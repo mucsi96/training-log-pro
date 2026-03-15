@@ -1,0 +1,9 @@
+spring:
+  cloud:
+    azure:
+      keyvault:
+        secret:
+          property-sources:
+            - enabled: false
+      active-directory:
+        enabled: false

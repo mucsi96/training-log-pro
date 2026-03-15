@@ -1,0 +1,17 @@
+spring:
+  docker:
+    compose:
+      enabled: true
+      file: ./compose.yaml
+  datasource:
+    url: jdbc:postgresql://localhost:5433/training-log
+    username: postgres
+    password: postgres
+  cloud:
+    azure:
+      active-directory:
+        credential:
+          client-secret: ${api-client-secret}
+management:
+  server:
+    port: 8182

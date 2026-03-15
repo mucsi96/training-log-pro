@@ -1,14 +1,32 @@
-server:
-  shutdown: graceful
-  servlet:
-    context-path: /api
-management:
-  endpoint:
-    health:
-      show-details: always
-      probes:
-        enabled: true
 spring:
+  datasource:
+    url: ${db-url}
+    username: ${db-username}
+    password: ${db-password}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    properties:
+      hibernate:
+        show-sql: true
+        jdbc:
+          time-zone: UTC
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+  cloud:
+    azure:
+      keyvault:
+        secret:
+          property-sources:
+            - endpoint: ${AZURE_KEYVAULT_ENDPOINT}
+              enabled: true
+      active-directory:
+        enabled: true
+        profile:
+          tenant-id: ${tenant-id}
+        credential:
+          client-id: ${api-client-id}
   security:
     oauth2:
       client:
@@ -34,49 +52,24 @@ spring:
             authorization-grant-type: authorization_code
             redirect-uri: "{baseUrl}/strava/authorize"
             scope: activity:read
-  datasource:
-    url: jdbc:postgresql://${POSTGRES_HOSTNAME}:${POSTGRES_PORT}/${POSTGRES_DB}
-    username: ${POSTGRES_USER}
-    password: ${POSTGRES_PASSWORD}
-  sql:
-    init:
-      mode: always
-  jpa:
-    show-sql: true
-    properties:
-      # GENERATE SCHEMA
-      # javax:
-      #   persistence:
-      #     schema-generation:
-      #       create-source: metadata
-      #       scripts:
-      #         action: create
-      #         create-target: create.sql
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        format-sql: true
-        jdbc:
-          time-zone: UTC
-
-logging:
-  level:
-    com:
-      zaxxer:
-        hikari: OFF
-springdoc:
-  swagger-ui:
-    path: /
-webdriver:
-  api-uri: ${WEBDRIVER_API_URI}
+server:
+  servlet:
+    context-path: /api
+management:
+  server:
+    port: ${SPRING_ACTUATOR_PORT}
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
 withings:
   api-uri: ${WITHINGS_API_URI}
 strava:
   username: ${STRAVA_USERNAME}
   password: ${STRAVA_PASSWORD}
   api-uri: ${STRAVA_API_URI}
-kubetools:
-  introspection-uri: /
-  user-info-uri: /
-  client-id: clientId
-  client-secret: clientSecret
-
