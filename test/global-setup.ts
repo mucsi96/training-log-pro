@@ -1,8 +1,8 @@
-import { cleanupDb, populateDb } from './utils';
+import { cleanupDb, populateOAuthClients } from './utils';
 
 async function globalSetup() {
   await cleanupDb();
-  await populateDb();
+  await populateOAuthClients();
 }
 
 export default globalSetup;

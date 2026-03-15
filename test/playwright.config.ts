@@ -19,7 +19,7 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         contextOptions: {
           recordHar: {
-            path: 'test/test-results/test.har',
+            path: 'test-results/test.har',
             mode: 'minimal',
           },
         },

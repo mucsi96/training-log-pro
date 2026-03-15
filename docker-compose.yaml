@@ -47,6 +47,15 @@ services:
       DB_URL: "jdbc:postgresql://db:5432/test"
       DB_USERNAME: "postgres"
       DB_PASSWORD: "postgres"
+      WITHINGS_ACCOUNTS_URI: "http://mock-withings:8080/withings"
+      WITHINGS_API_URI: "http://mock-withings:8080/withings"
+      WITHINGS_CLIENT_ID: "withings-client-id"
+      WITHINGS_CLIENT_SECRET: "withings-client-secret"
+      STRAVA_API_URI: "http://mock-strava:8080/strava"
+      STRAVA_CLIENT_ID: "strava-client-id"
+      STRAVA_CLIENT_SECRET: "strava-client-secret"
+      STRAVA_USERNAME: ""
+      STRAVA_PASSWORD: ""
     healthcheck:
       test: "curl --fail --silent localhost:8182/actuator/health/readiness | grep UP || exit 1"
       interval: 2s
@@ -54,6 +63,12 @@ services:
       start_period: 16s
     depends_on:
       db:
+        condition: service_healthy
+      mock-withings:
+        condition: service_healthy
+      mock-strava:
+        condition: service_healthy
+      mock-backup-tool:
         condition: service_healthy
 
   db:
@@ -69,3 +84,48 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  mock-withings:
+    build:
+      context: test/mock_withings
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mock-withings.rule=PathPrefix(`/withings`)"
+      - "traefik.http.routers.mock-withings.priority=3"
+      - "traefik.http.services.mock-withings.loadbalancer.server.port=8080"
+    healthcheck:
+      test: "curl --fail --silent localhost:8080/ || exit 1"
+      interval: 2s
+      timeout: 3s
+      retries: 5
+      start_period: 2s
+
+  mock-strava:
+    build:
+      context: test/mock_strava
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mock-strava.rule=PathPrefix(`/strava`)"
+      - "traefik.http.routers.mock-strava.priority=3"
+      - "traefik.http.services.mock-strava.loadbalancer.server.port=8080"
+    healthcheck:
+      test: "curl --fail --silent localhost:8080/ || exit 1"
+      interval: 2s
+      timeout: 3s
+      retries: 5
+      start_period: 2s
+
+  mock-backup-tool:
+    build:
+      context: test/mock_backup_tool
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mock-backup-tool.rule=Path(`/db/last-backup-time`)"
+      - "traefik.http.routers.mock-backup-tool.priority=3"
+      - "traefik.http.services.mock-backup-tool.loadbalancer.server.port=8080"
+    healthcheck:
+      test: "curl --fail --silent localhost:8080/ || exit 1"
+      interval: 2s
+      timeout: 3s
+      retries: 5
+      start_period: 2s
