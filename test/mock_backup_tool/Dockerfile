@@ -1,4 +1,4 @@
-FROM node:25-slim
+FROM docker.io/library/node:25-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 

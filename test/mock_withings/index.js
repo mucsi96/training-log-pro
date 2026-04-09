@@ -3,7 +3,7 @@ const { authozire } = require("./authorize");
 const { get_access_token } = require("./get_access_token");
 const { measure } = require("./measure");
 
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 const server = createServer();
 
 server.on("request", async (request, response) => {

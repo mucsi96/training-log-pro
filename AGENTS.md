@@ -68,10 +68,16 @@ Training and fitness tracking application demonstrating patterns for:
 - Azure AD (MSAL) authentication
 - Azure Key Vault for secrets
 - Traefik reverse proxy
-- Docker multi-stage builds
+- Podman for container management
+- Helm for Kubernetes deployment
 - Playwright for E2E testing
 
 ## Development Commands
+
+### Setup
+```bash
+scripts/install_dependencies.sh  # Install all dependencies (Ubuntu)
+```
 
 ### Frontend
 ```bash
@@ -81,21 +87,30 @@ cd client && npm run build    # Production build
 
 ### Backend
 ```bash
+scripts/dev_db_up.sh          # Start dev database (Podman pod)
+scripts/dev_db_down.sh        # Stop dev database
 cd server && mvn spring-boot:run -Dspring-boot.run.profiles=local  # Start with local profile
 ```
 
 ### Testing
 ```bash
-scripts/compose_up.sh         # Start test stack
+scripts/pod_up.sh             # Start test stack (Podman pod)
+scripts/pod_down.sh           # Stop test stack
 cd test && npm test           # Run E2E tests
 cd test && npx playwright test --ui  # Interactive test runner
+```
+
+### Deployment
+```bash
+scripts/pull_kubeconfig.sh    # Fetch kubeconfig from Azure Key Vault
+scripts/deploy.sh             # Deploy to Kubernetes via Helm
 ```
 
 ## Configuration Patterns
 
 ### Spring Profiles
 - **prod** - Production with Azure Key Vault and AAD
-- **local** - Local development with Docker Compose DB
+- **local** - Local development with Podman dev DB
 - **test** - Testing with disabled auth
 
 ### Environment Config

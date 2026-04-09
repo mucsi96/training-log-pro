@@ -1,4 +1,4 @@
-FROM maven:3-eclipse-temurin-21 AS build
+FROM docker.io/library/maven:3-eclipse-temurin-21 AS build
 
 WORKDIR /workspace
 
@@ -9,7 +9,7 @@ RUN mvn package -DskipTests && \
     mkdir -p target/extracted && \
     java -Djarmode=tools -jar target/*.jar extract --layers --launcher --destination target/extracted
 
-FROM eclipse-temurin:25-jre
+FROM docker.io/library/eclipse-temurin:25-jre
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 

@@ -1,6 +1,6 @@
 const { createServer } = require("http");
 
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 const server = createServer();
 
 server.on("request", (request, response) => {
