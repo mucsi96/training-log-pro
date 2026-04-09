@@ -6,13 +6,12 @@ on:
       - main
   pull_request:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   test-server:
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-test-server-${{ github.ref }}
+      cancel-in-progress: true
     defaults:
       run:
         working-directory: server
@@ -27,6 +26,9 @@ jobs:
 
   test-e2e:
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-test-e2e-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -56,6 +58,9 @@ jobs:
 
   publish-server:
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-publish-server-${{ github.ref }}
+      cancel-in-progress: false
     needs:
       - test-server
       - test-e2e
@@ -78,14 +83,14 @@ jobs:
         if: steps.get_next_version.outputs.hasNextVersion == 'true'
         uses: docker/login-action@v4
         with:
-          username: ${{ github.repository_owner }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push server image
         if: steps.get_next_version.outputs.hasNextVersion == 'true'
         run: |
-          docker build -t ${{ github.repository_owner }}/training-log-pro-server:${{ steps.get_next_version.outputs.version }} server
-          docker push ${{ github.repository_owner }}/training-log-pro-server:${{ steps.get_next_version.outputs.version }}
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/training-log-pro-server:${{ steps.get_next_version.outputs.version }} server
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/training-log-pro-server:${{ steps.get_next_version.outputs.version }}
 
       - name: Create release
         if: steps.get_next_version.outputs.hasNextVersion == 'true'
@@ -96,6 +101,9 @@ jobs:
 
   publish-client:
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-publish-client-${{ github.ref }}
+      cancel-in-progress: false
     needs:
       - test-server
       - test-e2e
@@ -118,14 +126,14 @@ jobs:
         if: steps.get_next_version.outputs.hasNextVersion == 'true'
         uses: docker/login-action@v4
         with:
-          username: ${{ github.repository_owner }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push client image
         if: steps.get_next_version.outputs.hasNextVersion == 'true'
         run: |
-          docker build -t ${{ github.repository_owner }}/training-log-pro-client:${{ steps.get_next_version.outputs.version }} client
-          docker push ${{ github.repository_owner }}/training-log-pro-client:${{ steps.get_next_version.outputs.version }}
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/training-log-pro-client:${{ steps.get_next_version.outputs.version }} client
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/training-log-pro-client:${{ steps.get_next_version.outputs.version }}
 
       - name: Create release
         if: steps.get_next_version.outputs.hasNextVersion == 'true'
