@@ -41,19 +41,24 @@
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-webmvc</artifactId>
+      <artifactId>spring-boot-starter-hateoas</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
     <dependency>
       <groupId>com.azure.spring</groupId>
       <artifactId>spring-cloud-azure-starter-keyvault-secrets</artifactId>
       <exclusions>
-          <exclusion>
-              <groupId>com.azure</groupId>
-              <artifactId>azure-core-http-netty</artifactId>
-          </exclusion>
+        <exclusion>
+          <groupId>com.azure</groupId>
+          <artifactId>azure-core-http-netty</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
-    <!-- Use JDK HTTP client instead of Netty for Azure SDK (Netty 4.1 vs 4.2 incompatibility with Spring Boot 4) -->
+    <!-- Use JDK HTTP client instead of Netty for Azure SDK (Netty 4.1 vs 4.2 incompatibility with
+    Spring Boot 4) -->
     <dependency>
       <groupId>com.azure</groupId>
       <artifactId>azure-core-http-jdk-httpclient</artifactId>
@@ -69,6 +74,16 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-oauth2-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>2.7.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.seleniumhq.selenium</groupId>
+      <artifactId>selenium-java</artifactId>
+      <version>4.41.0</version>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -97,6 +112,32 @@
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-webmvc-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.wiremock</groupId>
+      <artifactId>wiremock-standalone</artifactId>
+      <version>3.11.0</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
   <dependencyManagement>
     <dependencies>
@@ -107,8 +148,24 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+      <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>testcontainers-bom</artifactId>
+        <version>1.21.0</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
+  <repositories>
+    <repository>
+      <id>ossrh</id>
+      <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+    </repository>
+  </repositories>
 
   <build>
     <plugins>
@@ -139,6 +196,64 @@
             </exclude>
           </excludes>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.openapitools</groupId>
+        <artifactId>openapi-generator-maven-plugin</artifactId>
+        <version>6.3.0</version>
+        <configuration>
+          <generatorName>java</generatorName>
+          <configOptions>
+            <sourceFolder>src/gen/java/main</sourceFolder>
+            <dateLibrary>java8</dateLibrary>
+            <java8>true</java8>
+            <useTags>true</useTags>
+            <interfaceOnly>true</interfaceOnly>
+            <library>native</library>
+            <useJakartaEe>true</useJakartaEe>
+            <supportUrlQuery>false</supportUrlQuery>
+            <additionalModelTypeAnnotations>@lombok.Builder @lombok.AllArgsConstructor
+              @SuppressWarnings("all")</additionalModelTypeAnnotations>
+          </configOptions>
+          <generateApis>false</generateApis>
+          <generateApiTests>false</generateApiTests>
+          <generateModelTests>false</generateModelTests>
+          <generateModelDocumentation>false</generateModelDocumentation>
+          <generateSupportingFiles>false</generateSupportingFiles>
+          <generateApiDocumentation>false</generateApiDocumentation>
+        </configuration>
+        <executions>
+          <execution>
+            <id>withings</id>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+            <configuration>
+              <inputSpec>${project.basedir}/src/main/resources/withings.yml</inputSpec>
+              <modelPackage>mucsi96.traininglog.withings</modelPackage>
+            </configuration>
+          </execution>
+          <execution>
+            <id>strava</id>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+            <configuration>
+              <inputSpec>${project.basedir}/src/main/resources/strava.yml</inputSpec>
+              <modelPackage>mucsi96.traininglog.strava</modelPackage>
+            </configuration>
+          </execution>
+          <execution>
+            <id>api</id>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+            <configuration>
+              <inputSpec>${project.basedir}/src/main/resources/api.yml</inputSpec>
+              <modelPackage>mucsi96.traininglog.api</modelPackage>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

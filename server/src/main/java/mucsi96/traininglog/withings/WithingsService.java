@@ -38,7 +38,7 @@ public class WithingsService {
         .toEpochSecond();
     log.info("Getting today last weight measure from {} to {}", startTime, endTime);
     return UriComponentsBuilder
-        .fromHttpUrl(withingsConfiguration.getApiUri())
+        .fromUriString(withingsConfiguration.getApiUri())
         .path("/measure")
         .queryParam("action", "getmeas")
         .queryParam("category", 1)

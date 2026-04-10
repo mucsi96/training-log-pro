@@ -1,6 +1,5 @@
 package mucsi96.traininglog.withings;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
@@ -8,21 +7,16 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.http.converter.FormHttpMessageConverter;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder;
 import org.springframework.security.oauth2.client.RemoveAuthorizedClientOAuth2AuthorizationFailureHandler;
-import org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationCodeTokenResponseClient;
-import org.springframework.security.oauth2.client.endpoint.DefaultRefreshTokenTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
-import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequestEntityConverter;
 import org.springframework.security.oauth2.client.endpoint.OAuth2RefreshTokenGrantRequest;
-import org.springframework.security.oauth2.client.endpoint.OAuth2RefreshTokenGrantRequestEntityConverter;
-import org.springframework.security.oauth2.client.http.OAuth2ErrorResponseErrorHandler;
+import org.springframework.security.oauth2.client.endpoint.RestClientAuthorizationCodeTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.RestClientRefreshTokenTokenResponseClient;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
@@ -30,16 +24,12 @@ import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
-import org.springframework.security.oauth2.core.http.converter.OAuth2AccessTokenResponseHttpMessageConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.github.mucsi96.kubetools.security.KubetoolsSecurityConfigurer;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Data;
@@ -55,15 +45,13 @@ public class WithingsConfiguration {
   private String apiUri;
 
   @Bean
-  SecurityFilterChain withingsSecurityFilterChain(
-      HttpSecurity http,
-      KubetoolsSecurityConfigurer kubetoolsSecurityConfigurer) throws Exception {
+  SecurityFilterChain withingsSecurityFilterChain(HttpSecurity http) throws Exception {
     return http
         .securityMatcher("/withings/**")
         .oauth2Client(configurer -> configurer
             .authorizationCodeGrant(customizer -> customizer
                 .accessTokenResponseClient(withingsAccessTokenResponseClient())))
-        .with(kubetoolsSecurityConfigurer, Customizer.withDefaults())
+        .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
         .build();
   }
 
@@ -97,41 +85,23 @@ public class WithingsConfiguration {
   }
 
   OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> withingsAccessTokenResponseClient() {
-    OAuth2AuthorizationCodeGrantRequestEntityConverter requestEntityConverter = new OAuth2AuthorizationCodeGrantRequestEntityConverter();
-    requestEntityConverter.addParametersConverter(withingsAccessTokenRequestParametersConverter());
+    RestClientAuthorizationCodeTokenResponseClient client = new RestClientAuthorizationCodeTokenResponseClient();
 
-    OAuth2AccessTokenResponseHttpMessageConverter accessTokenResponseConverter = new OAuth2AccessTokenResponseHttpMessageConverter();
-    accessTokenResponseConverter.setAccessTokenResponseConverter(withingsAccessTokenResponseConverter());
+    // TODO: Implement custom response body converter for Withings non-standard OAuth2 response
+    // Need to create custom RestClient with message converters for withingsAccessTokenResponseConverter()
+    client.setParametersConverter(withingsAccessTokenRequestParametersConverter());
 
-    RestTemplate restTemplate = new RestTemplate(Arrays.asList(
-        new FormHttpMessageConverter(),
-        accessTokenResponseConverter));
-
-    restTemplate.setErrorHandler(new OAuth2ErrorResponseErrorHandler());
-
-    DefaultAuthorizationCodeTokenResponseClient accessTokenResponseClient = new DefaultAuthorizationCodeTokenResponseClient();
-    accessTokenResponseClient.setRequestEntityConverter(requestEntityConverter);
-    accessTokenResponseClient.setRestOperations(restTemplate);
-    return accessTokenResponseClient;
+    return client;
   }
 
   OAuth2AccessTokenResponseClient<OAuth2RefreshTokenGrantRequest> withingsRefreshTokenResponseClient() {
-    OAuth2RefreshTokenGrantRequestEntityConverter requestEntityConverter = new OAuth2RefreshTokenGrantRequestEntityConverter();
-    requestEntityConverter.addParametersConverter(withingsRefreshTokenRequestParametersConverter());
+    RestClientRefreshTokenTokenResponseClient client = new RestClientRefreshTokenTokenResponseClient();
 
-    OAuth2AccessTokenResponseHttpMessageConverter accessTokenResponseConverter = new OAuth2AccessTokenResponseHttpMessageConverter();
-    accessTokenResponseConverter.setAccessTokenResponseConverter(withingsAccessTokenResponseConverter());
+    // TODO: Implement custom response body converter for Withings non-standard OAuth2 response
+    // Need to create custom RestClient with message converters for withingsAccessTokenResponseConverter()
+    client.setParametersConverter(withingsRefreshTokenRequestParametersConverter());
 
-    RestTemplate restTemplate = new RestTemplate(Arrays.asList(
-        new FormHttpMessageConverter(),
-        accessTokenResponseConverter));
-
-    restTemplate.setErrorHandler(new OAuth2ErrorResponseErrorHandler());
-
-    DefaultRefreshTokenTokenResponseClient tokenResponseClient = new DefaultRefreshTokenTokenResponseClient();
-    tokenResponseClient.setRequestEntityConverter(requestEntityConverter);
-    tokenResponseClient.setRestOperations(restTemplate);
-    return tokenResponseClient;
+    return client;
   }
 
   Converter<OAuth2AuthorizationCodeGrantRequest, MultiValueMap<String, String>> withingsAccessTokenRequestParametersConverter() {

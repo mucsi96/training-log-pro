@@ -41,7 +41,7 @@ public class StravaActivityService {
         .toEpochSecond();
     log.info("Getting today activities from {} to {}", startTime, endTime);
     return UriComponentsBuilder
-        .fromHttpUrl(configuration.getApiUri())
+        .fromUriString(configuration.getApiUri())
         .path("/api/v3/athlete/activities")
         .queryParam("after", startTime)
         .queryParam("before", endTime)
