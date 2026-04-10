@@ -1,0 +1,169 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1-create-oauth2-authorized-client-table
+      author: mucsi96
+      changes:
+        - createTable:
+            tableName: oauth2_authorized_client
+            columns:
+              - column:
+                  name: client_registration_id
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: principal_name
+                  type: varchar(200)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: access_token_type
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: access_token_value
+                  type: bytea
+                  constraints:
+                    nullable: false
+              - column:
+                  name: access_token_issued_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: access_token_expires_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: access_token_scopes
+                  type: varchar(1000)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: refresh_token_value
+                  type: bytea
+                  constraints:
+                    nullable: true
+              - column:
+                  name: refresh_token_issued_at
+                  type: timestamp
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: oauth2_authorized_client
+            columnNames: client_registration_id, principal_name
+
+  - changeSet:
+      id: 2-create-ride-table
+      author: mucsi96
+      changes:
+        - createTable:
+            tableName: ride
+            columns:
+              - column:
+                  name: created_at
+                  type: timestamp(6)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: calories
+                  type: float4
+                  constraints:
+                    nullable: true
+              - column:
+                  name: distance
+                  type: float4
+                  constraints:
+                    nullable: true
+              - column:
+                  name: moving_time
+                  type: integer
+                  constraints:
+                    nullable: true
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: sport_type
+                  type: varchar(255)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: total_elevation_gain
+                  type: float4
+                  constraints:
+                    nullable: true
+              - column:
+                  name: weighted_average_watts
+                  type: float4
+                  constraints:
+                    nullable: true
+
+  - changeSet:
+      id: 3-create-fitness-table
+      author: mucsi96
+      changes:
+        - createTable:
+            tableName: fitness
+            columns:
+              - column:
+                  name: created_at
+                  type: timestamp(6)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: fatigue
+                  type: float4
+                  constraints:
+                    nullable: true
+              - column:
+                  name: fitness
+                  type: float4
+                  constraints:
+                    nullable: true
+              - column:
+                  name: form
+                  type: float4
+                  constraints:
+                    nullable: true
+
+  - changeSet:
+      id: 4-create-weight-table
+      author: mucsi96
+      changes:
+        - createTable:
+            tableName: weight
+            columns:
+              - column:
+                  name: created_at
+                  type: timestamp(6)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: weight
+                  type: float4
+                  constraints:
+                    nullable: true
+              - column:
+                  name: fat_ratio
+                  type: float4
+                  constraints:
+                    nullable: true
+              - column:
+                  name: fat_mass_weight
+                  type: float4
+                  constraints:
+                    nullable: true

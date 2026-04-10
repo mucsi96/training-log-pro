@@ -18,12 +18,16 @@ public class WithMockUserRolesSecurityContextFactory implements WithSecurityCont
     public SecurityContext createSecurityContext(WithMockUserRoles mockUser) {
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         Collection<GrantedAuthority> authorities = Arrays.stream(mockUser.value())
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                .flatMap(role -> Arrays.stream(new String[] {
+                    "ROLE_" + role,  // For hasRole() checks
+                    role              // For @RolesAllowed checks
+                }))
+                .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
 
         Jwt jwt = Jwt.withTokenValue("mock-token")
                 .header("alg", "none")
-                .claim("sub", "test-user")
+                .claim("sub", "rob")
                 .claim("roles", mockUser.value())
                 .build();
 

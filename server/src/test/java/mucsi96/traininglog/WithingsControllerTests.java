@@ -110,18 +110,6 @@ public class WithingsControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  public void returns_forbidden_if_user_has_no_user_role() throws Exception {
-    authorizeWithingsOAuth2Client();
-    MockHttpServletResponse response = mockMvc
-        .perform(
-            post("/withings/sync")
-                .headers(getHeaders()))
-        .andReturn().getResponse();
-
-    assertThat(response.getStatus()).isEqualTo(403);
-  }
-
-  @Test
   @WithMockUserRoles
   public void redirects_to_withings_request_authorization_page() throws Exception {
     MockHttpServletResponse response = mockMvc

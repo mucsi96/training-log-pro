@@ -5,8 +5,10 @@ import java.util.Set;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder;
@@ -41,9 +43,11 @@ public class StravaConfiguration {
   private String apiUri;
 
   @Bean
+  @Order(1)
   SecurityFilterChain stravaSecurityFilterChain(HttpSecurity http) throws Exception {
     return http
         .securityMatcher("/strava/**")
+        .csrf(AbstractHttpConfigurer::disable)
         .oauth2Client(configurer -> configurer
         .authorizationCodeGrant(customizer -> customizer
         .accessTokenResponseClient(stravaAccessTokenResponseClient())))

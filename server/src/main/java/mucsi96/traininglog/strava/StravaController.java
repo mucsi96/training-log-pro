@@ -1,14 +1,11 @@
 package mucsi96.traininglog.strava;
 
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
-
 import java.time.ZoneId;
+import java.util.Map;
 
-import org.springframework.hateoas.Link;
-import org.springframework.hateoas.RepresentationModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
@@ -21,11 +18,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.view.RedirectView;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -45,12 +37,7 @@ public class StravaController {
   private final OAuth2AuthorizedClientManager stravaAuthorizedClientManager;
 
   @PostMapping("/activities/sync")
-  @Operation(parameters = {
-      @Parameter(in = ParameterIn.HEADER, name = "X-Timezone", required = true, example = "America/New_York")
-  }, responses = { @ApiResponse(content = @Content()),
-      @ApiResponse(responseCode = "401", content = @Content(), links = {
-          @io.swagger.v3.oas.annotations.links.Link(name = "oauth2Login", operationId = "strava-authorize") }) })
-  public ResponseEntity<RepresentationModel<?>> syncActivities(
+  public ResponseEntity<?> syncActivities(
       Authentication principal,
       HttpServletRequest servletRequest,
       HttpServletResponse servletResponse,
@@ -62,20 +49,16 @@ public class StravaController {
       OAuth2AuthorizedClient authorizedClient = getAuthorizedClient(principal, servletRequest, servletResponse);
       stravaActivityService.getTodayRides(authorizedClient, zoneId).forEach(rideService::saveRide);
     } catch (OAuth2AuthorizationException ex) {
-      Link oauth2LogLink = linkTo(methodOn(StravaController.class).authorize(null, null, null))
-          .withRel("oauth2Login");
-
-      RepresentationModel<?> model = RepresentationModel.of(null).add(oauth2LogLink);
-
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(model);
+      String authorizeUrl = ServletUriComponentsBuilder.fromRequestUri(servletRequest)
+          .replacePath("/strava/authorize").toUriString();
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+          .body(Map.of("_links", Map.of("oauth2Login", Map.of("href", authorizeUrl))));
     }
 
-    return ResponseEntity.ok(null);
-
+    return ResponseEntity.ok().build();
   }
 
   @GetMapping("/authorize")
-  @Operation(operationId = "strava-authorize", responses = { @ApiResponse(content = @Content()) })
   public RedirectView authorize(
       Authentication principal,
       HttpServletRequest servletRequest,

@@ -3,6 +3,7 @@ package mucsi96.traininglog.core;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -16,6 +17,7 @@ import com.azure.spring.cloud.autoconfigure.implementation.aad.security.AadResou
 public class SecurityConfiguration {
 
     @Bean
+    @Order(3)
     SecurityFilterChain securityFilterChain(HttpSecurity http)
             throws Exception {
 

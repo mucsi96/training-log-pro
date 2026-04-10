@@ -1,4 +1,7 @@
 spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.admin.SpringApplicationAdminJmxAutoConfiguration
   cloud:
     azure:
       keyvault:
@@ -7,3 +10,12 @@ spring:
             - enabled: false
       active-directory:
         enabled: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080
+
+management:
+  server:
+    port: ${server.port:0}

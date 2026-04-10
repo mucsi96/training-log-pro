@@ -4,16 +4,20 @@ spring:
     username: ${db-username}
     password: ${db-password}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-init-sql: CREATE SCHEMA IF NOT EXISTS training_log; SET search_path TO training_log, public
   jpa:
+    hibernate:
+      ddl-auto: none
     properties:
       hibernate:
         show-sql: true
         jdbc:
           time-zone: UTC
-  sql:
-    init:
-      mode: always
-      schema-locations: classpath:schema.sql
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    default-schema: training_log
+    liquibase-schema: training_log
   cloud:
     azure:
       keyvault:

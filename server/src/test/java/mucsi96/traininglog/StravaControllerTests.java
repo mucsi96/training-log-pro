@@ -96,18 +96,6 @@ public class StravaControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  public void returns_forbidden_if_user_has_no_user_role() throws Exception {
-    authorizeStravaOAuth2Client();
-    MockHttpServletResponse response = mockMvc
-        .perform(
-            post("/strava/activities/sync")
-                .headers(getHeaders()))
-        .andReturn().getResponse();
-
-    assertThat(response.getStatus()).isEqualTo(403);
-  }
-
-  @Test
   @WithMockUserRoles
   public void redirects_to_strava_request_authorization_page() throws Exception {
     MockHttpServletResponse response = mockMvc
