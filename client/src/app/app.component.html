@@ -42,11 +42,6 @@
   </nav>
 </header>
 <main app-main>
-  @if ($lastBackupTime | async; as lastBackupTime) {
-  <a app-badge href="/db" class="lastBackup"
-    >Last backup {{ lastBackupTime | relativeTime }}</a
-  >
-  }
   <section class="main">
     <router-outlet></router-outlet>
   </section>

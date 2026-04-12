@@ -18,7 +18,7 @@ export type WeightMeasurement = {
   fatMassWeight?: number;
 };
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class WeightService {
   constructor(
     private readonly http: HttpClient,

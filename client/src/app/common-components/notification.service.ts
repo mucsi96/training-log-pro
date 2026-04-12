@@ -8,7 +8,7 @@ export type Notification = {
   message: string;
 }
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class NotificationService {
   #notifications = new Subject<Notification>()
   $notifications = this.#notifications.asObservable();

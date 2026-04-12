@@ -17,7 +17,7 @@ export type RideStats = {
   time?: number;
 };
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class RideService {
   constructor(
     private readonly http: HttpClient,

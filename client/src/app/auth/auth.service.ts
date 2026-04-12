@@ -1,6 +1,6 @@
 import { LocationStrategy } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import {
   BehaviorSubject,
@@ -15,8 +15,12 @@ import { RouterTokens } from '../app.routes';
 
 type UserInfo = { sub: string; name: string; groups: string[] };
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class AuthService {
+  private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
+  private readonly locationStrategy = inject(LocationStrategy);
+
   redirectUri =
     location.origin +
     this.locationStrategy.prepareExternalUrl(
@@ -27,7 +31,7 @@ export class AuthService {
   );
   $userInfo = this.signinsAndSignouts.asObservable().pipe(
     switchMap((nextRoute) =>
-      this.http.get<UserInfo>('/auth/user-info').pipe(
+      this.http.get<UserInfo>('/api/auth/user-info').pipe(
         catchError(() => {
           return of({} as UserInfo);
         }),
@@ -37,12 +41,6 @@ export class AuthService {
     shareReplay(1)
   );
 
-  constructor(
-    private readonly http: HttpClient,
-    private readonly router: Router,
-    private readonly locationStrategy: LocationStrategy
-  ) {}
-
   getUserInfo() {
     return this.$userInfo;
   }
@@ -51,7 +49,7 @@ export class AuthService {
     this.http
       .post<{
         authorizationUrl: string;
-      }>('/auth/authorize', { redirectUri: this.redirectUri })
+      }>('/api/auth/authorize', { redirectUri: this.redirectUri })
       .subscribe(({ authorizationUrl }) => {
         location.href = authorizationUrl;
       });
@@ -59,7 +57,7 @@ export class AuthService {
 
   async handleSigninRedirectCallback() {
     this.http
-      .post<void>('/auth/get-token', {
+      .post<void>('/api/auth/get-token', {
         callbackUrl: location.href.toString(),
         redirectUri: this.redirectUri,
       })
@@ -86,7 +84,7 @@ export class AuthService {
 
   signout() {
     this.http
-      .post('/auth/logout', {})
+      .post('/api/auth/logout', {})
       .subscribe(() => this.signinsAndSignouts.next([RouterTokens.SIGNIN]));
   }
 }

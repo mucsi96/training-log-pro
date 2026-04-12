@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import {
   EMPTY,
   catchError,
@@ -10,13 +10,11 @@ import {
 import { NotificationService } from '../common-components/notification.service';
 import { WithingsService } from '../withings/withings.service';
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class StravaService {
-  constructor(
-    private readonly http: HttpClient,
-    private readonly notificationService: NotificationService,
-    private readonly withingsService: WithingsService
-  ) {}
+  private readonly http = inject(HttpClient);
+  private readonly notificationService = inject(NotificationService);
+  private readonly withingsService = inject(WithingsService);
 
   private readonly $syncActivities = concat(
     this.withingsService.syncMeasurements(),

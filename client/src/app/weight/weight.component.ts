@@ -1,10 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { EChartsOption } from 'echarts';
-import { NgxEchartsDirective, NgxEchartsModule } from 'ngx-echarts';
+import { NgxEchartsModule } from 'ngx-echarts';
 import { combineLatest, map, switchMap } from 'rxjs';
 import { HeadingComponent } from '../common-components/heading/heading.component';
-import { LoaderComponent } from '../common-components/loader/loader.component';
 import { TextComponent } from '../common-components/text/text.component';
 import { WeightService } from './weight.service';
 import { MeasurementWithUnitPipe } from '../utils/measurement-with-unit.pipe';
@@ -17,7 +16,6 @@ import { ActivatedRoute } from '@angular/router';
   imports: [
     CommonModule,
     HeadingComponent,
-    LoaderComponent,
     NgxEchartsModule,
     TextComponent,
     PercentageDiffPipe,
@@ -29,13 +27,10 @@ import { ActivatedRoute } from '@angular/router';
   styleUrls: ['./weight.component.css'],
 })
 export class WeightComponent {
-  readonly initOpts: NgxEchartsDirective['initOpts'] = {
-    renderer: 'svg',
-  };
-  constructor(
-    private readonly weightService: WeightService,
-    private readonly route: ActivatedRoute
-  ) {}
+  private readonly weightService = inject(WeightService);
+  private readonly route = inject(ActivatedRoute);
+
+  readonly initOpts = { renderer: 'svg' as const };
   private readonly $todayWeight = this.weightService.getTodayWeight();
   private readonly $diff = this.route.data.pipe(
     switchMap((data) => this.weightService.getDiff(data['period']))

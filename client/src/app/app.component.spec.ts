@@ -1,11 +1,9 @@
 import { Component, Directive, Input } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
-import { Subject, of } from 'rxjs';
+import { of } from 'rxjs';
 import { AppComponent } from './app.component';
 import { NotificationService } from './common-components/notification.service';
-import { BackupService } from './backup/backup.service';
-import { RelativeTimePipe } from './utils/relative-time.pipe';
 import { provideHttpClient } from '@angular/common/http';
 import {
   IsActiveMatchOptions,
@@ -44,28 +42,20 @@ class MockRouterLinkActive {
 class MockRouterOutlet {}
 
 async function setup() {
-  const mockBackupService: jasmine.SpyObj<BackupService> = jasmine.createSpyObj(
-    ['getLastBackupTime']
-  );
   const mockAuthService: jasmine.SpyObj<AuthService> = jasmine.createSpyObj([
     'isSignedIn',
     'getUserName',
     'signin',
     'signout',
   ]);
-  mockBackupService.getLastBackupTime.and.returnValue(
-    of(new Date(Date.now() - 5 * 60 * 1000))
-  );
   mockAuthService.getUserName.and.returnValue(of('Igor'));
   mockAuthService.isSignedIn.and.returnValue(of(true));
 
   await TestBed.configureTestingModule({
-    imports: [RelativeTimePipe],
     providers: [
       provideNoopAnimations(),
       provideHttpClient(),
       NotificationService,
-      { provide: BackupService, useValue: mockBackupService },
       { provide: AuthService, useValue: mockAuthService },
     ],
   }).compileComponents();
@@ -94,12 +84,4 @@ describe('AppComponent', () => {
     expect(element.querySelector('header h1')?.textContent).toBe('W6');
   });
 
-  it('renders last backup time', async () => {
-    const { element, fixture } = await setup();
-    expect(
-      Array.from(element.querySelectorAll('a')).find((e) =>
-        e.textContent?.includes('Last backup')
-      )?.textContent
-    ).toEqual('Last backup 5 minutes ago');
-  });
 });

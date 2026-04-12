@@ -1,7 +1,7 @@
 import { delay, http, HttpResponse } from 'msw';
 
 export const authMocks = [
-  http.get('/auth/user-info', async () => {
+  http.get('/api/auth/user-info', async () => {
     await delay(600);
 
     const isSignedIn = !!sessionStorage.getItem('signedIn');
@@ -16,14 +16,14 @@ export const authMocks = [
       groups: ['user', 'admin'],
     });
   }),
-  http.post('/auth/authorize', () =>
+  http.post('/api/auth/authorize', () =>
     HttpResponse.json({ authorizationUrl: '/signin-redirect-callback' })
   ),
-  http.post('/auth/get-token', () => {
+  http.post('/api/auth/get-token', () => {
     sessionStorage.setItem('signedIn', 'true');
     return new HttpResponse();
   }),
-  http.post('/auth/logout', () => {
+  http.post('/api/auth/logout', () => {
     sessionStorage.removeItem('signedIn');
     return new HttpResponse();
   }),
