@@ -48,8 +48,8 @@ export function MSALInstanceFactory(config: EnvironmentConfig): IPublicClientApp
 
 function getApiScopes(config: EnvironmentConfig): string[] {
   return [
-    `${config.apiClientId}/readData`,
-    `${config.apiClientId}/writeData`,
+    `${config.apiClientId}/readWorkouts`,
+    `${config.apiClientId}/createWorkout`,
   ];
 }
 
