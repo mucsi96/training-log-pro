@@ -36,11 +36,11 @@ spring:
       client:
         provider:
           withings:
-            authorization-uri: ${withings-accounts-uri}/oauth2_user/authorize2
-            token-uri: ${withings-api-uri}/v2/oauth2
+            authorization-uri: https://account.withings.com/oauth2_user/authorize2
+            token-uri: https://wbsapi.withings.net/v2/oauth2
           strava:
-            authorization-uri: ${strava-api-uri}/oauth/authorize
-            token-uri: ${strava-api-uri}/oauth/token
+            authorization-uri: https://www.strava.com/oauth/authorize
+            token-uri: https://www.strava.com/oauth/token
         registration:
           withings-client:
             provider: withings
@@ -72,8 +72,8 @@ management:
       probes:
         enabled: true
 withings:
-  api-uri: ${withings-api-uri}
+  api-uri: https://wbsapi.withings.net
 strava:
   username: ${strava-username}
   password: ${strava-password}
-  api-uri: ${strava-api-uri}
+  api-uri: https://www.strava.com

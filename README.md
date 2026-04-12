@@ -20,11 +20,8 @@ All application secrets are pulled from Azure Key Vault using the Spring Cloud A
 | `db-password` | PostgreSQL password | [Azure Portal > Azure Database for PostgreSQL](https://portal.azure.com/#view/HubsExtension/BrowseResource/resourceType/Microsoft.DBforPostgreSQL%2FflexibleServers) |
 | `withings-client-id` | Withings OAuth2 client ID | [Withings Developer Dashboard](https://developer.withings.com/dashboard/) |
 | `withings-client-secret` | Withings OAuth2 client secret | [Withings Developer Dashboard](https://developer.withings.com/dashboard/) |
-| `withings-api-uri` | Withings API base URI | [Withings API Reference](https://developer.withings.com/api-reference) |
-| `withings-accounts-uri` | Withings OAuth2 accounts base URI | [Withings API Reference](https://developer.withings.com/api-reference) |
 | `strava-client-id` | Strava OAuth2 client ID | [Strava API Settings](https://www.strava.com/settings/api) |
 | `strava-client-secret` | Strava OAuth2 client secret | [Strava API Settings](https://www.strava.com/settings/api) |
-| `strava-api-uri` | Strava API base URI | [Strava API Reference](https://developers.strava.com/docs/reference/) |
 | `strava-username` | Strava account username | [Strava Account](https://www.strava.com/account) |
 | `strava-password` | Strava account password | [Strava Account](https://www.strava.com/account) |
 
