@@ -90,30 +90,6 @@ spec:
           value: "8182"
         - name: SPRING_PROFILES_ACTIVE
           value: test
-        - name: DB_URL
-          value: jdbc:postgresql://localhost:5432/test
-        - name: DB_USERNAME
-          value: postgres
-        - name: DB_PASSWORD
-          value: postgres
-        - name: WITHINGS_ACCOUNTS_URI
-          value: http://localhost:3001/withings
-        - name: WITHINGS_API_URI
-          value: http://localhost:3001/withings
-        - name: WITHINGS_CLIENT_ID
-          value: withings-client-id
-        - name: WITHINGS_CLIENT_SECRET
-          value: withings-client-secret
-        - name: STRAVA_API_URI
-          value: http://localhost:3002/strava
-        - name: STRAVA_CLIENT_ID
-          value: strava-client-id
-        - name: STRAVA_CLIENT_SECRET
-          value: strava-client-secret
-        - name: STRAVA_USERNAME
-          value: ""
-        - name: STRAVA_PASSWORD
-          value: ""
       livenessProbe:
         httpGet:
           path: /actuator/health/readiness
