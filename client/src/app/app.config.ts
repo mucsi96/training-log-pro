@@ -15,7 +15,7 @@ import * as echarts from 'echarts';
 import { NGX_ECHARTS_CONFIG } from 'ngx-echarts';
 import { routes } from './app.routes';
 import { errorInterceptor } from './utils/error.interceptor';
-import { timezoneInterceptor } from './http-interceptors/timezone-interceptor';
+import { timezoneInterceptor } from './utils/timezone.interceptor';
 import { provideMsalConfig } from './msal.config';
 import {
   EnvironmentConfig,

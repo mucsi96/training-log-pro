@@ -1,7 +1,6 @@
 import { Component, Directive, Input } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
-import { of } from 'rxjs';
 import { AppComponent } from './app.component';
 import { NotificationService } from './common-components/notification.service';
 import { provideHttpClient } from '@angular/common/http';
@@ -11,7 +10,7 @@ import {
   RouterLinkActive,
   RouterOutlet,
 } from '@angular/router';
-import { AuthService } from './auth/auth.service';
+import { ENVIRONMENT_CONFIG } from './environment/environment.config';
 
 @Directive({
   standalone: true,
@@ -42,21 +41,15 @@ class MockRouterLinkActive {
 class MockRouterOutlet {}
 
 async function setup() {
-  const mockAuthService: jasmine.SpyObj<AuthService> = jasmine.createSpyObj([
-    'isSignedIn',
-    'getUserName',
-    'signin',
-    'signout',
-  ]);
-  mockAuthService.getUserName.and.returnValue(of('Igor'));
-  mockAuthService.isSignedIn.and.returnValue(of(true));
-
   await TestBed.configureTestingModule({
     providers: [
       provideNoopAnimations(),
       provideHttpClient(),
       NotificationService,
-      { provide: AuthService, useValue: mockAuthService },
+      {
+        provide: ENVIRONMENT_CONFIG,
+        useValue: { mockAuth: true, tenantId: '', clientId: '', apiClientId: '' },
+      },
     ],
   }).compileComponents();
 
@@ -83,5 +76,4 @@ describe('AppComponent', () => {
     const { element } = await setup();
     expect(element.querySelector('header h1')?.textContent).toBe('W6');
   });
-
 });
