@@ -23,7 +23,7 @@ public class WebDriverConfiguration {
   private String apiUri;
 
   @Bean
-  @Profile({ "test", "local" })
+  @Profile({ "test", "local", "unittest" })
   public WebDriver getLocalWebDriver() {
     ChromeOptions options = new ChromeOptions().addArguments("--headless",
         "--disable-gpu", "--no-sandbox", "--disable-dev-shm-usage",

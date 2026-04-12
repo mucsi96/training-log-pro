@@ -11,7 +11,7 @@ spec:
           hostPort: 5435
       env:
         - name: POSTGRES_DB
-          value: training_log
+          value: test
         - name: POSTGRES_PASSWORD
           value: postgres
         - name: POSTGRES_USER
