@@ -10,8 +10,3 @@ main {
   grid-template-columns: 1fr;
   padding: 20px 0;
 }
-
-.lastBackup {
-  justify-self: flex-end;
-  gap: 8px;
-}

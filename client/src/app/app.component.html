@@ -1,11 +1,10 @@
-@if ($vm | async; as vm) {
 <header app-header>
   <nav>
     <a app-header-menu routerLink="/"><h1 app-heading>W6</h1></a>
-    @if (vm.isSignedIn) {
+    @if (isAuthenticated()) {
     <a
       app-header-menu
-      [routerLink]="routerTokens.WEEK"
+      routerLink=""
       [routerLinkActiveOptions]="{ exact: true }"
       routerLinkActive
       ariaCurrentWhenActive="page"
@@ -13,43 +12,34 @@
     >
     <a
       app-header-menu
-      [routerLink]="routerTokens.MONTH"
+      routerLink="month"
       routerLinkActive
       ariaCurrentWhenActive="page"
       >Month</a
     >
     <a
       app-header-menu
-      [routerLink]="routerTokens.YEAR"
+      routerLink="year"
       routerLinkActive
       ariaCurrentWhenActive="page"
       >Year</a
     >
     <a
       app-header-menu
-      [routerLink]="routerTokens.ALL_TIME"
+      routerLink="all-time"
       routerLinkActive
       ariaCurrentWhenActive="page"
       >All time</a
     >
-    <span app-badge>{{ vm.userName }}</span>
-    <button app-button color="red" (click)="onSignout()" type="button">
-      Sign out
-    </button>
-    } @else {
-    <button app-button (click)="onSignin()" type="button">Sign in</button>
+    @if (profile.value(); as user) {
+    <span app-badge>{{ user.name }}</span>
+    }
     }
   </nav>
 </header>
 <main app-main>
-  @if ($lastBackupTime | async; as lastBackupTime) {
-  <a app-badge href="/db" class="lastBackup"
-    >Last backup {{ lastBackupTime | relativeTime }}</a
-  >
-  }
   <section class="main">
     <router-outlet></router-outlet>
   </section>
 </main>
-}
 <ul app-notifications></ul>
