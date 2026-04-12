@@ -54,6 +54,8 @@ export class AuthService {
     : signal(undefined);
 
   constructor() {
+    this.msalService?.handleRedirectObservable().subscribe();
+
     effect(() => {
       const result = this.loginSuccess();
       if (result) {
