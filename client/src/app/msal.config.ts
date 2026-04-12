@@ -105,10 +105,7 @@ export function provideMsalConfig() {
     MsalBroadcastService,
     {
       provide: APP_INITIALIZER,
-      useFactory: (msalService: MsalService) => async () => {
-        await msalService.instance.initialize();
-        await msalService.instance.handleRedirectPromise();
-      },
+      useFactory: (msalService: MsalService) => () => msalService.instance.initialize(),
       deps: [MsalService],
       multi: true,
     },
