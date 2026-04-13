@@ -11,7 +11,7 @@ async function setup({ period }: { period?: number } = {}) {
     'getRideStats',
   ]);
   mockRideService.getRideStats.and.callFake((period = 7) =>
-    of({
+    Promise.resolve({
       calories: period * 646,
       elevationGain: period * 408,
       distance: period * 11747.7,
@@ -26,7 +26,8 @@ async function setup({ period }: { period?: number } = {}) {
   }).compileComponents();
 
   const fixture = TestBed.createComponent(RideComponent);
-
+  fixture.detectChanges();
+  await fixture.whenStable();
   fixture.detectChanges();
 
   return {
@@ -37,8 +38,7 @@ async function setup({ period }: { period?: number } = {}) {
 
 describe('RideComponent', () => {
   it('renders today ride stats', async () => {
-    const { element, fixture } = await setup();
-    fixture.detectChanges();
+    const { element } = await setup();
     const valueElements = element.querySelectorAll('h2 + *');
     expect(valueElements[0].textContent?.trim()).toEqual('646');
     expect(valueElements[1].textContent?.trim()).toEqual('408 m');
@@ -47,8 +47,7 @@ describe('RideComponent', () => {
   });
 
   it('renders period ride stats', async () => {
-    const { element, fixture } = await setup();
-    fixture.detectChanges();
+    const { element } = await setup();
     const valueElements = element.querySelectorAll('h2 + * + *');
     expect(valueElements[0].textContent?.trim()).toEqual('4 522');
     expect(valueElements[1].textContent?.trim()).toEqual('2 856 m');
@@ -57,10 +56,9 @@ describe('RideComponent', () => {
   });
 
   it('fetches weight meausrements with month period', async () => {
-    const { element, fixture } = await setup({
+    const { element } = await setup({
       period: 30,
     });
-    fixture.detectChanges();
     const valueElements = element.querySelectorAll('h2 + * + *');
     expect(valueElements[0].textContent?.trim()).toEqual('19 380');
     expect(valueElements[1].textContent?.trim()).toEqual('12 240 m');

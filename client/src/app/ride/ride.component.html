@@ -1,39 +1,41 @@
-@if ($vm | async; as vm) {
+@let today = todayRideStats.value();
+@let period = periodRideStats.value();
+@if (today && period) {
 <section>
   <article>
     <h2 app-text>Calories</h2>
     <p app-heading large>
-      {{ vm.todayRideStats.calories | measurementWithUnit : "" : 0 }}
+      {{ today.calories | measurementWithUnit : "" : 0 }}
     </p>
     <p app-text app-text-type="blue">
-      {{ vm.periodRideStats.calories | measurementWithUnit : "" : 0 }}
+      {{ period.calories | measurementWithUnit : "" : 0 }}
     </p>
   </article>
   <article>
     <h2 app-text>Elevation gain</h2>
     <p app-heading large>
-      {{ vm.todayRideStats.elevationGain | measurementWithUnit : "m" : 0 }}
+      {{ today.elevationGain | measurementWithUnit : "m" : 0 }}
     </p>
     <p app-text app-text-type="blue">
-      {{ vm.periodRideStats.elevationGain | measurementWithUnit : "m" : 0 }}
+      {{ period.elevationGain | measurementWithUnit : "m" : 0 }}
     </p>
   </article>
   <article>
     <h2 app-text>Distance</h2>
     <p app-heading large>
-      {{ vm.todayRideStats.distance | measurementWithUnit : "km" : 0 : 1000 }}
+      {{ today.distance | measurementWithUnit : "km" : 0 : 1000 }}
     </p>
     <p app-text app-text-type="blue">
-      {{ vm.periodRideStats.distance | measurementWithUnit : "km" : 0 : 1000 }}
+      {{ period.distance | measurementWithUnit : "km" : 0 : 1000 }}
     </p>
   </article>
   <article>
     <h2 app-text>Time</h2>
     <p app-heading large>
-      {{ vm.todayRideStats.time | measurementWithUnit : "min" : 0 : 60 }}
+      {{ today.time | measurementWithUnit : "min" : 0 : 60 }}
     </p>
     <p app-text app-text-type="blue">
-      {{ vm.periodRideStats.time | measurementWithUnit : "min" : 0 : 60 }}
+      {{ period.time | measurementWithUnit : "min" : 0 : 60 }}
     </p>
   </article>
 </section>

@@ -25,22 +25,24 @@ function setup() {
 
 describe('WithingsService', () => {
   describe('sync', () => {
-    it('should sync with Withings', () => {
+    it('should sync with Withings', async () => {
       const { service, httpTestingController } = setup();
-      service.syncMeasurements().subscribe();
+      const promise = service.sync();
       const request = httpTestingController.expectOne('/api/withings/sync');
-      request.flush({});
       expect(request.request.method).toBe('POST');
+      request.flush({});
+      await promise;
       httpTestingController.verify();
     });
 
-    it('should show notification if fetching last backup was not succesful', () => {
+    it('should show notification if fetching last backup was not succesful', async () => {
       const { service, httpTestingController, mockNotificationService } =
         setup();
-      service.syncMeasurements().subscribe();
+      const promise = service.sync();
       httpTestingController
         .expectOne('/api/withings/sync')
         .error(new ProgressEvent(''));
+      await promise;
       httpTestingController.verify();
       expect(mockNotificationService.showNotification).toHaveBeenCalledWith(
         'Unable to sync with Withings',
@@ -48,13 +50,15 @@ describe('WithingsService', () => {
       );
     });
 
-    it('caches last backup time', () => {
+    it('caches last backup time', async () => {
       const { service, httpTestingController } = setup();
-      service.syncMeasurements().subscribe();
-      service.syncMeasurements().subscribe();
+      const promise1 = service.sync();
+      const promise2 = service.sync();
       const request = httpTestingController.expectOne('/api/withings/sync');
-      request.flush({});
       expect(request.request.method).toBe('POST');
+      request.flush({});
+      await promise1;
+      await promise2;
       httpTestingController.verify();
     });
   });
