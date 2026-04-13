@@ -31,9 +31,7 @@
       ariaCurrentWhenActive="page"
       >All time</a
     >
-    @if (profile.value(); as user) {
-    <span app-badge>{{ user.name }}</span>
-    }
+    <app-user-badge></app-user-badge>
     }
   </nav>
 </header>
