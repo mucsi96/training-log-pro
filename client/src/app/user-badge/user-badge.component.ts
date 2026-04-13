@@ -1,14 +1,14 @@
 import { Component, inject } from '@angular/core';
-import { BadgeComponent } from '../common-components/badge/badge.component';
+import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
 import { UserProfileService } from '../user-profile.service';
 
 @Component({
   standalone: true,
-  imports: [BadgeComponent],
+  imports: [MatButtonModule, MatMenuModule],
   selector: 'app-user-badge',
-  template: `@if (profile.value(); as user) {
-    <span app-badge>{{ user.name }}</span>
-  }`,
+  templateUrl: './user-badge.component.html',
+  styleUrl: './user-badge.component.css',
 })
 export class UserBadgeComponent {
   readonly profile = inject(UserProfileService).profile;
