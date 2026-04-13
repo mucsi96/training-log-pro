@@ -8,5 +8,6 @@ import org.springframework.security.test.context.support.WithSecurityContext;
 @Retention(RetentionPolicy.RUNTIME)
 @WithSecurityContext(factory = WithMockUserRolesSecurityContextFactory.class)
 public @interface WithMockUserRoles {
-    String[] value() default { "user" };
+    String[] value() default { "APPROLE_WorkoutReader", "SCOPE_readWorkouts",
+            "APPROLE_WorkoutCreator", "SCOPE_createWorkout" };
 }

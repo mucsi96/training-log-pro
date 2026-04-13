@@ -18,10 +18,6 @@ public class WithMockUserRolesSecurityContextFactory implements WithSecurityCont
     public SecurityContext createSecurityContext(WithMockUserRoles mockUser) {
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         Collection<GrantedAuthority> authorities = Arrays.stream(mockUser.value())
-                .flatMap(role -> Arrays.stream(new String[] {
-                    "ROLE_" + role,  // For hasRole() checks
-                    role              // For @RolesAllowed checks
-                }))
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
 

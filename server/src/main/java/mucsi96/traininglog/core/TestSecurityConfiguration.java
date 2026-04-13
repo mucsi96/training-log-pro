@@ -11,7 +11,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Profile("test")
 @Configuration
-@EnableMethodSecurity(jsr250Enabled = true)
+@EnableMethodSecurity
 public class TestSecurityConfiguration {
 
     @Bean
