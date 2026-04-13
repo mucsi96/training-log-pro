@@ -20,7 +20,7 @@ public class DatabaseStartupInitializer implements ApplicationContextInitializer
 
         if (profiles.contains("local")) {
             runScript("dev_db_up.sh");
-        } else if (profiles.contains("unittest")) {
+        } else if (profiles.contains("test")) {
             runScript("test_db_up.sh");
         }
     }
