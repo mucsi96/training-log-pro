@@ -68,7 +68,6 @@ public class RideControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  @WithMockUserRoles
   public void returns_today_ride_stats() throws Exception {
     MockHttpServletResponse response = mockMvc
         .perform(
@@ -84,7 +83,6 @@ public class RideControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  @WithMockUserRoles
   public void returns_one_week_ride_stats() throws Exception {
     MockHttpServletResponse response = mockMvc
         .perform(
@@ -100,7 +98,6 @@ public class RideControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  @WithMockUserRoles
   public void returns_all_time_ride_stats() throws Exception {
     MockHttpServletResponse response = mockMvc
         .perform(
