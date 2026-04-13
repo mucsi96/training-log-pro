@@ -6,6 +6,7 @@ import {
 import { TestBed } from '@angular/core/testing';
 import { NotificationService } from '../common-components/notification.service';
 import { WithingsService } from '../withings/withings.service';
+import { ENVIRONMENT_CONFIG } from '../environment/environment.config';
 import { StravaService } from './strava.service';
 
 function setup() {
@@ -23,6 +24,7 @@ function setup() {
       StravaService,
       { provide: NotificationService, useValue: mockNotificationService },
       { provide: WithingsService, useValue: mockWithingsService },
+      { provide: ENVIRONMENT_CONFIG, useValue: { mockAuth: true } },
     ],
   });
   const service = TestBed.inject(StravaService);

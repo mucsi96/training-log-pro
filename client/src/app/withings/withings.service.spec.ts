@@ -6,6 +6,7 @@ import {
 import { TestBed } from '@angular/core/testing';
 import { WithingsService } from './withings.service';
 import { NotificationService } from '../common-components/notification.service';
+import { ENVIRONMENT_CONFIG } from '../environment/environment.config';
 
 function setup() {
   const mockNotificationService: jasmine.SpyObj<NotificationService> =
@@ -16,6 +17,7 @@ function setup() {
       provideHttpClientTesting(),
       WithingsService,
       { provide: NotificationService, useValue: mockNotificationService },
+      { provide: ENVIRONMENT_CONFIG, useValue: { mockAuth: true } },
     ],
   });
   const service = TestBed.inject(WithingsService);
