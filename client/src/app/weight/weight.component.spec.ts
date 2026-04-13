@@ -6,9 +6,8 @@ import { ActivatedRoute } from '@angular/router';
 import { EChartsOption } from 'echarts';
 import { NgxEchartsDirective, NgxEchartsModule } from 'ngx-echarts';
 import { of } from 'rxjs';
-import { NotificationService } from '../common-components/notification.service';
 import { WeightComponent } from './weight.component';
-import { WeightService } from './weight.service';
+import { WeightMeasurement, WeightService } from './weight.service';
 
 @Directive({
   standalone: true,
@@ -22,32 +21,35 @@ class MockECharts {
   initOpts?: NgxEchartsDirective['initOpts'];
 }
 
-const measurements = [
-  { date: new Date('2020-05-05T00:00:00.000Z'), weight: 108.9 },
+const periodMeasurements: WeightMeasurement[] = [
+  {
+    date: new Date('2020-05-05T00:00:00.000Z'),
+    weight: 109.044,
+    fatMassWeight: 20.286,
+    fatRatio: 28.732,
+  },
   { date: new Date('2020-05-07T00:00:00.000Z'), weight: 108.3 },
-  { date: new Date('2020-05-10T00:00:00.000Z'), weight: 107.8 },
+  {
+    date: new Date('2020-05-10T00:00:00.000Z'),
+    weight: 108.9,
+    fatMassWeight: 21.3,
+    fatRatio: 31,
+  },
 ];
 
 async function setup({ period }: { period?: number } = {}) {
   const mockActivatedRoute = { data: of({ period }) };
-  const mockWeightService: jasmine.SpyObj<WeightService> = jasmine.createSpyObj(
-    ['getWeight', 'getTodayWeight', 'getDiff']
+  const mockWeightService: jasmine.SpyObj<WeightService> =
+    jasmine.createSpyObj(['getWeight', 'getTodayWeight']);
+  mockWeightService.getWeight.and.returnValue(
+    Promise.resolve(periodMeasurements)
   );
-  mockWeightService.getWeight.and.returnValue(of(measurements));
   mockWeightService.getTodayWeight.and.returnValue(
-    of({
+    Promise.resolve({
       date: new Date(),
       weight: 108.9,
       fatMassWeight: 21.3,
       fatRatio: 31,
-    })
-  );
-  mockWeightService.getDiff.and.returnValue(
-    of({
-      date: new Date(),
-      weight: -0.00132,
-      fatMassWeight: 0.05,
-      fatRatio: 0.07894,
     })
   );
   await TestBed.configureTestingModule({
@@ -68,6 +70,8 @@ async function setup({ period }: { period?: number } = {}) {
 
   const fixture = TestBed.createComponent(WeightComponent);
   fixture.detectChanges();
+  await fixture.whenStable();
+  fixture.detectChanges();
 
   return {
     fixture,
@@ -77,11 +81,6 @@ async function setup({ period }: { period?: number } = {}) {
 }
 
 describe('WeightComponent', () => {
-  it('renders loading state', async () => {
-    const { element } = await setup();
-    expect(element.querySelector('[aria-busy="true"]')).toBeDefined();
-  });
-
   it('renders weight', async () => {
     const { element } = await setup();
     const valueElements = element.querySelectorAll('h2 + *');
@@ -114,9 +113,9 @@ describe('WeightComponent', () => {
     ).toEqual({
       source: [
         ['date', 'weight'],
-        [measurements[0].date, measurements[0].weight],
-        [measurements[1].date, measurements[1].weight],
-        [measurements[2].date, measurements[2].weight],
+        [periodMeasurements[0].date, periodMeasurements[0].weight],
+        [periodMeasurements[1].date, periodMeasurements[1].weight],
+        [periodMeasurements[2].date, periodMeasurements[2].weight],
       ],
     });
   });

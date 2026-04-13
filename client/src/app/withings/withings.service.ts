@@ -1,32 +1,25 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { EMPTY, Observable, catchError, mergeMap, shareReplay } from 'rxjs';
+import { inject, Injectable } from '@angular/core';
 import { NotificationService } from '../common-components/notification.service';
+import { fetchJson } from '../utils/fetchJson';
 
 @Injectable({ providedIn: 'root' })
 export class WithingsService {
-  private readonly $syncMeasurements: Observable<never>;
+  private readonly http = inject(HttpClient);
+  private readonly notificationService = inject(NotificationService);
+  private syncPromise: Promise<void> | undefined;
 
-  constructor(
-    private readonly http: HttpClient,
-    private readonly notificationService: NotificationService
-  ) {
-    this.$syncMeasurements = this.http
-      .post<void>('/api/withings/sync', undefined)
-      .pipe(
-        mergeMap(() => EMPTY),
-        catchError((e) => {
-          this.notificationService.showNotification(
-            'Unable to sync with Withings',
-            'error'
-          );
-          return EMPTY;
-        }),
-        shareReplay(1)
-      );
-  }
-
-  syncMeasurements() {
-    return this.$syncMeasurements;
+  sync(): Promise<void> {
+    if (!this.syncPromise) {
+      this.syncPromise = fetchJson<void>(this.http, '/api/withings/sync', {
+        method: 'post',
+      }).catch(() => {
+        this.notificationService.showNotification(
+          'Unable to sync with Withings',
+          'error'
+        );
+      });
+    }
+    return this.syncPromise;
   }
 }

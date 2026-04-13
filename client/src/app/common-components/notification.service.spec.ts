@@ -1,10 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 
-import { Notification, NotificationService } from './notification.service';
+import { NotificationService } from './notification.service';
 
 function setup() {
   TestBed.configureTestingModule({
-    providers: [NotificationService]
+    providers: [NotificationService],
   });
 
   const service = TestBed.inject(NotificationService);
@@ -13,12 +13,9 @@ function setup() {
 
 describe('NotificationService', () => {
   it('stores notifications', () => {
-    const notifications: Notification[] = [];
     const { service } = setup();
-    service.$notifications.subscribe((notification) =>
-      notifications.push(notification)
-    );
     service.showNotification('test notification');
+    const notifications = service.notifications();
     expect(notifications).toHaveSize(1);
     expect(notifications[0]).toEqual({
       type: 'success',
@@ -27,15 +24,12 @@ describe('NotificationService', () => {
   });
 
   it('stores multiple notifications', () => {
-    const notifications: Notification[] = [];
     const { service } = setup();
-    service.$notifications.subscribe((notification) =>
-      notifications.push(notification)
-    );
     service.showNotification('test notification 1');
     service.showNotification('test notification 2', 'error');
     service.showNotification('test notification 3', 'success');
     service.showNotification('test notification 4', 'error');
+    const notifications = service.notifications();
     expect(notifications).toHaveSize(4);
     expect(notifications[0]).toEqual({
       type: 'success',

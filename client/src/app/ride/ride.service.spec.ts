@@ -4,21 +4,22 @@ import {
   provideHttpClientTesting,
 } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { Subject } from 'rxjs';
 import { NotificationService } from '../common-components/notification.service';
 import { StravaService } from '../strava/strava.service';
 import { RideService, RideStats } from './ride.service';
 
-function setup() {
+function setup({ pendingSync = false } = {}) {
   const mockNotificationService: jasmine.SpyObj<NotificationService> =
     jasmine.createSpyObj(['showNotification']);
-  const syncActivities = new Subject<never>();
-  const mockStravaService: jasmine.SpyObj<StravaService> = jasmine.createSpyObj(
-    ['syncActivities']
-  );
-  mockStravaService.syncActivities.and.returnValue(
-    syncActivities.asObservable()
-  );
+  const mockStravaService: jasmine.SpyObj<StravaService> =
+    jasmine.createSpyObj(['sync']);
+
+  if (pendingSync) {
+    mockStravaService.sync.and.returnValue(new Promise<void>(() => {}));
+  } else {
+    mockStravaService.sync.and.returnValue(Promise.resolve());
+  }
+
   TestBed.configureTestingModule({
     providers: [
       provideHttpClient(),
@@ -33,7 +34,6 @@ function setup() {
   return {
     service,
     httpTestingController,
-    syncActivities,
     mockNotificationService,
   };
 }
@@ -53,43 +53,33 @@ const mockResponse2: RideStats = {
 describe('RideService', () => {
   describe('getRideStats', () => {
     it('should sync activities first', () => {
-      const { service, httpTestingController } = setup();
-      service.getRideStats(30).subscribe((rideStats) => {
-        expect(rideStats).toEqual(mockResponse);
-      });
-      const request = httpTestingController.expectNone(
-        '/api/ride/stats?period=30'
-      );
-      expect(request).toBeUndefined();
+      const { service, httpTestingController } = setup({ pendingSync: true });
+      service.getRideStats(30);
+      httpTestingController.expectNone('/api/ride/stats?period=30');
       httpTestingController.verify();
     });
 
-    it('should return ride stats for given period', () => {
-      const { service, httpTestingController, syncActivities } = setup();
-      service.getRideStats(30).subscribe((rideStats) => {
-        expect(rideStats).toEqual(mockResponse);
-      });
-      syncActivities.complete()
+    it('should return ride stats for given period', async () => {
+      const { service, httpTestingController } = setup();
+      const promise = service.getRideStats(30);
+      await Promise.resolve();
       httpTestingController
         .expectOne('/api/ride/stats?period=30')
         .flush(mockResponse);
+      const result = await promise;
+      expect(result).toEqual(mockResponse);
       httpTestingController.verify();
     });
 
-    it('should show notification if fetching ride stats was not succesful', () => {
-      const {
-        service,
-        httpTestingController,
-        mockNotificationService,
-        syncActivities,
-      } = setup();
-      service.getRideStats(30).subscribe((rideStats) => {
-        expect(rideStats).toBeUndefined();
-      });
-      syncActivities.complete()
+    it('should show notification if fetching ride stats was not succesful', async () => {
+      const { service, httpTestingController, mockNotificationService } =
+        setup();
+      const promise = service.getRideStats(30);
+      await Promise.resolve();
       httpTestingController
         .expectOne('/api/ride/stats?period=30')
         .error(new ProgressEvent(''));
+      await expectAsync(promise).toBeRejected();
       httpTestingController.verify();
       expect(mockNotificationService.showNotification).toHaveBeenCalledWith(
         'Unable to fetch ride stats',
@@ -97,45 +87,45 @@ describe('RideService', () => {
       );
     });
 
-    it('caches ride stats', () => {
-      const { service, httpTestingController, syncActivities } = setup();
-      service.getRideStats(30).subscribe((rideStats) => {
-        expect(rideStats).toEqual(mockResponse);
-      });
-      syncActivities.complete()
-      service.getRideStats(30).subscribe((rideStats) => {
-        expect(rideStats).toEqual(mockResponse);
-      });
+    it('caches ride stats', async () => {
+      const { service, httpTestingController } = setup();
+      const promise1 = service.getRideStats(30);
+      await Promise.resolve();
       httpTestingController
         .expectOne('/api/ride/stats?period=30')
         .flush(mockResponse);
+      const result1 = await promise1;
+      expect(result1).toEqual(mockResponse);
+
+      const result2 = await service.getRideStats(30);
+      expect(result2).toEqual(mockResponse);
       httpTestingController.verify();
     });
 
-    it('caches ride stats for multiple periods', () => {
-      const { service, httpTestingController, syncActivities } = setup();
-      service.getRideStats(10).subscribe((rideStats) => {
-        expect(rideStats).toEqual(mockResponse);
-      });
-      service.getRideStats(30).subscribe((rideStats) => {
-        expect(rideStats).toEqual(mockResponse2);
-      });
-      syncActivities.complete()
-      service.getRideStats(10).subscribe((rideStats) => {
-        expect(rideStats).toEqual(mockResponse);
-      });
-      service.getRideStats(30).subscribe((rideStats) => {
-        expect(rideStats).toEqual(mockResponse2);
-      });
-      service.getRideStats(10).subscribe((rideStats) => {
-        expect(rideStats).toEqual(mockResponse);
-      });
+    it('caches ride stats for multiple periods', async () => {
+      const { service, httpTestingController } = setup();
+      const promise1 = service.getRideStats(10);
+      await Promise.resolve();
       httpTestingController
         .expectOne('/api/ride/stats?period=10')
         .flush(mockResponse);
+      const result1 = await promise1;
+      expect(result1).toEqual(mockResponse);
+
+      const promise2 = service.getRideStats(30);
+      await Promise.resolve();
       httpTestingController
         .expectOne('/api/ride/stats?period=30')
         .flush(mockResponse2);
+      const result2 = await promise2;
+      expect(result2).toEqual(mockResponse2);
+
+      const result3 = await service.getRideStats(10);
+      expect(result3).toEqual(mockResponse);
+
+      const result4 = await service.getRideStats(30);
+      expect(result4).toEqual(mockResponse2);
+
       httpTestingController.verify();
     });
   });

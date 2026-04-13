@@ -1,6 +1,7 @@
-import { AfterViewInit, Component, ElementRef } from '@angular/core';
-import { Notification, NotificationService } from '../notification.service';
+import { AfterViewInit, Component, ElementRef, inject } from '@angular/core';
+import { NotificationService } from '../notification.service';
 import { NotificationComponent } from '../notification/notification.component';
+import { Notification } from '../notification.service';
 
 @Component({
   standalone: true,
@@ -10,13 +11,11 @@ import { NotificationComponent } from '../notification/notification.component';
   styleUrls: ['./notifications.component.css'],
 })
 export class NotificationsComponent implements AfterViewInit {
-  notifications: Notification[] = [];
+  readonly notificationService = inject(NotificationService);
+  readonly notifications = this.notificationService.notifications;
   #height = 0;
 
-  constructor(
-    private elementRef: ElementRef,
-    private notificationService: NotificationService
-  ) {}
+  private readonly elementRef = inject(ElementRef);
 
   ngAfterViewInit(): void {
     const element = this.elementRef.nativeElement;
@@ -40,19 +39,9 @@ export class NotificationsComponent implements AfterViewInit {
     });
 
     observer.observe(element);
-
-    this.notificationService.$notifications.subscribe((notification) =>
-      this.addNotification(notification)
-    );
   }
 
-  addNotification(newNotification: Notification) {
-    this.notifications = [...this.notifications, newNotification];
-  }
-
-  removeNotification(notificationToRemove: Notification) {
-    this.notifications = this.notifications.filter(
-      (notification) => notification !== notificationToRemove
-    );
+  removeNotification(notification: Notification) {
+    this.notificationService.removeNotification(notification);
   }
 }
