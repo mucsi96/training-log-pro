@@ -11,7 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.annotation.security.RolesAllowed;
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import mucsi96.traininglog.api.WeightMeasurement;
@@ -19,7 +20,7 @@ import mucsi96.traininglog.api.WeightMeasurement;
 @RestController
 @RequestMapping(value = "/weight", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
-@RolesAllowed("user")
+@PreAuthorize("hasAuthority('APPROLE_WorkoutReader') and hasAuthority('SCOPE_readWorkouts')")
 public class WeightController {
 
   private final WeightService weightService;

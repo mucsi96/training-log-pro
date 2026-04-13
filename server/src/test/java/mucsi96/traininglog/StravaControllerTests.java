@@ -96,7 +96,6 @@ public class StravaControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  @WithMockUserRoles
   public void redirects_to_strava_request_authorization_page() throws Exception {
     MockHttpServletResponse response = mockMvc
         .perform(
@@ -117,7 +116,6 @@ public class StravaControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  @WithMockUserRoles
   public void requests_access_token_after_consent_is_granted() throws Exception {
     mockStravaServer.stubFor(WireMock.post("/oauth/token").willReturn(
         WireMock.aResponse()
@@ -166,7 +164,6 @@ public class StravaControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  @WithMockUserRoles
   public void requests_new_access_token_if_its_expired() throws Exception {
     mockStravaServer.stubFor(WireMock.post("/oauth/token").willReturn(
         WireMock.aResponse()
@@ -219,7 +216,6 @@ public class StravaControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  @WithMockUserRoles
   public void returns_not_authorized_if_refresh_token_is_invalid() throws Exception {
     mockStravaServer.stubFor(WireMock.post("/oauth/token").willReturn(
         WireMock.aResponse()
@@ -252,7 +248,6 @@ public class StravaControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  @WithMockUserRoles
   public void pulls_todays_weight_from_strava_to_database() throws Exception {
     authorizeStravaOAuth2Client();
     mockStravaServer.stubFor(WireMock

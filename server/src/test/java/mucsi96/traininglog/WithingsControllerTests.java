@@ -96,7 +96,6 @@ public class WithingsControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  @WithMockUserRoles
   public void returns_not_authorized_if_authorized_client_is_not_found() throws Exception {
     MockHttpServletResponse response = mockMvc
         .perform(
@@ -110,7 +109,6 @@ public class WithingsControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  @WithMockUserRoles
   public void redirects_to_withings_request_authorization_page() throws Exception {
     MockHttpServletResponse response = mockMvc
         .perform(
@@ -131,7 +129,6 @@ public class WithingsControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  @WithMockUserRoles
   public void requests_access_token_after_consent_is_granted() throws Exception {
     mockWithingsServer.stubFor(WireMock.post("/v2/oauth2").willReturn(
         WireMock.aResponse()
@@ -181,7 +178,6 @@ public class WithingsControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  @WithMockUserRoles
   public void requests_new_access_token_if_its_expired() throws Exception {
     mockWithingsServer.stubFor(WireMock.post("/v2/oauth2").willReturn(
         WireMock.aResponse()
@@ -222,7 +218,6 @@ public class WithingsControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  @WithMockUserRoles
   public void returns_not_authorized_if_refresh_token_is_invalid() throws Exception {
     mockWithingsServer.stubFor(WireMock.post("/v2/oauth2").willReturn(
         WireMock.aResponse()
@@ -255,7 +250,6 @@ public class WithingsControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  @WithMockUserRoles
   public void pulls_todays_weight_from_withings_to_database() throws Exception {
     authorizeWithingsOAuth2Client();
     mockWithingsServer.stubFor(WireMock
