@@ -27,10 +27,14 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
+import org.springframework.security.authentication.ott.OneTimeTokenService;
+import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import mucsi96.traininglog.core.OneTimeTokenBridgeFilter;
 
 @Data
 @Configuration
@@ -44,13 +48,16 @@ public class StravaConfiguration {
 
   @Bean
   @Order(1)
-  SecurityFilterChain stravaSecurityFilterChain(HttpSecurity http) throws Exception {
+  SecurityFilterChain stravaSecurityFilterChain(HttpSecurity http, OneTimeTokenService oneTimeTokenService)
+      throws Exception {
     return http
         .securityMatcher("/strava/**")
         .csrf(AbstractHttpConfigurer::disable)
+        .addFilterBefore(new OneTimeTokenBridgeFilter(oneTimeTokenService),
+            AbstractPreAuthenticatedProcessingFilter.class)
         .oauth2Client(configurer -> configurer
-        .authorizationCodeGrant(customizer -> customizer
-        .accessTokenResponseClient(stravaAccessTokenResponseClient())))
+            .authorizationCodeGrant(customizer -> customizer
+                .accessTokenResponseClient(stravaAccessTokenResponseClient())))
         .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
         .build();
   }

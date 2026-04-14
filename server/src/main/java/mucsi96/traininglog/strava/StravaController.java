@@ -29,7 +29,6 @@ import mucsi96.traininglog.rides.RideService;
 @RestController
 @RequestMapping("/strava")
 @RequiredArgsConstructor
-@PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
 @Slf4j
 public class StravaController {
 
@@ -38,6 +37,7 @@ public class StravaController {
   private final OAuth2AuthorizedClientManager stravaAuthorizedClientManager;
 
   @PostMapping("/activities/sync")
+  @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
   public ResponseEntity<?> syncActivities(
       Authentication principal,
       HttpServletRequest servletRequest,
@@ -51,7 +51,7 @@ public class StravaController {
       stravaActivityService.getTodayRides(authorizedClient, zoneId).forEach(rideService::saveRide);
     } catch (OAuth2AuthorizationException ex) {
       String authorizeUrl = ServletUriComponentsBuilder.fromRequestUri(servletRequest)
-          .replacePath("/strava/authorize").toUriString();
+          .replacePath(servletRequest.getContextPath() + "/strava/authorize").toUriString();
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
           .body(Map.of("_links", Map.of("oauth2Login", Map.of("href", authorizeUrl))));
     }
