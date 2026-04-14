@@ -104,15 +104,30 @@ public class WithingsControllerTests extends BaseIntegrationTest {
         .andReturn().getResponse();
 
     assertThat(response.getStatus()).isEqualTo(401);
-    assertThat(JsonPath.parse(response.getContentAsString()).read("$._links.oauth2Login.href", String.class))
-        .isEqualTo("http://localhost/withings/authorize");
+    String authorizeUrl = JsonPath.parse(response.getContentAsString())
+        .read("$._links.oauth2Login.href", String.class);
+    assertThat(authorizeUrl).startsWith("http://localhost/withings/authorize?token=");
   }
 
   @Test
   public void redirects_to_withings_request_authorization_page() throws Exception {
+    MockHttpServletResponse syncResponse = mockMvc
+        .perform(
+            post("/withings/sync").headers(getHeaders()))
+        .andReturn().getResponse();
+
+    assertThat(syncResponse.getStatus()).isEqualTo(401);
+    String authorizeUrl = JsonPath.parse(syncResponse.getContentAsString())
+        .read("$._links.oauth2Login.href", String.class);
+    URI authorizeUri = new URI(authorizeUrl);
+    assertThat(authorizeUri).hasParameter("token");
+
+    String token = UriComponentsBuilder.fromUriString(authorizeUrl).build()
+        .getQueryParams().getFirst("token");
+
     MockHttpServletResponse response = mockMvc
         .perform(
-            get("/withings/authorize").headers(getHeaders()))
+            get("/withings/authorize").queryParam("token", token).headers(getHeaders()))
         .andReturn().getResponse();
 
     assertThat(response.getStatus()).isEqualTo(302);
@@ -135,9 +150,19 @@ public class WithingsControllerTests extends BaseIntegrationTest {
             .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .withBodyFile("withings-authorize.json")));
 
+    MockHttpServletResponse syncResponse = mockMvc
+        .perform(
+            post("/withings/sync").headers(getHeaders()))
+        .andReturn().getResponse();
+
+    String authorizeUrl = JsonPath.parse(syncResponse.getContentAsString())
+        .read("$._links.oauth2Login.href", String.class);
+    String token = UriComponentsBuilder.fromUriString(authorizeUrl).build()
+        .getQueryParams().getFirst("token");
+
     MockHttpSession mockHttpSession = new MockHttpSession();
     MockHttpServletResponse response1 = mockMvc.perform(
-        get("/withings/authorize").headers(getHeaders())
+        get("/withings/authorize").queryParam("token", token).headers(getHeaders())
             .session(mockHttpSession))
         .andReturn().getResponse();
     UriComponents components = UriComponentsBuilder.fromUriString(response1.getRedirectedUrl()).build();
@@ -245,8 +270,9 @@ public class WithingsControllerTests extends BaseIntegrationTest {
 
     assertThat(authorizedClient.isPresent()).isFalse();
     assertThat(response.getStatus()).isEqualTo(401);
-    assertThat(JsonPath.parse(response.getContentAsString()).read("$._links.oauth2Login.href", String.class))
-        .isEqualTo("http://localhost/withings/authorize");
+    String authorizeUrl = JsonPath.parse(response.getContentAsString())
+        .read("$._links.oauth2Login.href", String.class);
+    assertThat(authorizeUrl).startsWith("http://localhost/withings/authorize?token=");
   }
 
   @Test

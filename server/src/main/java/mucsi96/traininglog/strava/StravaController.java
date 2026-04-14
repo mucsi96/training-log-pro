@@ -6,6 +6,9 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.security.authentication.ott.GenerateOneTimeTokenRequest;
+import org.springframework.security.authentication.ott.OneTimeToken;
+import org.springframework.security.authentication.ott.OneTimeTokenService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
@@ -35,6 +38,7 @@ public class StravaController {
   private final StravaActivityService stravaActivityService;
   private final RideService rideService;
   private final OAuth2AuthorizedClientManager stravaAuthorizedClientManager;
+  private final OneTimeTokenService oneTimeTokenService;
 
   @PostMapping("/activities/sync")
   @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
@@ -50,8 +54,11 @@ public class StravaController {
       OAuth2AuthorizedClient authorizedClient = getAuthorizedClient(principal, servletRequest, servletResponse);
       stravaActivityService.getTodayRides(authorizedClient, zoneId).forEach(rideService::saveRide);
     } catch (OAuth2AuthorizationException ex) {
+      OneTimeToken token = oneTimeTokenService.generate(new GenerateOneTimeTokenRequest(principal.getName()));
       String authorizeUrl = ServletUriComponentsBuilder.fromRequestUri(servletRequest)
-          .replacePath(servletRequest.getContextPath() + "/strava/authorize").toUriString();
+          .replacePath(servletRequest.getContextPath() + "/strava/authorize")
+          .queryParam("token", token.getTokenValue())
+          .toUriString();
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
           .body(Map.of("_links", Map.of("oauth2Login", Map.of("href", authorizeUrl))));
     }

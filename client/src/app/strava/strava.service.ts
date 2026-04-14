@@ -3,7 +3,6 @@ import { inject, Injectable } from '@angular/core';
 import { NotificationService } from '../common-components/notification.service';
 import { WithingsService } from '../withings/withings.service';
 import { fetchJson } from '../utils/fetchJson';
-import { requestOttAndRedirect } from '../utils/ott-bridge';
 
 @Injectable({ providedIn: 'root' })
 export class StravaService {
@@ -24,7 +23,7 @@ export class StravaService {
         .catch((error: HttpErrorResponse) => {
           const authorizeUrl = error.error?._links?.oauth2Login?.href;
           if (error.status === 401 && authorizeUrl) {
-            requestOttAndRedirect(this.http, authorizeUrl);
+            window.location.href = authorizeUrl;
             return;
           }
           this.notificationService.showNotification(
