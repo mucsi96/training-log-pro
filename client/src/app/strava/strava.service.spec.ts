@@ -61,6 +61,41 @@ describe('StravaService', () => {
       );
     });
 
+    it('should request OTT and redirect on 401 with oauth2Login link', async () => {
+      const { service, httpTestingController, mockNotificationService } =
+        setup();
+
+      const originalHref = window.location.href;
+      spyOnProperty(window, 'location', 'get').and.returnValue({
+        ...window.location,
+        set href(value: string) {},
+        get href() {
+          return originalHref;
+        },
+      } as Location);
+
+      const promise = service.sync();
+      await Promise.resolve();
+      const syncRequest = httpTestingController.expectOne(
+        '/api/strava/activities/sync'
+      );
+      syncRequest.flush(
+        { _links: { oauth2Login: { href: '/api/strava/authorize' } } },
+        { status: 401, statusText: 'Unauthorized' }
+      );
+
+      await Promise.resolve();
+      const ottRequest = httpTestingController.expectOne(
+        '/api/token-bridge/generate'
+      );
+      expect(ottRequest.request.method).toBe('POST');
+      ottRequest.flush({ token: 'test-token' });
+
+      await promise;
+      httpTestingController.verify();
+      expect(mockNotificationService.showNotification).not.toHaveBeenCalled();
+    });
+
     it('caches last backup time', async () => {
       const { service, httpTestingController } = setup();
       const promise1 = service.sync();

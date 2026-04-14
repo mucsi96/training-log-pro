@@ -1,7 +1,8 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { NotificationService } from '../common-components/notification.service';
 import { fetchJson } from '../utils/fetchJson';
+import { requestOttAndRedirect } from '../utils/ott-bridge';
 
 @Injectable({ providedIn: 'root' })
 export class WithingsService {
@@ -13,7 +14,12 @@ export class WithingsService {
     if (!this.syncPromise) {
       this.syncPromise = fetchJson<void>(this.http, '/api/withings/sync', {
         method: 'post',
-      }).catch(() => {
+      }).catch((error: HttpErrorResponse) => {
+        const authorizeUrl = error.error?._links?.oauth2Login?.href;
+        if (error.status === 401 && authorizeUrl) {
+          requestOttAndRedirect(this.http, authorizeUrl);
+          return;
+        }
         this.notificationService.showNotification(
           'Unable to sync with Withings',
           'error'

@@ -29,7 +29,6 @@ import mucsi96.traininglog.weight.WeightService;
 @RestController
 @RequestMapping("/withings")
 @RequiredArgsConstructor
-@PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
 @Slf4j
 public class WithingsController {
 
@@ -38,6 +37,7 @@ public class WithingsController {
   private final OAuth2AuthorizedClientManager withingsAuthorizedClientManager;
 
   @PostMapping("/sync")
+  @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
   public ResponseEntity<?> sync(
       Authentication principal,
       HttpServletRequest servletRequest,
@@ -51,7 +51,7 @@ public class WithingsController {
       withingsService.getTodayWeight(authorizedClient, zoneId).ifPresent(weightService::saveWeight);
     } catch (OAuth2AuthorizationException ex) {
       String authorizeUrl = ServletUriComponentsBuilder.fromRequestUri(servletRequest)
-          .replacePath("/withings/authorize").toUriString();
+          .replacePath(servletRequest.getContextPath() + "/withings/authorize").toUriString();
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
           .body(Map.of("_links", Map.of("oauth2Login", Map.of("href", authorizeUrl))));
     }
