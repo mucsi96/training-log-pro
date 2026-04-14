@@ -50,16 +50,12 @@ describe('WithingsService', () => {
       );
     });
 
-    it('should request OTT and redirect on 401 with oauth2Login link', async () => {
+    it('should redirect on 401 with oauth2Login link', async () => {
       const { service, httpTestingController, mockNotificationService } =
         setup();
 
       const originalHref = window.location.href;
-      const hrefSetter = spyOnProperty(
-        window,
-        'location',
-        'get'
-      ).and.returnValue({
+      spyOnProperty(window, 'location', 'get').and.returnValue({
         ...window.location,
         set href(value: string) {},
         get href() {
@@ -70,16 +66,9 @@ describe('WithingsService', () => {
       const promise = service.sync();
       const syncRequest = httpTestingController.expectOne('/api/withings/sync');
       syncRequest.flush(
-        { _links: { oauth2Login: { href: '/api/withings/authorize' } } },
+        { _links: { oauth2Login: { href: '/api/withings/authorize?token=test-token' } } },
         { status: 401, statusText: 'Unauthorized' }
       );
-
-      await Promise.resolve();
-      const ottRequest = httpTestingController.expectOne(
-        '/api/token-bridge/generate'
-      );
-      expect(ottRequest.request.method).toBe('POST');
-      ottRequest.flush({ token: 'test-token' });
 
       await promise;
       httpTestingController.verify();

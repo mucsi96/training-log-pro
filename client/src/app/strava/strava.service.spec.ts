@@ -61,7 +61,7 @@ describe('StravaService', () => {
       );
     });
 
-    it('should request OTT and redirect on 401 with oauth2Login link', async () => {
+    it('should redirect on 401 with oauth2Login link', async () => {
       const { service, httpTestingController, mockNotificationService } =
         setup();
 
@@ -80,16 +80,9 @@ describe('StravaService', () => {
         '/api/strava/activities/sync'
       );
       syncRequest.flush(
-        { _links: { oauth2Login: { href: '/api/strava/authorize' } } },
+        { _links: { oauth2Login: { href: '/api/strava/authorize?token=test-token' } } },
         { status: 401, statusText: 'Unauthorized' }
       );
-
-      await Promise.resolve();
-      const ottRequest = httpTestingController.expectOne(
-        '/api/token-bridge/generate'
-      );
-      expect(ottRequest.request.method).toBe('POST');
-      ottRequest.flush({ token: 'test-token' });
 
       await promise;
       httpTestingController.verify();
