@@ -6,10 +6,7 @@ import java.util.Set;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.oauth2.client.JdbcOAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
@@ -30,7 +27,6 @@ import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.http.converter.OAuth2AccessTokenResponseHttpMessageConverter;
-import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
@@ -50,19 +46,6 @@ public class WithingsConfiguration {
   public static final String registrationId = "withings-client";
 
   private String apiUri;
-
-  @Bean
-  @Order(2)
-  SecurityFilterChain withingsSecurityFilterChain(HttpSecurity http) throws Exception {
-    return http
-        .securityMatcher("/withings/**")
-        .csrf(AbstractHttpConfigurer::disable)
-        .oauth2Client(configurer -> configurer
-            .authorizationCodeGrant(customizer -> customizer
-                .accessTokenResponseClient(withingsAccessTokenResponseClient())))
-        .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
-        .build();
-  }
 
   @Bean
   OAuth2AuthorizedClientManager withingsAuthorizedClientManager(
@@ -100,7 +83,7 @@ public class WithingsConfiguration {
     return new JdbcOAuth2AuthorizedClientService(jdbcTemplate, clientRegistrationRepository);
   }
 
-  OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> withingsAccessTokenResponseClient() {
+  public OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> withingsAccessTokenResponseClient() {
     RestClientAuthorizationCodeTokenResponseClient client = new RestClientAuthorizationCodeTokenResponseClient();
     client.setParametersConverter(withingsAccessTokenRequestParametersConverter());
     client.setRestClient(withingsRestClient());
