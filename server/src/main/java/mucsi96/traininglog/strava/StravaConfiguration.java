@@ -51,7 +51,9 @@ public class StravaConfiguration {
         .oauth2Client(configurer -> configurer
         .authorizationCodeGrant(customizer -> customizer
         .accessTokenResponseClient(stravaAccessTokenResponseClient())))
-        .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
+        .authorizeHttpRequests(authorize -> authorize
+            .requestMatchers("/strava/authorize").permitAll()
+            .anyRequest().authenticated())
         .build();
   }
 

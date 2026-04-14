@@ -60,7 +60,9 @@ public class WithingsConfiguration {
         .oauth2Client(configurer -> configurer
             .authorizationCodeGrant(customizer -> customizer
                 .accessTokenResponseClient(withingsAccessTokenResponseClient())))
-        .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
+        .authorizeHttpRequests(authorize -> authorize
+            .requestMatchers("/withings/authorize").permitAll()
+            .anyRequest().authenticated())
         .build();
   }
 
