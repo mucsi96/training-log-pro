@@ -5,10 +5,7 @@ import java.util.Set;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder;
@@ -23,7 +20,6 @@ import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizedCli
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
-import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
@@ -41,19 +37,6 @@ public class StravaConfiguration {
   private String username;
   private String password;
   private String apiUri;
-
-  @Bean
-  @Order(1)
-  SecurityFilterChain stravaSecurityFilterChain(HttpSecurity http) throws Exception {
-    return http
-        .securityMatcher("/strava/**")
-        .csrf(AbstractHttpConfigurer::disable)
-        .oauth2Client(configurer -> configurer
-        .authorizationCodeGrant(customizer -> customizer
-        .accessTokenResponseClient(stravaAccessTokenResponseClient())))
-        .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
-        .build();
-  }
 
   @Bean
   OAuth2AuthorizedClientManager stravaAuthorizedClientManager(
@@ -84,7 +67,7 @@ public class StravaConfiguration {
     return authorizedClientManager;
   }
 
-  OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> stravaAccessTokenResponseClient() {
+  public OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> stravaAccessTokenResponseClient() {
     RestClientAuthorizationCodeTokenResponseClient client = new RestClientAuthorizationCodeTokenResponseClient();
     client.setParametersConverter(stravaAccessTokenRequestParametersConverter());
     return client;
