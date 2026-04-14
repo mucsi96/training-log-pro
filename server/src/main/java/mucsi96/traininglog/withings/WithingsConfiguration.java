@@ -60,7 +60,7 @@ public class WithingsConfiguration {
   SecurityFilterChain withingsSecurityFilterChain(HttpSecurity http, OneTimeTokenService oneTimeTokenService)
       throws Exception {
     return http
-        .securityMatcher("/withings/**")
+        .securityMatcher("/withings/authorize")
         .csrf(AbstractHttpConfigurer::disable)
         .addFilterBefore(new OneTimeTokenBridgeFilter(oneTimeTokenService),
             AbstractPreAuthenticatedProcessingFilter.class)

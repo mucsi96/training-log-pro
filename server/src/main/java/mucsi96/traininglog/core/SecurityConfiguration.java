@@ -11,24 +11,28 @@ import org.springframework.security.web.SecurityFilterChain;
 
 import com.azure.spring.cloud.autoconfigure.implementation.aad.security.AadResourceServerHttpSecurityConfigurer;
 
-@Profile({"prod", "local"})
+@Profile({ "prod", "local" })
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfiguration {
 
-    @Bean
-    @Order(3)
-    SecurityFilterChain securityFilterChain(HttpSecurity http)
-            throws Exception {
+  @Bean
+  @Order(3)
+  SecurityFilterChain securityFilterChain(HttpSecurity http)
+      throws Exception {
 
-        http.with(AadResourceServerHttpSecurityConfigurer.aadResourceServer(),
-                Customizer.withDefaults());
+    http.with(AadResourceServerHttpSecurityConfigurer.aadResourceServer(),
+        Customizer.withDefaults());
 
-        http.authorizeHttpRequests(requests -> requests
-                .requestMatchers("/environment").permitAll()
-                .requestMatchers("/actuator/**").permitAll()
-                .anyRequest().authenticated());
+    http.authorizeHttpRequests(requests -> requests
+        .requestMatchers(
+            "/environment",
+            "/actuator/**",
+            "/strava/authorize",
+            "/withings/authorize")
+        .permitAll()
+        .anyRequest().authenticated());
 
-        return http.build();
-    }
+    return http.build();
+  }
 }

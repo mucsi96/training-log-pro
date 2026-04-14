@@ -51,7 +51,7 @@ public class StravaConfiguration {
   SecurityFilterChain stravaSecurityFilterChain(HttpSecurity http, OneTimeTokenService oneTimeTokenService)
       throws Exception {
     return http
-        .securityMatcher("/strava/**")
+        .securityMatcher("/strava/authorize")
         .csrf(AbstractHttpConfigurer::disable)
         .addFilterBefore(new OneTimeTokenBridgeFilter(oneTimeTokenService),
             AbstractPreAuthenticatedProcessingFilter.class)
