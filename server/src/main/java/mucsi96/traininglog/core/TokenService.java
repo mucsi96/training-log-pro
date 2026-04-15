@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TokenService {
 
-  private static final int MAX_USES = 2;
+  private static final int MAX_USES = 3;
   private static final long TTL_SECONDS = 60;
 
   private record TokenEntry(String username, Instant expiresAt, int remainingUses) {
