@@ -6,9 +6,6 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import org.springframework.security.authentication.ott.GenerateOneTimeTokenRequest;
-import org.springframework.security.authentication.ott.OneTimeToken;
-import org.springframework.security.authentication.ott.OneTimeTokenService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
@@ -27,6 +24,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import mucsi96.traininglog.core.TokenService;
 import mucsi96.traininglog.weight.WeightService;
 
 @RestController
@@ -38,7 +36,7 @@ public class WithingsController {
   private final WithingsService withingsService;
   private final WeightService weightService;
   private final OAuth2AuthorizedClientManager withingsAuthorizedClientManager;
-  private final OneTimeTokenService oneTimeTokenService;
+  private final TokenService tokenService;
 
   @PostMapping("/sync")
   @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
@@ -54,10 +52,10 @@ public class WithingsController {
       OAuth2AuthorizedClient authorizedClient = getAuthorizedClient(principal, servletRequest, servletResponse);
       withingsService.getTodayWeight(authorizedClient, zoneId).ifPresent(weightService::saveWeight);
     } catch (OAuth2AuthorizationException ex) {
-      OneTimeToken token = oneTimeTokenService.generate(new GenerateOneTimeTokenRequest(principal.getName()));
+      String token = tokenService.generate(principal.getName());
       String authorizeUrl = ServletUriComponentsBuilder.fromRequestUri(servletRequest)
           .replacePath(servletRequest.getContextPath() + "/withings/authorize")
-          .queryParam("token", token.getTokenValue())
+          .queryParam("token", token)
           .toUriString();
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
           .body(Map.of("_links", Map.of("oauth2Login", Map.of("href", authorizeUrl))));
