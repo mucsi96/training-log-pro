@@ -70,6 +70,16 @@ spec:
         periodSeconds: 2
         failureThreshold: 5
 
+    - name: playwright
+      image: mcr.microsoft.com/playwright:v1.52.0-noble
+      command: ["npx", "playwright", "run-server", "--port", "3003"]
+      livenessProbe:
+        tcpSocket:
+          port: 3003
+        initialDelaySeconds: 5
+        periodSeconds: 2
+        failureThreshold: 10
+
     - name: server
       image: localhost/training-log-pro-server:test
       env:
@@ -83,6 +93,8 @@ spec:
           value: postgres
         - name: DB_PASSWORD
           value: postgres
+        - name: PLAYWRIGHT_WS_ENDPOINT
+          value: "ws://localhost:3003"
       livenessProbe:
         httpGet:
           path: /actuator/health/readiness

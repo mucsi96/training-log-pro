@@ -10,8 +10,8 @@
     "description": "Configuration for Strava API"
   },
   {
-    "name": "webdriver",
-    "type": "mucsi96.traininglog.core.WebDriverConfiguration",
-    "description": "Configuration for webdriver"
+    "name": "playwright",
+    "type": "mucsi96.traininglog.core.PlaywrightConfiguration",
+    "description": "Configuration for Playwright browser"
   }
 ]}
