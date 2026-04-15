@@ -13,4 +13,7 @@ reports/
 .env
 
 
+test-results/
+
+
 .attach_*

@@ -71,7 +71,7 @@ spec:
         failureThreshold: 5
 
     - name: playwright
-      image: mcr.microsoft.com/playwright:v1.52.0-noble
+      image: mcr.microsoft.com/playwright:v1.59.1-noble
       command: ["npx", "playwright", "run-server", "--port", "3003"]
       livenessProbe:
         tcpSocket:
