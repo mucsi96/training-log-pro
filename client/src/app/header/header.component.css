@@ -12,6 +12,10 @@
   border: unset;
 }
 
+.profile-menu {
+  margin: 10px;
+}
+
 .profile-name {
   display: flex;
   justify-content: flex-start;

@@ -5,22 +5,22 @@ import {
 } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { WithingsService } from './withings.service';
-import { NotificationService } from '../common-components/notification.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 function setup() {
-  const mockNotificationService: jasmine.SpyObj<NotificationService> =
-    jasmine.createSpyObj(['showNotification']);
+  const mockSnackBar: jasmine.SpyObj<MatSnackBar> =
+    jasmine.createSpyObj(['open']);
   TestBed.configureTestingModule({
     providers: [
       provideHttpClient(),
       provideHttpClientTesting(),
       WithingsService,
-      { provide: NotificationService, useValue: mockNotificationService },
+      { provide: MatSnackBar, useValue: mockSnackBar },
     ],
   });
   const service = TestBed.inject(WithingsService);
   const httpTestingController = TestBed.inject(HttpTestingController);
-  return { service, httpTestingController, mockNotificationService };
+  return { service, httpTestingController, mockSnackBar };
 }
 
 describe('WithingsService', () => {
@@ -36,7 +36,7 @@ describe('WithingsService', () => {
     });
 
     it('should show notification if fetching last backup was not succesful', async () => {
-      const { service, httpTestingController, mockNotificationService } =
+      const { service, httpTestingController, mockSnackBar } =
         setup();
       const promise = service.sync();
       httpTestingController
@@ -44,14 +44,15 @@ describe('WithingsService', () => {
         .error(new ProgressEvent(''));
       await promise;
       httpTestingController.verify();
-      expect(mockNotificationService.showNotification).toHaveBeenCalledWith(
+      expect(mockSnackBar.open).toHaveBeenCalledWith(
         'Unable to sync with Withings',
-        'error'
+        'Close',
+        jasmine.objectContaining({ panelClass: ['error'] })
       );
     });
 
     it('should redirect on 401 with oauth2Login link', async () => {
-      const { service, httpTestingController, mockNotificationService } =
+      const { service, httpTestingController, mockSnackBar } =
         setup();
 
       const originalHref = window.location.href;
@@ -72,7 +73,7 @@ describe('WithingsService', () => {
 
       await promise;
       httpTestingController.verify();
-      expect(mockNotificationService.showNotification).not.toHaveBeenCalled();
+      expect(mockSnackBar.open).not.toHaveBeenCalled();
     });
 
     it('caches last backup time', async () => {

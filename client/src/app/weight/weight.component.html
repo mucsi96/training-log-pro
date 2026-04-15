@@ -1,7 +1,9 @@
 @let today = todayWeight.value();
 @let diffVal = diff();
 @let chart = chartOptions();
-@if (today && chart) {
+@if (todayWeight.isLoading() || periodMeasurements.isLoading()) {
+<mat-spinner class="page-loading" />
+} @else if (today && chart) {
 <section>
   <div class="chart-wrapper">
     <div
@@ -13,38 +15,29 @@
     ></div>
   </div>
   <article>
-    <h2 app-text>Weight</h2>
-    <p app-heading large>
+    <h2>Weight</h2>
+    <p class="value">
       {{ today.weight | measurementWithUnit : "kg" }}
     </p>
-    <p
-      app-text
-      [app-text-type]="diffVal?.weight | percentageDiffColor : 'inverse'"
-    >
+    <p [class]="'diff-value ' + (diffVal?.weight | percentageDiffColor : 'inverse')">
       {{ diffVal?.weight | percentageDiff }}
     </p>
   </article>
   <article>
-    <h2 app-text>Body fat</h2>
-    <p app-heading large>
+    <h2>Body fat</h2>
+    <p class="value">
       {{ today.fatMassWeight | measurementWithUnit : "kg" }}
     </p>
-    <p
-      app-text
-      [app-text-type]="diffVal?.fatMassWeight | percentageDiffColor : 'inverse'"
-    >
+    <p [class]="'diff-value ' + (diffVal?.fatMassWeight | percentageDiffColor : 'inverse')">
       {{ diffVal?.fatMassWeight | percentageDiff }}
     </p>
   </article>
   <article>
-    <h2 app-text>Fat ratio</h2>
-    <p app-heading large>
+    <h2>Fat ratio</h2>
+    <p class="value">
       {{ today.fatRatio | measurementWithUnit : "%" }}
     </p>
-    <p
-      app-text
-      [app-text-type]="diffVal?.fatRatio | percentageDiffColor : 'inverse'"
-    >
+    <p [class]="'diff-value ' + (diffVal?.fatRatio | percentageDiffColor : 'inverse')">
       {{ diffVal?.fatRatio | percentageDiff }}
     </p>
   </article>

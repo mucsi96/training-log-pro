@@ -17,6 +17,29 @@ section > * {
   gap: 4px;
 }
 
+h2 {
+  color: var(--mat-app-text-color);
+  font-size: 14px;
+}
+
+.value {
+  color: var(--mat-sys-on-primary);
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.diff-value {
+  font-size: 14px;
+}
+
+.diff-value.green {
+  color: hsl(111, 32%, 66%);
+}
+
+.diff-value.red {
+  color: hsl(0, 91%, 74%);
+}
+
 .chart-wrapper {
   aspect-ratio: 1;
   min-width: 100px;
@@ -27,4 +50,8 @@ section > * {
 .chart {
   position: absolute;
   inset: 0;
+}
+
+.page-loading {
+  margin: 150px auto;
 }

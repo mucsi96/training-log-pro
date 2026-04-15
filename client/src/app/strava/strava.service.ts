@@ -1,13 +1,13 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { NotificationService } from '../common-components/notification.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { WithingsService } from '../withings/withings.service';
 import { fetchJson } from '../utils/fetchJson';
 
 @Injectable({ providedIn: 'root' })
 export class StravaService {
   private readonly http = inject(HttpClient);
-  private readonly notificationService = inject(NotificationService);
+  private readonly snackBar = inject(MatSnackBar);
   private readonly withingsService = inject(WithingsService);
   private syncPromise: Promise<void> | undefined;
 
@@ -26,10 +26,11 @@ export class StravaService {
             window.location.href = authorizeUrl;
             return;
           }
-          this.notificationService.showNotification(
-            'Unable to sync with Strava',
-            'error'
-          );
+          this.snackBar.open('Unable to sync with Strava', 'Close', {
+            duration: 3000,
+            verticalPosition: 'top',
+            panelClass: ['error'],
+          });
         });
     }
     return this.syncPromise;

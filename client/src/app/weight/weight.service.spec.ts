@@ -4,13 +4,13 @@ import {
   provideHttpClientTesting,
 } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { NotificationService } from '../common-components/notification.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { WithingsService } from '../withings/withings.service';
 import { WeightMeasurement, WeightService } from './weight.service';
 
 function setup({ pendingSync = false } = {}) {
-  const mockNotificationService: jasmine.SpyObj<NotificationService> =
-    jasmine.createSpyObj(['showNotification']);
+  const mockSnackBar: jasmine.SpyObj<MatSnackBar> =
+    jasmine.createSpyObj(['open']);
   const mockWithingsService: jasmine.SpyObj<WithingsService> =
     jasmine.createSpyObj(['sync']);
 
@@ -26,8 +26,8 @@ function setup({ pendingSync = false } = {}) {
       provideHttpClientTesting(),
       WeightService,
       {
-        provide: NotificationService,
-        useValue: mockNotificationService,
+        provide: MatSnackBar,
+        useValue: mockSnackBar,
       },
       {
         provide: WithingsService,
@@ -40,7 +40,7 @@ function setup({ pendingSync = false } = {}) {
   return {
     service,
     httpTestingController,
-    mockNotificationService,
+    mockSnackBar,
   };
 }
 
@@ -90,7 +90,7 @@ describe('WeightService', () => {
     });
 
     it('should show notification if fetching weight measurements was not succesful', async () => {
-      const { service, httpTestingController, mockNotificationService } =
+      const { service, httpTestingController, mockSnackBar } =
         setup();
       const promise = service.getWeight(7);
       await Promise.resolve();
@@ -99,9 +99,10 @@ describe('WeightService', () => {
         .error(new ProgressEvent(''));
       await expectAsync(promise).toBeRejected();
       httpTestingController.verify();
-      expect(mockNotificationService.showNotification).toHaveBeenCalledWith(
+      expect(mockSnackBar.open).toHaveBeenCalledWith(
         'Unable to fetch weight',
-        'error'
+        'Close',
+        jasmine.objectContaining({ panelClass: ['error'] })
       );
     });
 
@@ -191,7 +192,7 @@ describe('WeightService', () => {
     });
 
     it('should show notification if fetching today weight was not succesful', async () => {
-      const { service, httpTestingController, mockNotificationService } =
+      const { service, httpTestingController, mockSnackBar } =
         setup();
       const promise = service.getTodayWeight();
       await Promise.resolve();
@@ -200,9 +201,10 @@ describe('WeightService', () => {
         .error(new ProgressEvent(''));
       await expectAsync(promise).toBeRejected();
       httpTestingController.verify();
-      expect(mockNotificationService.showNotification).toHaveBeenCalledWith(
+      expect(mockSnackBar.open).toHaveBeenCalledWith(
         'Unable to fetch weight',
-        'error'
+        'Close',
+        jasmine.objectContaining({ panelClass: ['error'] })
       );
     });
 

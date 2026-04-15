@@ -1,12 +1,12 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { NotificationService } from '../common-components/notification.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { fetchJson } from '../utils/fetchJson';
 
 @Injectable({ providedIn: 'root' })
 export class WithingsService {
   private readonly http = inject(HttpClient);
-  private readonly notificationService = inject(NotificationService);
+  private readonly snackBar = inject(MatSnackBar);
   private syncPromise: Promise<void> | undefined;
 
   sync(): Promise<void> {
@@ -19,10 +19,11 @@ export class WithingsService {
           window.location.href = authorizeUrl;
           return;
         }
-        this.notificationService.showNotification(
-          'Unable to sync with Withings',
-          'error'
-        );
+        this.snackBar.open('Unable to sync with Withings', 'Close', {
+          duration: 3000,
+          verticalPosition: 'top',
+          panelClass: ['error'],
+        });
       });
     }
     return this.syncPromise;
