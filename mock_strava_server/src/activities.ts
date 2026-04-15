@@ -153,7 +153,7 @@ export function getActivities(req: Request, res: Response) {
 
 export function getActivity(req: Request, res: Response) {
   const authorization = req.headers.authorization;
-  const id = req.params.id;
+  const id = req.params.id as string;
 
   console.log('[getActivity] Parameters:', {
     authorization,
