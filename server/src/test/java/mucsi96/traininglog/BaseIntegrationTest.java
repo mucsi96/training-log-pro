@@ -8,12 +8,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
-import mucsi96.traininglog.config.DatabaseStartupInitializer;
-
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ContextConfiguration(initializers = DatabaseStartupInitializer.class)
+@ContextConfiguration()
 public class BaseIntegrationTest {
 
   @Autowired

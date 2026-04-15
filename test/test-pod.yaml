@@ -51,9 +51,9 @@ spec:
           value: "3001"
       livenessProbe:
         httpGet:
-          path: /
+          path: /health
           port: 3001
-        initialDelaySeconds: 2
+        initialDelaySeconds: 5
         periodSeconds: 2
         failureThreshold: 5
 
@@ -64,24 +64,21 @@ spec:
           value: "3002"
       livenessProbe:
         httpGet:
-          path: /
+          path: /health
           port: 3002
-        initialDelaySeconds: 2
+        initialDelaySeconds: 5
         periodSeconds: 2
         failureThreshold: 5
 
-    - name: mock-backup-tool
-      image: localhost/training-log-pro-mock-backup-tool:test
-      env:
-        - name: PORT
-          value: "3003"
+    - name: playwright
+      image: mcr.microsoft.com/playwright:v1.59.1-noble
+      command: ["npx", "playwright", "run-server", "--port", "3003"]
       livenessProbe:
-        httpGet:
-          path: /
+        tcpSocket:
           port: 3003
-        initialDelaySeconds: 2
+        initialDelaySeconds: 5
         periodSeconds: 2
-        failureThreshold: 5
+        failureThreshold: 10
 
     - name: server
       image: localhost/training-log-pro-server:test
@@ -90,6 +87,14 @@ spec:
           value: "8182"
         - name: SPRING_PROFILES_ACTIVE
           value: test
+        - name: DB_URL
+          value: jdbc:postgresql://localhost:5432/test
+        - name: DB_USERNAME
+          value: postgres
+        - name: DB_PASSWORD
+          value: postgres
+        - name: PLAYWRIGHT_WS_ENDPOINT
+          value: "ws://localhost:3003"
       livenessProbe:
         httpGet:
           path: /actuator/health/readiness

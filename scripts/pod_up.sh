@@ -8,9 +8,8 @@ MAX_WAIT=120
 echo "Building container images..."
 podman build -t localhost/training-log-pro-server:test "$PROJECT_DIR/server" &
 podman build -t localhost/training-log-pro-client:test "$PROJECT_DIR/client" &
-podman build -t localhost/training-log-pro-mock-withings:test "$PROJECT_DIR/test/mock_withings" &
-podman build -t localhost/training-log-pro-mock-strava:test "$PROJECT_DIR/test/mock_strava" &
-podman build -t localhost/training-log-pro-mock-backup-tool:test "$PROJECT_DIR/test/mock_backup_tool" &
+podman build -t localhost/training-log-pro-mock-withings:test "$PROJECT_DIR/mock_withings_server" &
+podman build -t localhost/training-log-pro-mock-strava:test "$PROJECT_DIR/mock_strava_server" &
 wait
 
 echo "Cleaning up existing pod..."

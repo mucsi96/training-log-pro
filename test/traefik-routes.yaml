@@ -18,12 +18,6 @@ http:
       service: mock-strava
       entryPoints:
         - web
-    backup-tool:
-      rule: "Path(`/db/last-backup-time`)"
-      priority: 3
-      service: mock-backup-tool
-      entryPoints:
-        - web
     client:
       rule: "PathPrefix(`/`)"
       priority: 1
@@ -43,10 +37,6 @@ http:
       loadBalancer:
         servers:
           - url: "http://127.0.0.1:3002"
-    mock-backup-tool:
-      loadBalancer:
-        servers:
-          - url: "http://127.0.0.1:3003"
     client:
       loadBalancer:
         servers:

@@ -1,11 +1,4 @@
 spring:
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.admin.SpringApplicationAdminJmxAutoConfiguration
-  datasource:
-    url: jdbc:postgresql://localhost:5435/test
-    username: postgres
-    password: postgres
   cloud:
     azure:
       keyvault:
@@ -35,9 +28,11 @@ spring:
 withings:
   api-uri: http://localhost:3001/withings
 strava:
-  username: ""
-  password: ""
+  username: "rob"
+  password: "123"
   api-uri: http://localhost:3002/strava
+playwright:
+  ws-endpoint: ${PLAYWRIGHT_WS_ENDPOINT:}
 management:
   server:
     port: ${server.port:0}
