@@ -37,10 +37,14 @@ import org.springframework.web.client.RestClient;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import mucsi96.traininglog.core.OneTimeTokenBridgeFilter;
+import mucsi96.traininglog.core.TokenService;
 
 @Data
 @Configuration
@@ -53,15 +57,17 @@ public class WithingsConfiguration {
 
   @Bean
   @Order(2)
-  SecurityFilterChain withingsSecurityFilterChain(HttpSecurity http)
+  SecurityFilterChain withingsSecurityFilterChain(HttpSecurity http, TokenService tokenService)
       throws Exception {
     return http
         .securityMatcher("/withings/authorize")
         .csrf(AbstractHttpConfigurer::disable)
+        .addFilterBefore(new OneTimeTokenBridgeFilter(tokenService),
+            AbstractPreAuthenticatedProcessingFilter.class)
         .oauth2Client(configurer -> configurer
             .authorizationCodeGrant(customizer -> customizer
                 .accessTokenResponseClient(withingsAccessTokenResponseClient())))
-        .authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll())
+        .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
         .build();
   }
 
