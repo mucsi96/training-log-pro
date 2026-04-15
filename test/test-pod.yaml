@@ -70,19 +70,6 @@ spec:
         periodSeconds: 2
         failureThreshold: 5
 
-    - name: mock-backup-tool
-      image: localhost/training-log-pro-mock-backup-tool:test
-      env:
-        - name: PORT
-          value: "3003"
-      livenessProbe:
-        httpGet:
-          path: /
-          port: 3003
-        initialDelaySeconds: 2
-        periodSeconds: 2
-        failureThreshold: 5
-
     - name: server
       image: localhost/training-log-pro-server:test
       env:
