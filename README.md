@@ -5,17 +5,30 @@
 - [Server](https://hub.docker.com/repository/docker/mucsi96/training-log-pro-server)
 - [Client](https://hub.docker.com/repository/docker/mucsi96/training-log-pro-client)
 
-## Resources
+## Azure Key Vault Secrets
 
-### Spring Security
+All application secrets are pulled from Azure Key Vault using the Spring Cloud Azure Key Vault Secrets starter. The only environment variable required at runtime is `AZURE_KEYVAULT_ENDPOINT`.
 
-https://www.marcobehler.com/guides/spring-security
-https://docs.spring.io/spring-security/reference/servlet/authentication/preauth.html
+| Secret Name | Description | Reference |
+|---|---|---|
+| `tenant-id` | Azure AD tenant ID | [Azure Portal > App registrations](https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade) |
+| `api-client-id` | Azure AD API application (server) client ID | [Azure Portal > App registrations](https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade) |
+| `api-client-secret` | Azure AD API application client secret (local profile only) | [Azure Portal > App registrations > Certificates & secrets](https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade) |
+| `spa-client-id` | Azure AD SPA application (client) client ID | [Azure Portal > App registrations](https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade) |
+| `db-url` | PostgreSQL JDBC connection URL | [Azure Portal > Azure Database for PostgreSQL](https://portal.azure.com/#view/HubsExtension/BrowseResource/resourceType/Microsoft.DBforPostgreSQL%2FflexibleServers) |
+| `db-username` | PostgreSQL username | [Azure Portal > Azure Database for PostgreSQL](https://portal.azure.com/#view/HubsExtension/BrowseResource/resourceType/Microsoft.DBforPostgreSQL%2FflexibleServers) |
+| `db-password` | PostgreSQL password | [Azure Portal > Azure Database for PostgreSQL](https://portal.azure.com/#view/HubsExtension/BrowseResource/resourceType/Microsoft.DBforPostgreSQL%2FflexibleServers) |
+| `withings-client-id` | Withings OAuth2 client ID | [Withings Developer Dashboard](https://developer.withings.com/dashboard/) |
+| `withings-client-secret` | Withings OAuth2 client secret | [Withings Developer Dashboard](https://developer.withings.com/dashboard/) |
+| `strava-client-id` | Strava OAuth2 client ID | [Strava API Settings](https://www.strava.com/settings/api) |
+| `strava-client-secret` | Strava OAuth2 client secret | [Strava API Settings](https://www.strava.com/settings/api) |
+| `strava-username` | Strava account username | [Strava Account](https://www.strava.com/account) |
+| `strava-password` | Strava account password | [Strava Account](https://www.strava.com/account) |
 
-## Examples
+## Runtime Environment Variables
 
-https://github.com/mayuresh-tech/GlobalTech_Aspire_Backend_Assignment/blob/138fd2e18c6041ad7dccd9a75d458b4300212f0c/Code/GlobalTech_Aspire/src/main/java/com/globaltech/aspire/security/SecurityConfiguration.java
-
-https://github.com/jvanheesch/spring-security-header-example/blob/e7b4b3a682fb716f037980a14b9d1630259db88f/src/main/java/com/github/jvanheesch/WebSecurityConfig.java
-
-https://github.com/int128/spring-cloud-api-gateway-example/blob/ec4fb108fc59b34fd84f2bb5cf78df230259eb46/api-gateway/src/main/groovy/example/gateway/AppSecurityConfiguration.groovy
+| Variable | Description |
+|---|---|
+| `AZURE_KEYVAULT_ENDPOINT` | Azure Key Vault endpoint URL |
+| `SPRING_ACTUATOR_PORT` | Port for Spring Boot Actuator endpoints |
+| `SPRING_PROFILES_ACTIVE` | Active Spring profile (`prod`, `local`, `test`) |

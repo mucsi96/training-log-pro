@@ -59,18 +59,6 @@ public class WeightControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  public void returns_forbidden_if_user_has_no_user_role() throws Exception {
-    MockHttpServletResponse response = mockMvc
-        .perform(
-            get("/weight")
-                .headers(getHeaders()))
-        .andReturn().getResponse();
-
-    assertThat(response.getStatus()).isEqualTo(403);
-  }
-
-  @Test
-  @WithMockUserRoles
   public void returns_today_weight_measurement() throws Exception {
     MockHttpServletResponse response = mockMvc
         .perform(
@@ -88,7 +76,6 @@ public class WeightControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  @WithMockUserRoles
   public void returns_one_week_weight_measurements() throws Exception {
     MockHttpServletResponse response = mockMvc
         .perform(
@@ -113,7 +100,6 @@ public class WeightControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  @WithMockUserRoles
   public void returns_all_time_weight_measurements() throws Exception {
     MockHttpServletResponse response = mockMvc
         .perform(

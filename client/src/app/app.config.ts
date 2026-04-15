@@ -1,20 +1,30 @@
-import { ApplicationConfig, Provider } from '@angular/core';
+import { ApplicationConfig, Provider, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { provideAnimations } from '@angular/platform-browser/animations';
+import {
+  provideHttpClient,
+  withInterceptors,
+  withInterceptorsFromDi,
+} from '@angular/common/http';
+import {
+  MAT_RIPPLE_GLOBAL_OPTIONS,
+  RippleGlobalOptions,
+} from '@angular/material/core';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import * as echarts from 'echarts';
 import { NGX_ECHARTS_CONFIG } from 'ngx-echarts';
 import { routes } from './app.routes';
-import { NotificationService } from './common-components/notification.service';
-import { oAuthLoginInterceptor } from './http-interceptors/oauth-login-interceptor';
-import { timezoneInterceptor } from './http-interceptors/timezone-interceptor';
-import { BackupService } from './backup/backup.service';
-import { RideService } from './ride/ride.service';
-import { StravaService } from './strava/strava.service';
-import { WeightService } from './weight/weight.service';
-import { WithingsService } from './withings/withings.service';
-import { AuthService } from './auth/auth.service';
+import { errorInterceptor } from './utils/error.interceptor';
+import { timezoneInterceptor } from './utils/timezone.interceptor';
+import { provideMsalConfig } from './msal.config';
+import {
+  EnvironmentConfig,
+  ENVIRONMENT_CONFIG,
+} from './environment/environment.config';
+
+const globalRippleConfig: RippleGlobalOptions = {
+  disabled: true,
+};
 
 function provideECharts(): Provider {
   return {
@@ -23,25 +33,20 @@ function provideECharts(): Provider {
   };
 }
 
-function provideLocation(): Provider {
-  return { provide: Location, useValue: window.location };
+export function getAppConfig(environment: EnvironmentConfig): ApplicationConfig {
+  return {
+    providers: [
+      provideZoneChangeDetection({ eventCoalescing: true }),
+      provideRouter(routes),
+      provideHttpClient(
+        withInterceptorsFromDi(),
+        withInterceptors([timezoneInterceptor, errorInterceptor])
+      ),
+      { provide: MAT_RIPPLE_GLOBAL_OPTIONS, useValue: globalRippleConfig },
+      provideAnimationsAsync(),
+      { provide: ENVIRONMENT_CONFIG, useValue: environment },
+      provideECharts(),
+      ...(environment.mockAuth ? [] : provideMsalConfig()),
+    ],
+  };
 }
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideAnimations(),
-    provideRouter(routes),
-    provideHttpClient(
-      withInterceptors([timezoneInterceptor, oAuthLoginInterceptor])
-    ),
-    provideLocation(),
-    provideECharts(),
-    AuthService,
-    StravaService,
-    RideService,
-    WeightService,
-    WithingsService,
-    NotificationService,
-    BackupService,
-  ],
-};

@@ -1,0 +1,119 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: training-log-pro-test
+spec:
+  containers:
+    - name: traefik
+      image: docker.io/library/traefik:v3.6
+      ports:
+        - containerPort: 80
+          hostPort: 8180
+        - containerPort: 8081
+          hostPort: 8181
+      volumeMounts:
+        - name: traefik-config
+          mountPath: /etc/traefik/traefik.yaml
+          readOnly: true
+        - name: traefik-routes
+          mountPath: /etc/traefik/routes.yaml
+          readOnly: true
+      livenessProbe:
+        exec:
+          command: ["traefik", "healthcheck", "--ping"]
+        initialDelaySeconds: 2
+        periodSeconds: 2
+        failureThreshold: 5
+
+    - name: db
+      image: docker.io/library/postgres:17.5-bullseye
+      ports:
+        - containerPort: 5432
+          hostPort: 5460
+      env:
+        - name: POSTGRES_DB
+          value: test
+        - name: POSTGRES_PASSWORD
+          value: postgres
+        - name: POSTGRES_USER
+          value: postgres
+      livenessProbe:
+        exec:
+          command: ["pg_isready", "-U", "postgres"]
+        initialDelaySeconds: 5
+        periodSeconds: 10
+        failureThreshold: 5
+
+    - name: mock-withings
+      image: localhost/training-log-pro-mock-withings:test
+      env:
+        - name: PORT
+          value: "3001"
+      livenessProbe:
+        httpGet:
+          path: /
+          port: 3001
+        initialDelaySeconds: 2
+        periodSeconds: 2
+        failureThreshold: 5
+
+    - name: mock-strava
+      image: localhost/training-log-pro-mock-strava:test
+      env:
+        - name: PORT
+          value: "3002"
+      livenessProbe:
+        httpGet:
+          path: /
+          port: 3002
+        initialDelaySeconds: 2
+        periodSeconds: 2
+        failureThreshold: 5
+
+    - name: mock-backup-tool
+      image: localhost/training-log-pro-mock-backup-tool:test
+      env:
+        - name: PORT
+          value: "3003"
+      livenessProbe:
+        httpGet:
+          path: /
+          port: 3003
+        initialDelaySeconds: 2
+        periodSeconds: 2
+        failureThreshold: 5
+
+    - name: server
+      image: localhost/training-log-pro-server:test
+      env:
+        - name: SPRING_ACTUATOR_PORT
+          value: "8182"
+        - name: SPRING_PROFILES_ACTIVE
+          value: test
+      livenessProbe:
+        httpGet:
+          path: /actuator/health/readiness
+          port: 8182
+        initialDelaySeconds: 16
+        periodSeconds: 2
+        failureThreshold: 10
+
+    - name: client
+      image: localhost/training-log-pro-client:test
+      livenessProbe:
+        httpGet:
+          path: /
+          port: 8000
+        initialDelaySeconds: 5
+        periodSeconds: 2
+        failureThreshold: 10
+
+  volumes:
+    - name: traefik-config
+      hostPath:
+        path: test/traefik.yaml
+        type: File
+    - name: traefik-routes
+      hostPath:
+        path: test/traefik-routes.yaml
+        type: File

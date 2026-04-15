@@ -1,9 +1,48 @@
+:root {
+  --bg-primary: hsl(221, 39%, 11%);
+  --bg-secondary: hsl(217, 33%, 17%);
+  --bg-tertiary: hsl(215, 28%, 22%);
+  --text-primary: hsl(210, 40%, 98%);
+  --text-secondary: hsl(215, 20%, 65%);
+  --text-muted: hsl(215, 14%, 34%);
+  --border-color: hsl(215, 14%, 34%);
+  --primary: hsl(220, 89%, 53%);
+  --primary-light: hsl(220, 89%, 63%);
+  --success: hsl(145, 78%, 68%);
+  --error: hsl(0, 96%, 77%);
+}
+
 html,
 body {
   margin: 0;
   padding: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
 
-body {
-  background-color: hsl(222, 47%, 11%);
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+}
+
+/* Material form field customization */
+.mat-mdc-text-field-wrapper.mdc-text-field--filled {
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem !important;
+}
+
+/* Material button focus */
+.mat-mdc-button:focus-visible,
+.mat-mdc-icon-button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Snackbar states */
+.mat-mdc-snack-bar-container.success .mdc-snackbar__surface {
+  background-color: var(--success);
+}
+
+.mat-mdc-snack-bar-container.error .mdc-snackbar__surface {
+  background-color: var(--error);
 }

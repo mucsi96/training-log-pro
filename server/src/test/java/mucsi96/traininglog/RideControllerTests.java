@@ -68,18 +68,6 @@ public class RideControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  public void returns_forbidden_if_user_has_no_user_role() throws Exception {
-    MockHttpServletResponse response = mockMvc
-        .perform(
-            get("/ride/stats")
-                .headers(getHeaders()))
-        .andReturn().getResponse();
-
-    assertThat(response.getStatus()).isEqualTo(403);
-  }
-
-  @Test
-  @WithMockUserRoles
   public void returns_today_ride_stats() throws Exception {
     MockHttpServletResponse response = mockMvc
         .perform(
@@ -95,7 +83,6 @@ public class RideControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  @WithMockUserRoles
   public void returns_one_week_ride_stats() throws Exception {
     MockHttpServletResponse response = mockMvc
         .perform(
@@ -111,7 +98,6 @@ public class RideControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  @WithMockUserRoles
   public void returns_all_time_ride_stats() throws Exception {
     MockHttpServletResponse response = mockMvc
         .perform(

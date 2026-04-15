@@ -1,47 +1,31 @@
-import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
-import { NgxEchartsModule } from 'ngx-echarts';
-import { Observable, combineLatest, map, switchMap } from 'rxjs';
-import { HeadingComponent } from '../common-components/heading/heading.component';
-import { LoaderComponent } from '../common-components/loader/loader.component';
-import { TextComponent } from '../common-components/text/text.component';
-import { RideService, RideStats } from './ride.service';
-import { MeasurementWithUnitPipe } from '../utils/measurement-with-unit.pipe';
-import { PercentageDiffColorPipe } from '../utils/percentage-diff-color.pipe';
-import { PercentageDiffPipe } from '../utils/percentage-diff.pipe';
+import { Component, inject, resource } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
+import { map } from 'rxjs';
+import { HeadingComponent } from '../common-components/heading/heading.component';
+import { TextComponent } from '../common-components/text/text.component';
+import { RideService } from './ride.service';
+import { MeasurementWithUnitPipe } from '../utils/measurement-with-unit.pipe';
 
 @Component({
   standalone: true,
-  imports: [
-    CommonModule,
-    HeadingComponent,
-    LoaderComponent,
-    NgxEchartsModule,
-    TextComponent,
-    PercentageDiffPipe,
-    PercentageDiffColorPipe,
-    MeasurementWithUnitPipe,
-  ],
+  imports: [HeadingComponent, TextComponent, MeasurementWithUnitPipe],
   selector: 'app-ride',
   templateUrl: './ride.component.html',
   styleUrls: ['./ride.component.css'],
 })
 export class RideComponent {
-  private readonly $periodRideStats = this.route.data.pipe(
-    switchMap((data) => this.rideService.getRideStats(data['period']))
+  private readonly rideService = inject(RideService);
+  private readonly period = toSignal(
+    inject(ActivatedRoute).data.pipe(map((data) => (data['period'] as number) ?? 0))
   );
-  private readonly $todayRideStats = this.rideService.getRideStats(1);
 
-  constructor(
-    private readonly rideService: RideService,
-    private readonly route: ActivatedRoute
-  ) {}
+  readonly todayRideStats = resource({
+    loader: () => this.rideService.getRideStats(1),
+  });
 
-  $vm = combineLatest([this.$todayRideStats, this.$periodRideStats]).pipe(
-    map(([todayRideStats, periodRideStats]) => ({
-      todayRideStats,
-      periodRideStats,
-    }))
-  );
+  readonly periodRideStats = resource({
+    params: () => this.period(),
+    loader: ({ params: period }) => this.rideService.getRideStats(period),
+  });
 }

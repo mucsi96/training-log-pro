@@ -1,39 +1,37 @@
-import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import {
-  EMPTY,
-  catchError,
-  concat,
-  mergeMap,
-  shareReplay
-} from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
 import { NotificationService } from '../common-components/notification.service';
 import { WithingsService } from '../withings/withings.service';
+import { fetchJson } from '../utils/fetchJson';
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class StravaService {
-  constructor(
-    private readonly http: HttpClient,
-    private readonly notificationService: NotificationService,
-    private readonly withingsService: WithingsService
-  ) {}
+  private readonly http = inject(HttpClient);
+  private readonly notificationService = inject(NotificationService);
+  private readonly withingsService = inject(WithingsService);
+  private syncPromise: Promise<void> | undefined;
 
-  private readonly $syncActivities = concat(
-    this.withingsService.syncMeasurements(),
-    this.http.post<void>('/api/strava/activities/sync', undefined).pipe(
-      mergeMap(() => EMPTY),
-      catchError((e) => {
-        this.notificationService.showNotification(
-          'Unable to sync with Strava',
-          'error'
-        );
-        return EMPTY;
-      }),
-      shareReplay(1)
-    )
-  );
-
-  syncActivities() {
-    return this.$syncActivities;
+  sync(): Promise<void> {
+    if (!this.syncPromise) {
+      this.syncPromise = this.withingsService
+        .sync()
+        .then(() =>
+          fetchJson<void>(this.http, '/api/strava/activities/sync', {
+            method: 'post',
+          })
+        )
+        .catch((error: HttpErrorResponse) => {
+          const authorizeUrl = error.error?._links?.oauth2Login?.href;
+          if (error.status === 401 && authorizeUrl) {
+            window.location.href = authorizeUrl;
+            return;
+          }
+          this.notificationService.showNotification(
+            'Unable to sync with Strava',
+            'error'
+          );
+        });
+    }
+    return this.syncPromise;
   }
 }

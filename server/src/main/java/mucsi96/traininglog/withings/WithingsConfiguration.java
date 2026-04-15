@@ -1,49 +1,54 @@
 package mucsi96.traininglog.withings;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.http.converter.FormHttpMessageConverter;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.oauth2.client.JdbcOAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.RemoveAuthorizedClientOAuth2AuthorizationFailureHandler;
-import org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationCodeTokenResponseClient;
-import org.springframework.security.oauth2.client.endpoint.DefaultRefreshTokenTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
-import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequestEntityConverter;
 import org.springframework.security.oauth2.client.endpoint.OAuth2RefreshTokenGrantRequest;
-import org.springframework.security.oauth2.client.endpoint.OAuth2RefreshTokenGrantRequestEntityConverter;
-import org.springframework.security.oauth2.client.http.OAuth2ErrorResponseErrorHandler;
+import org.springframework.security.oauth2.client.endpoint.RestClientAuthorizationCodeTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.RestClientRefreshTokenTokenResponseClient;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.http.converter.OAuth2AccessTokenResponseHttpMessageConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
-
+import org.springframework.web.client.RestClient;
+import org.springframework.web.util.UriComponentsBuilder;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.github.mucsi96.kubetools.security.KubetoolsSecurityConfigurer;
+import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import mucsi96.traininglog.core.OneTimeTokenBridgeFilter;
+import mucsi96.traininglog.core.TokenService;
 
 @Data
 @Configuration
@@ -55,16 +60,55 @@ public class WithingsConfiguration {
   private String apiUri;
 
   @Bean
-  SecurityFilterChain withingsSecurityFilterChain(
-      HttpSecurity http,
-      KubetoolsSecurityConfigurer kubetoolsSecurityConfigurer) throws Exception {
+  @Order(2)
+  SecurityFilterChain withingsSecurityFilterChain(HttpSecurity http, TokenService tokenService,
+      ClientRegistrationRepository clientRegistrationRepository) throws Exception {
     return http
-        .securityMatcher("/withings/**")
+        .securityMatcher("/withings/authorize")
+        .csrf(AbstractHttpConfigurer::disable)
+        .addFilterBefore(new OneTimeTokenBridgeFilter(tokenService),
+            AbstractPreAuthenticatedProcessingFilter.class)
         .oauth2Client(configurer -> configurer
             .authorizationCodeGrant(customizer -> customizer
+                .authorizationRequestResolver(tokenForwardingResolver(clientRegistrationRepository))
                 .accessTokenResponseClient(withingsAccessTokenResponseClient())))
-        .with(kubetoolsSecurityConfigurer, Customizer.withDefaults())
+        .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
         .build();
+  }
+
+  private OAuth2AuthorizationRequestResolver tokenForwardingResolver(
+      ClientRegistrationRepository clientRegistrationRepository) {
+    DefaultOAuth2AuthorizationRequestResolver defaultResolver =
+        new DefaultOAuth2AuthorizationRequestResolver(clientRegistrationRepository, "/oauth2/authorization");
+
+    return new OAuth2AuthorizationRequestResolver() {
+      @Override
+      public OAuth2AuthorizationRequest resolve(HttpServletRequest request) {
+        return addTokenToRedirectUri(request, defaultResolver.resolve(request));
+      }
+
+      @Override
+      public OAuth2AuthorizationRequest resolve(HttpServletRequest request, String clientRegistrationId) {
+        return addTokenToRedirectUri(request, defaultResolver.resolve(request, clientRegistrationId));
+      }
+
+      private OAuth2AuthorizationRequest addTokenToRedirectUri(HttpServletRequest request,
+          OAuth2AuthorizationRequest authorizationRequest) {
+        if (authorizationRequest == null) {
+          return null;
+        }
+        String token = request.getParameter("token");
+        if (token == null) {
+          return authorizationRequest;
+        }
+        String redirectUri = UriComponentsBuilder.fromUriString(authorizationRequest.getRedirectUri())
+            .queryParam("token", token)
+            .toUriString();
+        return OAuth2AuthorizationRequest.from(authorizationRequest)
+            .redirectUri(redirectUri)
+            .build();
+      }
+    };
   }
 
   @Bean
@@ -96,42 +140,33 @@ public class WithingsConfiguration {
     return authorizedClientManager;
   }
 
+  @Bean
+  OAuth2AuthorizedClientService authorizedClientService(
+      JdbcTemplate jdbcTemplate,
+      ClientRegistrationRepository clientRegistrationRepository) {
+    return new JdbcOAuth2AuthorizedClientService(jdbcTemplate, clientRegistrationRepository);
+  }
+
   OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> withingsAccessTokenResponseClient() {
-    OAuth2AuthorizationCodeGrantRequestEntityConverter requestEntityConverter = new OAuth2AuthorizationCodeGrantRequestEntityConverter();
-    requestEntityConverter.addParametersConverter(withingsAccessTokenRequestParametersConverter());
-
-    OAuth2AccessTokenResponseHttpMessageConverter accessTokenResponseConverter = new OAuth2AccessTokenResponseHttpMessageConverter();
-    accessTokenResponseConverter.setAccessTokenResponseConverter(withingsAccessTokenResponseConverter());
-
-    RestTemplate restTemplate = new RestTemplate(Arrays.asList(
-        new FormHttpMessageConverter(),
-        accessTokenResponseConverter));
-
-    restTemplate.setErrorHandler(new OAuth2ErrorResponseErrorHandler());
-
-    DefaultAuthorizationCodeTokenResponseClient accessTokenResponseClient = new DefaultAuthorizationCodeTokenResponseClient();
-    accessTokenResponseClient.setRequestEntityConverter(requestEntityConverter);
-    accessTokenResponseClient.setRestOperations(restTemplate);
-    return accessTokenResponseClient;
+    RestClientAuthorizationCodeTokenResponseClient client = new RestClientAuthorizationCodeTokenResponseClient();
+    client.setParametersConverter(withingsAccessTokenRequestParametersConverter());
+    client.setRestClient(withingsRestClient());
+    return client;
   }
 
   OAuth2AccessTokenResponseClient<OAuth2RefreshTokenGrantRequest> withingsRefreshTokenResponseClient() {
-    OAuth2RefreshTokenGrantRequestEntityConverter requestEntityConverter = new OAuth2RefreshTokenGrantRequestEntityConverter();
-    requestEntityConverter.addParametersConverter(withingsRefreshTokenRequestParametersConverter());
+    RestClientRefreshTokenTokenResponseClient client = new RestClientRefreshTokenTokenResponseClient();
+    client.setParametersConverter(withingsRefreshTokenRequestParametersConverter());
+    client.setRestClient(withingsRestClient());
+    return client;
+  }
 
-    OAuth2AccessTokenResponseHttpMessageConverter accessTokenResponseConverter = new OAuth2AccessTokenResponseHttpMessageConverter();
-    accessTokenResponseConverter.setAccessTokenResponseConverter(withingsAccessTokenResponseConverter());
-
-    RestTemplate restTemplate = new RestTemplate(Arrays.asList(
-        new FormHttpMessageConverter(),
-        accessTokenResponseConverter));
-
-    restTemplate.setErrorHandler(new OAuth2ErrorResponseErrorHandler());
-
-    DefaultRefreshTokenTokenResponseClient tokenResponseClient = new DefaultRefreshTokenTokenResponseClient();
-    tokenResponseClient.setRequestEntityConverter(requestEntityConverter);
-    tokenResponseClient.setRestOperations(restTemplate);
-    return tokenResponseClient;
+  private RestClient withingsRestClient() {
+    OAuth2AccessTokenResponseHttpMessageConverter tokenResponseConverter = new OAuth2AccessTokenResponseHttpMessageConverter();
+    tokenResponseConverter.setAccessTokenResponseConverter(withingsAccessTokenResponseConverter());
+    return RestClient.builder()
+        .configureMessageConverters(converters -> converters.addCustomConverter(tokenResponseConverter))
+        .build();
   }
 
   Converter<OAuth2AuthorizationCodeGrantRequest, MultiValueMap<String, String>> withingsAccessTokenRequestParametersConverter() {

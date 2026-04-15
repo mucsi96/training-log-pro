@@ -12,9 +12,9 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.devtools.DevTools;
 import org.openqa.selenium.devtools.HasDevTools;
-import org.openqa.selenium.devtools.v113.network.Network;
-import org.openqa.selenium.devtools.v113.network.model.RequestId;
-import org.openqa.selenium.devtools.v113.network.model.ResourceType;
+import org.openqa.selenium.devtools.v144.network.Network;
+import org.openqa.selenium.devtools.v144.network.model.RequestId;
+import org.openqa.selenium.devtools.v144.network.model.ResourceType;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.stereotype.Service;
@@ -65,7 +65,7 @@ public class StravaFintnessService {
     DevTools devTools = ((HasDevTools) webDriver).getDevTools();
     devTools.createSession();
     List<RequestId> matches = new ArrayList<>();
-    devTools.send(Network.enable(Optional.of(1000000), Optional.empty(), Optional.empty()));
+    devTools.send(Network.enable(Optional.of(1000000), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()));
     devTools.addListener(Network.requestWillBeSent(), request -> {
       request.getType().ifPresent((value) -> {
         if (value == ResourceType.XHR && request.getRequest().getUrl().matches(".*\\/fitness\\/\\d+\\?.*")) {

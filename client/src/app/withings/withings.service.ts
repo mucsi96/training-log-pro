@@ -1,30 +1,30 @@
-import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { EMPTY, catchError, mergeMap, shareReplay } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
 import { NotificationService } from '../common-components/notification.service';
+import { fetchJson } from '../utils/fetchJson';
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class WithingsService {
-  constructor(
-    private readonly http: HttpClient,
-    private readonly notificationService: NotificationService
-  ) {}
+  private readonly http = inject(HttpClient);
+  private readonly notificationService = inject(NotificationService);
+  private syncPromise: Promise<void> | undefined;
 
-  private readonly $syncMeasurements = this.http
-    .post<void>('/api/withings/sync', undefined)
-    .pipe(
-      mergeMap(() => EMPTY),
-      catchError((e) => {
+  sync(): Promise<void> {
+    if (!this.syncPromise) {
+      this.syncPromise = fetchJson<void>(this.http, '/api/withings/sync', {
+        method: 'post',
+      }).catch((error: HttpErrorResponse) => {
+        const authorizeUrl = error.error?._links?.oauth2Login?.href;
+        if (error.status === 401 && authorizeUrl) {
+          window.location.href = authorizeUrl;
+          return;
+        }
         this.notificationService.showNotification(
           'Unable to sync with Withings',
           'error'
         );
-        return EMPTY;
-      }),
-      shareReplay(1)
-    );
-
-  syncMeasurements() {
-    return this.$syncMeasurements;
+      });
+    }
+    return this.syncPromise;
   }
 }

@@ -22,6 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestConstructor;
@@ -96,7 +97,7 @@ public class WithingsControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  @WithMockUserRoles
+  @WithMockUser(username = "rob")
   public void returns_not_authorized_if_authorized_client_is_not_found() throws Exception {
     MockHttpServletResponse response = mockMvc
         .perform(
@@ -105,28 +106,31 @@ public class WithingsControllerTests extends BaseIntegrationTest {
         .andReturn().getResponse();
 
     assertThat(response.getStatus()).isEqualTo(401);
-    assertThat(JsonPath.parse(response.getContentAsString()).read("$._links.oauth2Login.href", String.class))
-        .isEqualTo("http://localhost/withings/authorize");
+    String authorizeUrl = JsonPath.parse(response.getContentAsString())
+        .read("$._links.oauth2Login.href", String.class);
+    assertThat(authorizeUrl).startsWith("http://localhost/withings/authorize?token=");
   }
 
   @Test
-  public void returns_forbidden_if_user_has_no_user_role() throws Exception {
-    authorizeWithingsOAuth2Client();
-    MockHttpServletResponse response = mockMvc
+  @WithMockUser(username = "rob")
+  public void redirects_to_withings_request_authorization_page() throws Exception {
+    MockHttpServletResponse syncResponse = mockMvc
         .perform(
-            post("/withings/sync")
-                .headers(getHeaders()))
+            post("/withings/sync").headers(getHeaders()))
         .andReturn().getResponse();
 
-    assertThat(response.getStatus()).isEqualTo(403);
-  }
+    assertThat(syncResponse.getStatus()).isEqualTo(401);
+    String authorizeUrl = JsonPath.parse(syncResponse.getContentAsString())
+        .read("$._links.oauth2Login.href", String.class);
+    URI authorizeUri = new URI(authorizeUrl);
+    assertThat(authorizeUri).hasParameter("token");
 
-  @Test
-  @WithMockUserRoles
-  public void redirects_to_withings_request_authorization_page() throws Exception {
+    String token = UriComponentsBuilder.fromUriString(authorizeUrl).build()
+        .getQueryParams().getFirst("token");
+
     MockHttpServletResponse response = mockMvc
         .perform(
-            get("/withings/authorize").headers(getHeaders()))
+            get("/withings/authorize").queryParam("token", token).headers(getHeaders()))
         .andReturn().getResponse();
 
     assertThat(response.getStatus()).isEqualTo(302);
@@ -139,20 +143,30 @@ public class WithingsControllerTests extends BaseIntegrationTest {
     assertThat(redirectUrl).hasParameter(OAuth2ParameterNames.SCOPE, "user.metrics");
     assertThat(redirectUrl).hasParameter(OAuth2ParameterNames.STATE);
     assertThat(redirectUrl).hasParameter(OAuth2ParameterNames.REDIRECT_URI,
-        "http://localhost/withings/authorize");
+        "http://localhost/withings/authorize?token=" + token);
   }
 
   @Test
-  @WithMockUserRoles
+  @WithMockUser(username = "rob")
   public void requests_access_token_after_consent_is_granted() throws Exception {
     mockWithingsServer.stubFor(WireMock.post("/v2/oauth2").willReturn(
         WireMock.aResponse()
             .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .withBodyFile("withings-authorize.json")));
 
+    MockHttpServletResponse syncResponse = mockMvc
+        .perform(
+            post("/withings/sync").headers(getHeaders()))
+        .andReturn().getResponse();
+
+    String authorizeUrl = JsonPath.parse(syncResponse.getContentAsString())
+        .read("$._links.oauth2Login.href", String.class);
+    String token = UriComponentsBuilder.fromUriString(authorizeUrl).build()
+        .getQueryParams().getFirst("token");
+
     MockHttpSession mockHttpSession = new MockHttpSession();
     MockHttpServletResponse response1 = mockMvc.perform(
-        get("/withings/authorize").headers(getHeaders())
+        get("/withings/authorize").queryParam("token", token).headers(getHeaders())
             .session(mockHttpSession))
         .andReturn().getResponse();
     UriComponents components = UriComponentsBuilder.fromUriString(response1.getRedirectedUrl()).build();
@@ -160,16 +174,23 @@ public class WithingsControllerTests extends BaseIntegrationTest {
         components.getQueryParams().getFirst(OAuth2ParameterNames.STATE),
         StandardCharsets.UTF_8);
 
+    String redirectUri = URLDecoder.decode(
+        components.getQueryParams().getFirst(OAuth2ParameterNames.REDIRECT_URI),
+        StandardCharsets.UTF_8);
+
     MockHttpServletResponse response2 = mockMvc
-        .perform(get(components.getQueryParams().getFirst(OAuth2ParameterNames.REDIRECT_URI))
+        .perform(get(redirectUri)
             .headers(getHeaders())
             .queryParam(OAuth2ParameterNames.STATE, state)
             .queryParam(OAuth2ParameterNames.CODE, "test-authorization-code")
             .session(mockHttpSession))
         .andReturn().getResponse();
 
+    UriComponents components2 = UriComponentsBuilder.fromUriString(response2.getRedirectedUrl()).build();
+
     assertThat(response2.getStatus()).isEqualTo(302);
-    assertThat(response2.getRedirectedUrl()).isEqualTo("http://localhost/withings/authorize?continue");
+    assertThat(components2.getPath()).isEqualTo("/withings/authorize");
+    assertThat(components2.getQueryParams().getFirst("token")).isEqualTo(token);
 
     List<LoggedRequest> requests = mockWithingsServer
         .findAll(WireMock.postRequestedFor(WireMock.urlEqualTo("/v2/oauth2")));
@@ -193,7 +214,7 @@ public class WithingsControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  @WithMockUserRoles
+  @WithMockUser(username = "rob")
   public void requests_new_access_token_if_its_expired() throws Exception {
     mockWithingsServer.stubFor(WireMock.post("/v2/oauth2").willReturn(
         WireMock.aResponse()
@@ -234,7 +255,7 @@ public class WithingsControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  @WithMockUserRoles
+  @WithMockUser(username = "rob")
   public void returns_not_authorized_if_refresh_token_is_invalid() throws Exception {
     mockWithingsServer.stubFor(WireMock.post("/v2/oauth2").willReturn(
         WireMock.aResponse()
@@ -262,12 +283,13 @@ public class WithingsControllerTests extends BaseIntegrationTest {
 
     assertThat(authorizedClient.isPresent()).isFalse();
     assertThat(response.getStatus()).isEqualTo(401);
-    assertThat(JsonPath.parse(response.getContentAsString()).read("$._links.oauth2Login.href", String.class))
-        .isEqualTo("http://localhost/withings/authorize");
+    String authorizeUrl = JsonPath.parse(response.getContentAsString())
+        .read("$._links.oauth2Login.href", String.class);
+    assertThat(authorizeUrl).startsWith("http://localhost/withings/authorize?token=");
   }
 
   @Test
-  @WithMockUserRoles
+  @WithMockUser(username = "rob")
   public void pulls_todays_weight_from_withings_to_database() throws Exception {
     authorizeWithingsOAuth2Client();
     mockWithingsServer.stubFor(WireMock

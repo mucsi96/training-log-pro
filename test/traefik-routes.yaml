@@ -1,0 +1,53 @@
+http:
+  routers:
+    server:
+      rule: "PathPrefix(`/api`)"
+      priority: 2
+      service: server
+      entryPoints:
+        - web
+    withings:
+      rule: "PathPrefix(`/withings`)"
+      priority: 3
+      service: mock-withings
+      entryPoints:
+        - web
+    strava:
+      rule: "PathPrefix(`/strava`)"
+      priority: 3
+      service: mock-strava
+      entryPoints:
+        - web
+    backup-tool:
+      rule: "Path(`/db/last-backup-time`)"
+      priority: 3
+      service: mock-backup-tool
+      entryPoints:
+        - web
+    client:
+      rule: "PathPrefix(`/`)"
+      priority: 1
+      service: client
+      entryPoints:
+        - web
+  services:
+    server:
+      loadBalancer:
+        servers:
+          - url: "http://127.0.0.1:8080"
+    mock-withings:
+      loadBalancer:
+        servers:
+          - url: "http://127.0.0.1:3001"
+    mock-strava:
+      loadBalancer:
+        servers:
+          - url: "http://127.0.0.1:3002"
+    mock-backup-tool:
+      loadBalancer:
+        servers:
+          - url: "http://127.0.0.1:3003"
+    client:
+      loadBalancer:
+        servers:
+          - url: "http://127.0.0.1:8000"

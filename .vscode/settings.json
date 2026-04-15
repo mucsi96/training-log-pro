@@ -1,60 +1,24 @@
 {
-    "java.compile.nullAnalysis.mode": "automatic",
-    "sqltools.connections": [
-      {
-        "previewLimit": 50,
-        "server": "db",
-        "port": 5432,
-        "driver": "PostgreSQL",
-        "name": "localhost",
-        "database": "training-log",
-        "username": "postgres",
-        "password": "postgres"
-      },
-      {
-        "previewLimit": 50,
-        "server": "test-db",
-        "port": 5432,
-        "driver": "PostgreSQL",
-        "name": "test",
-        "database": "training-log",
-        "username": "postgres",
-        "password": "postgres"
-      },
-      {
-        "previewLimit": 50,
-        "server": "localhost",
-        "port": 5433,
-        "askForPassword": true,
-        "driver": "PostgreSQL",
-        "name": "prod",
-        "database": "training-log-pro",
-        "username": "rigvyfqkerar"
-      }
-    ],
-    "ansible.python.interpreterPath": "/usr/bin/python3",
-    "maven.terminal.favorites": [
-      {
-        "command": "spring-boot:run",
-        "debug": false
-      }
-    ],
-    "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx4G -Xms100m -Xlog:disable",
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "[java]": {
-      "editor.defaultFormatter": "redhat.java"
-    },
-    "vs-kubernetes": {
-      "vs-kubernetes.kubeconfig": ".kube/config",
-      "vs-kubernetes.knownKubeconfigs": [
-        ".kube/config"
-      ]
-    },
-    "java.configuration.updateBuildConfiguration": "interactive",
-    "search.exclude": {
-      "**/node_modules": true,
-      "**/bower_components": true,
-      "**/*.code-search": true,
-      "client/.angular": true
-    }
+  "java.compile.nullAnalysis.mode": "disabled",
+  "java.configuration.updateBuildConfiguration": "interactive",
+  "vs-kubernetes": {
+    "vs-kubernetes.namespace": "training-log",
+    "vs-kubernetes.kubeconfig": "${workspaceFolder}/.kube/config"
+  },
+  "terminal.integrated.env.linux": {
+    "KUBECONFIG": "${workspaceFolder}/.kube/config"
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[java]": {
+    "editor.defaultFormatter": "redhat.java"
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/bower_components": true,
+    "**/*.code-search": true,
+    "client/.angular": true
+  },
+  "[xml]": {
+    "editor.defaultFormatter": "redhat.vscode-xml"
+  }
 }

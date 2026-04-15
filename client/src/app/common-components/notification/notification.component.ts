@@ -57,7 +57,7 @@ export class NotificationComponent {
   }
 
   @HostListener('@toast.done')
-  animationEnd(_event: AnimationEvent) {
+  animationEnd() {
     this.settled.emit();
   }
 }

@@ -1,104 +1,167 @@
-name: CI
+name: Pipeline
 
 on:
   push:
     branches:
       - main
-
-concurrency:
-  group: any
-  cancel-in-progress: true
+  pull_request:
 
 jobs:
   test-server:
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-test-server-${{ github.ref }}
+      cancel-in-progress: true
     defaults:
       run:
         working-directory: server
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-java@v3
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
         with:
           distribution: "temurin"
-          java-version: "17"
+          java-version: "21"
           cache: "maven"
       - run: mvn test -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
-
-  test-client:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: client
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          cache: "yarn"
-          cache-dependency-path: client/yarn.lock
-      - run: yarn --frozen-lockfile
-      - run: yarn test:ci
-
-  build-images:
-    needs:
-      - test-server
-      - test-client
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Get Ansible Vault key
-        run: |
-          mkdir .ansible
-          echo "${{ secrets.ANSIBLE_VAULT_KEY }}" > .ansible/vault_key
-
-      - uses: actions/setup-python@v4
-        with:
-          python-version: "3.9"
-          cache: "pip" # caching pip dependencies
-      - run: pip install -r requirements.txt
-
-      - uses: buildpacks/github-actions/setup-pack@v5.0.0
-
-      - run: python scripts/build.py ${{ secrets.GITHUB_TOKEN }}
 
   test-e2e:
-    needs: build-images
     runs-on: ubuntu-latest
-    defaults:
-      run:
+    concurrency:
+      group: ${{ github.workflow }}-test-e2e-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: test/package-lock.json
+      - name: Install dependencies
         working-directory: test
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+        run: npm ci
+      - name: Install Playwright browsers
+        working-directory: test
+        run: npx playwright install chromium --with-deps
+      - name: Setup test environment and start pod
+        run: scripts/pod_up.sh
+      - name: Run Playwright tests
+        working-directory: test
+        run: npx playwright test
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v4
+        if: failure()
         with:
-          node-version: 18
-      - uses: actions/setup-java@v3
-        with:
-          distribution: "temurin"
-          java-version: "17"
-          cache: "maven"
-      - run: node docker-compose.js | docker compose --file - up --wait --quiet-pull
-      - run: mvn test -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
-      - run: node docker-compose.js | docker compose --file - logs
+          name: test-results
+          path: test/test-results
+      - name: Collect pod logs
         if: always()
+        run: |
+          for container in $(podman pod inspect training-log-pro-test --format '{{range .Containers}}{{.Name}} {{end}}' 2>/dev/null); do
+            echo "$container" | grep -q "infra" && continue
+            echo "=== $container ==="
+            podman logs "$container" 2>&1 || true
+          done
 
-  deploy:
-    needs: test-e2e
+  publish-server:
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-publish-server-${{ github.ref }}
+      cancel-in-progress: false
+    needs:
+      - test-server
+      - test-e2e
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - name: Get Ansible Vault key
+      - name: Get next version
+        id: get_next_version
+        uses: mucsi96/get-next-version@main
+        with:
+          prefix: 'server'
+          src: server
+
+      - name: Login to Docker Hub
+        if: steps.get_next_version.outputs.hasNextVersion == 'true'
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | podman login --username "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin docker.io
+
+      - name: Build and push server image
+        if: steps.get_next_version.outputs.hasNextVersion == 'true'
         run: |
-          mkdir .ansible
-          echo "${{ secrets.ANSIBLE_VAULT_KEY }}" > .ansible/vault_key
+          podman build -t docker.io/${{ secrets.DOCKERHUB_USERNAME }}/training-log-pro-server:${{ steps.get_next_version.outputs.version }} server
+          podman push docker.io/${{ secrets.DOCKERHUB_USERNAME }}/training-log-pro-server:${{ steps.get_next_version.outputs.version }}
 
-      - run: pip install -r requirements.txt
-      - run: ansible-galaxy install -r galaxy-requirements.yaml
-      - run: scripts/provision.sh
+      - name: Create release
+        if: steps.get_next_version.outputs.hasNextVersion == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: server-${{ steps.get_next_version.outputs.version }}
+          generate_release_notes: true
 
+  publish-client:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-publish-client-${{ github.ref }}
+      cancel-in-progress: false
+    needs:
+      - test-server
+      - test-e2e
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Get next version
+        id: get_next_version
+        uses: mucsi96/get-next-version@main
+        with:
+          prefix: 'client'
+          src: client
+
+      - name: Login to Docker Hub
+        if: steps.get_next_version.outputs.hasNextVersion == 'true'
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | podman login --username "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin docker.io
+
+      - name: Build and push client image
+        if: steps.get_next_version.outputs.hasNextVersion == 'true'
+        run: |
+          podman build -t docker.io/${{ secrets.DOCKERHUB_USERNAME }}/training-log-pro-client:${{ steps.get_next_version.outputs.version }} client
+          podman push docker.io/${{ secrets.DOCKERHUB_USERNAME }}/training-log-pro-client:${{ steps.get_next_version.outputs.version }}
+
+      - name: Create release
+        if: steps.get_next_version.outputs.hasNextVersion == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: client-${{ steps.get_next_version.outputs.version }}
+          generate_release_notes: true
+
+  deploy:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-deploy
+      cancel-in-progress: false
+    needs: [publish-server, publish-client]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Connect to Twingate
+        uses: twingate/github-action@v1
+        with:
+          service-key: ${{ secrets.TWINGATE_SERVICE_KEY }}
+
+      - name: Deploy to Kubernetes
+        env:
+          K8S_CONFIG: ${{ secrets.K8S_CONFIG }}
+          HOSTNAME: ${{ secrets.HOSTNAME }}
+          API_CLIENT_ID: ${{ secrets.API_CLIENT_ID }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          AZURE_KEYVAULT_ENDPOINT: ${{ secrets.AZURE_KEYVAULT_ENDPOINT }}
+        run: scripts/deploy.sh

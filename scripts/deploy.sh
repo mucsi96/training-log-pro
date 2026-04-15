@@ -1,0 +1,58 @@
+#!/bin/bash
+
+set -e  # Exit immediately if a command exits with a non-zero status
+
+: "${K8S_CONFIG:?Environment variable K8S_CONFIG is required}"
+: "${HOSTNAME:?Environment variable HOSTNAME is required}"
+: "${API_CLIENT_ID:?Environment variable API_CLIENT_ID is required}"
+: "${DOCKERHUB_USERNAME:?Environment variable DOCKERHUB_USERNAME is required}"
+: "${AZURE_KEYVAULT_ENDPOINT:?Environment variable AZURE_KEYVAULT_ENDPOINT is required}"
+
+# Create a temporary file in /dev/shm (RAM) to avoid writing to disk
+KUBECONFIG_FILE=$(mktemp /dev/shm/kubeconfig.XXXXXX)
+chmod 600 "$KUBECONFIG_FILE"
+echo "$K8S_CONFIG" > "$KUBECONFIG_FILE"
+export KUBECONFIG="$KUBECONFIG_FILE"
+
+# Ensure the temporary file is deleted when the script exits
+trap 'rm -f "$KUBECONFIG_FILE"' EXIT
+
+# Get latest tags for both server and client
+serverLatestTag=$(curl -s "https://registry.hub.docker.com/v2/repositories/$DOCKERHUB_USERNAME/training-log-pro-server/tags" | jq -r '.results | map(select(.name != "latest")) | sort_by(.last_updated) | reverse | .[0].name')
+clientLatestTag=$(curl -s "https://registry.hub.docker.com/v2/repositories/$DOCKERHUB_USERNAME/training-log-pro-client/tags" | jq -r '.results | map(select(.name != "latest")) | sort_by(.last_updated) | reverse | .[0].name')
+
+echo "Updating Helm repositories..."
+helm repo add mucsi96 https://mucsi96.github.io/k8s-helm-charts --force-update
+
+springAppChartVersion=$(helm search repo mucsi96/spring-app --output json | jq -r '.[0].version')
+clientAppChartVersion=$(helm search repo mucsi96/client-app --output json | jq -r '.[0].version')
+
+echo "Deploying server: $DOCKERHUB_USERNAME/training-log-pro-server:$serverLatestTag to $HOSTNAME using spring-app chart $springAppChartVersion"
+
+helm upgrade training-log-server mucsi96/spring-app \
+    --install \
+    --version $springAppChartVersion \
+    --namespace training-log \
+    --set image=$DOCKERHUB_USERNAME/training-log-pro-server:$serverLatestTag \
+    --set entryPoint=web \
+    --set host=$HOSTNAME \
+    --set basePath=/api \
+    --set clientId=$API_CLIENT_ID \
+    --set serviceAccountName=training-log-api-workload-identity \
+    --set env.AZURE_KEYVAULT_ENDPOINT=$AZURE_KEYVAULT_ENDPOINT \
+    --set resources.requests.memory=1Gi \
+    --set resources.requests.cpu=1 \
+    --set resources.limits.memory=2Gi \
+    --set resources.limits.cpu=2 \
+    --wait
+
+echo "Deploying client: $DOCKERHUB_USERNAME/training-log-pro-client:$clientLatestTag to $HOSTNAME using client-app chart $clientAppChartVersion"
+
+helm upgrade training-log-client mucsi96/client-app \
+    --install \
+    --version $clientAppChartVersion \
+    --namespace training-log \
+    --set image=$DOCKERHUB_USERNAME/training-log-pro-client:$clientLatestTag \
+    --set host=$HOSTNAME \
+    --set entryPoint=web \
+    --wait

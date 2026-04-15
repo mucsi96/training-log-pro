@@ -4,20 +4,22 @@ import {
   provideHttpClientTesting,
 } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { Subject } from 'rxjs';
 import { NotificationService } from '../common-components/notification.service';
 import { WithingsService } from '../withings/withings.service';
 import { WeightMeasurement, WeightService } from './weight.service';
 
-function setup() {
+function setup({ pendingSync = false } = {}) {
   const mockNotificationService: jasmine.SpyObj<NotificationService> =
     jasmine.createSpyObj(['showNotification']);
-  const syncMeasurements = new Subject<never>();
   const mockWithingsService: jasmine.SpyObj<WithingsService> =
-    jasmine.createSpyObj(['syncMeasurements']);
-  mockWithingsService.syncMeasurements.and.returnValue(
-    syncMeasurements.asObservable()
-  );
+    jasmine.createSpyObj(['sync']);
+
+  if (pendingSync) {
+    mockWithingsService.sync.and.returnValue(new Promise<void>(() => {}));
+  } else {
+    mockWithingsService.sync.and.returnValue(Promise.resolve());
+  }
+
   TestBed.configureTestingModule({
     providers: [
       provideHttpClient(),
@@ -39,13 +41,7 @@ function setup() {
     service,
     httpTestingController,
     mockNotificationService,
-    mockWithingsService,
-    syncMeasurements,
   };
-}
-
-function daysBefore(days: number): Date {
-  return new Date(new Date().getTime() - days * 1000 * 60 * 60 * 24);
 }
 
 const mockResponse: WeightMeasurement[] = [
@@ -74,42 +70,34 @@ const mockResponse2: WeightMeasurement[] = [
 
 describe('WeightService', () => {
   describe('getWeight', () => {
-    it('should return weight', () => {
-      const { service, httpTestingController, syncMeasurements } = setup();
-      service.getWeight(7).subscribe((measurements) => {
-        expect(measurements).toEqual(mockResponse);
-      });
-      syncMeasurements.complete();
+    it('should return weight', async () => {
+      const { service, httpTestingController } = setup();
+      const promise = service.getWeight(7);
+      await Promise.resolve();
       httpTestingController
         .expectOne('/api/weight?period=7')
         .flush(mockResponse);
+      const result = await promise;
+      expect(result).toEqual(mockResponse);
       httpTestingController.verify();
     });
 
     it('should sync measurements first', () => {
-      const { service, httpTestingController } = setup();
-      service.getWeight(7).subscribe((measurements) => {
-        expect(measurements).toEqual(mockResponse);
-      });
-      const request = httpTestingController.expectNone('/api/weight?period=7');
-      expect(request).toBeUndefined();
+      const { service, httpTestingController } = setup({ pendingSync: true });
+      service.getWeight(7);
+      httpTestingController.expectNone('/api/weight?period=7');
       httpTestingController.verify();
     });
 
-    it('should show notification if fetching weight measurements was not succesful', () => {
-      const {
-        service,
-        httpTestingController,
-        mockNotificationService,
-        syncMeasurements,
-      } = setup();
-      service.getWeight(7).subscribe((measurements) => {
-        expect(measurements).toEqual(mockResponse);
-      });
-      syncMeasurements.complete();
+    it('should show notification if fetching weight measurements was not succesful', async () => {
+      const { service, httpTestingController, mockNotificationService } =
+        setup();
+      const promise = service.getWeight(7);
+      await Promise.resolve();
       httpTestingController
         .expectOne('/api/weight?period=7')
         .error(new ProgressEvent(''));
+      await expectAsync(promise).toBeRejected();
       httpTestingController.verify();
       expect(mockNotificationService.showNotification).toHaveBeenCalledWith(
         'Unable to fetch weight',
@@ -117,106 +105,100 @@ describe('WeightService', () => {
       );
     });
 
-    it('caches weight measurements', () => {
-      const { service, httpTestingController, syncMeasurements } = setup();
-      service.getWeight(7).subscribe((measurements) => {
-        expect(measurements).toEqual(mockResponse);
-      });
-      syncMeasurements.complete();
-      service.getWeight(7).subscribe((measurements) => {
-        expect(measurements).toEqual(mockResponse);
-      });
+    it('caches weight measurements', async () => {
+      const { service, httpTestingController } = setup();
+      const promise1 = service.getWeight(7);
+      await Promise.resolve();
       httpTestingController
         .expectOne('/api/weight?period=7')
         .flush(mockResponse);
+      const result1 = await promise1;
+      expect(result1).toEqual(mockResponse);
+
+      const result2 = await service.getWeight(7);
+      expect(result2).toEqual(mockResponse);
       httpTestingController.verify();
     });
 
-    it('caches weight measurements for multiple periods', () => {
-      const { service, httpTestingController, syncMeasurements } = setup();
-      service.getWeight(10).subscribe((measurements) => {
-        expect(measurements).toEqual(mockResponse);
-      });
-      service.getWeight(30).subscribe((measurements) => {
-        expect(measurements).toEqual(mockResponse2);
-      });
-      syncMeasurements.complete();
-      service.getWeight(10).subscribe((measurements) => {
-        expect(measurements).toEqual(mockResponse);
-      });
-      service.getWeight(30).subscribe((measurements) => {
-        expect(measurements).toEqual(mockResponse2);
-      });
-      service.getWeight(10).subscribe((measurements) => {
-        expect(measurements).toEqual(mockResponse);
-      });
+    it('caches weight measurements for multiple periods', async () => {
+      const { service, httpTestingController } = setup();
+      const promise1 = service.getWeight(10);
+      await Promise.resolve();
       httpTestingController
         .expectOne('/api/weight?period=10')
         .flush(mockResponse);
+      const result1 = await promise1;
+      expect(result1).toEqual(mockResponse);
+
+      const promise2 = service.getWeight(30);
+      await Promise.resolve();
       httpTestingController
         .expectOne('/api/weight?period=30')
         .flush(mockResponse2);
+      const result2 = await promise2;
+      expect(result2).toEqual(mockResponse2);
+
+      const result3 = await service.getWeight(10);
+      expect(result3).toEqual(mockResponse);
+
+      const result4 = await service.getWeight(30);
+      expect(result4).toEqual(mockResponse2);
+
       httpTestingController.verify();
     });
   });
 
   describe('getTodayWeight', () => {
-    it('should return todays weight', () => {
-      const { service, httpTestingController, syncMeasurements } = setup();
-      service.getTodayWeight().subscribe((measurement) => {
-        expect(measurement).toEqual(mockResponse.at(-1));
-      });
-      syncMeasurements.complete();
+    it('should return todays weight', async () => {
+      const { service, httpTestingController } = setup();
+      const promise = service.getTodayWeight();
+      await Promise.resolve();
       httpTestingController
         .expectOne('/api/weight?period=1')
         .flush([mockResponse.at(-1)]);
+      const result = await promise;
+      expect(result).toEqual(mockResponse.at(-1));
       httpTestingController.verify();
     });
 
-    it('should return last todays weight', () => {
-      const { service, syncMeasurements, httpTestingController } = setup();
-      service.getTodayWeight().subscribe((measurement) => {
-        expect(measurement).toEqual(mockResponse.at(-1));
-      });
-      syncMeasurements.complete();
+    it('should return last todays weight', async () => {
+      const { service, httpTestingController } = setup();
+      const promise = service.getTodayWeight();
+      await Promise.resolve();
       httpTestingController
         .expectOne('/api/weight?period=1')
         .flush(mockResponse);
+      const result = await promise;
+      expect(result).toEqual(mockResponse.at(-1));
       httpTestingController.verify();
     });
 
-    it('should return undefined if there was no weight measurements today', () => {
-      const { service, syncMeasurements, httpTestingController } = setup();
-      service.getTodayWeight().subscribe((measurement) => {
-        expect(measurement).toBeUndefined();
-      });
-      syncMeasurements.complete();
+    it('should return undefined if there was no weight measurements today', async () => {
+      const { service, httpTestingController } = setup();
+      const promise = service.getTodayWeight();
+      await Promise.resolve();
       httpTestingController.expectOne('/api/weight?period=1').flush([]);
+      const result = await promise;
+      expect(result).toBeUndefined();
       httpTestingController.verify();
     });
 
     it('should sync measurements first', () => {
-      const { service, httpTestingController } = setup();
-      service.getTodayWeight().subscribe();
-      const request = httpTestingController.expectNone('/api/weight?period=1');
-      expect(request).toBeUndefined();
+      const { service, httpTestingController } = setup({ pendingSync: true });
+      service.getTodayWeight();
+      httpTestingController.expectNone('/api/weight?period=1');
       httpTestingController.verify();
     });
 
-    it('should show notification if fetching today weight was not succesful', () => {
-      const {
-        service,
-        httpTestingController,
-        mockNotificationService,
-        syncMeasurements,
-      } = setup();
-      service.getTodayWeight().subscribe((measurement) => {
-        expect(measurement).toEqual(mockResponse.at(-1));
-      });
-      syncMeasurements.complete();
+    it('should show notification if fetching today weight was not succesful', async () => {
+      const { service, httpTestingController, mockNotificationService } =
+        setup();
+      const promise = service.getTodayWeight();
+      await Promise.resolve();
       httpTestingController
         .expectOne('/api/weight?period=1')
         .error(new ProgressEvent(''));
+      await expectAsync(promise).toBeRejected();
       httpTestingController.verify();
       expect(mockNotificationService.showNotification).toHaveBeenCalledWith(
         'Unable to fetch weight',
@@ -224,144 +206,32 @@ describe('WeightService', () => {
       );
     });
 
-    it('caches weight measurements', () => {
-      const { service, httpTestingController, syncMeasurements } = setup();
-      service.getTodayWeight().subscribe((measurements) => {
-        expect(measurements).toEqual(mockResponse.at(-1));
-      });
-      syncMeasurements.complete();
-      service.getTodayWeight().subscribe((measurements) => {
-        expect(measurements).toEqual(mockResponse.at(-1));
-      });
+    it('caches weight measurements', async () => {
+      const { service, httpTestingController } = setup();
+      const promise1 = service.getTodayWeight();
+      await Promise.resolve();
       httpTestingController
         .expectOne('/api/weight?period=1')
         .flush(mockResponse);
+      const result1 = await promise1;
+      expect(result1).toEqual(mockResponse.at(-1));
+
+      const result2 = await service.getTodayWeight();
+      expect(result2).toEqual(mockResponse.at(-1));
       httpTestingController.verify();
     });
   });
 
-  describe('getDiff', () => {
-    it('returns measurement diff between first and last day', () => {
-      const { service, syncMeasurements, httpTestingController } = setup();
-      service.getDiff(7).subscribe((diff) => {
-        expect(diff?.weight.toFixed(3)).toBe('-0.017');
-        expect(diff?.fatMassWeight?.toFixed(3)).toBe('-0.056');
-        expect(diff?.fatRatio?.toFixed(3)).toBe('-0.033');
-      });
-      syncMeasurements.complete();
-      httpTestingController.expectOne('/api/weight?period=7').flush([
-        {
-          date: daysBefore(3),
-          weight: 108.9,
-          fatMassWeight: 22.6,
-          fatRatio: 32.1,
-        },
-        {
-          date: daysBefore(0),
-          weight: 107.1,
-          fatMassWeight: 21.34,
-          fatRatio: 31.04,
-        },
-      ]);
-      httpTestingController.verify();
-    });
-
-    it('returns only available measurements', () => {
-      const { service, syncMeasurements, httpTestingController } = setup();
-      service.getDiff(7).subscribe((diff) => {
-        expect(diff?.weight.toFixed(3)).toBe('-0.017');
-      });
-      syncMeasurements.complete();
-      httpTestingController.expectOne('/api/weight?period=7').flush([
-        {
-          date: daysBefore(3),
-          weight: 108.9,
-        },
-        {
-          date: daysBefore(0),
-          weight: 107.1,
-        },
-      ]);
-      httpTestingController.verify();
-    });
-
-    it('returns undefined if there is only 1 measurements', () => {
-      const { service, syncMeasurements, httpTestingController } = setup();
-      service.getDiff(7).subscribe((diff) => {
-        expect(diff).toBeUndefined();
-      });
-      syncMeasurements.complete();
-      httpTestingController.expectOne('/api/weight?period=7').flush([
-        {
-          date: daysBefore(3),
-          weight: 108.9,
-        },
-      ]);
-      httpTestingController.verify();
-    });
-
-    it('returns undefined if there are no measurements', () => {
-      const { service, syncMeasurements, httpTestingController } = setup();
-      service.getDiff(7).subscribe((diff) => {
-        expect(diff).toBeUndefined();
-      });
-      syncMeasurements.complete();
-      httpTestingController.expectOne('/api/weight?period=7').flush([]);
-      httpTestingController.verify();
-    });
-
-    it('should sync measurements first', () => {
-      const { service, httpTestingController } = setup();
-      service.getDiff(7).subscribe();
-      const request = httpTestingController.expectNone('/api/weight?period=1');
-      expect(request).toBeUndefined();
-      httpTestingController.verify();
-    });
-
-    it('should show notification if fetching today weight was not succesful', () => {
-      const {
-        service,
-        httpTestingController,
-        mockNotificationService,
-        syncMeasurements,
-      } = setup();
-      service.getDiff(7).subscribe();
-      syncMeasurements.complete();
-      httpTestingController
-        .expectOne('/api/weight?period=7')
-        .error(new ProgressEvent(''));
-      httpTestingController.verify();
-      expect(mockNotificationService.showNotification).toHaveBeenCalledWith(
-        'Unable to fetch weight',
-        'error'
-      );
-    });
-
-    it('caches weight measurements', () => {
-      const { service, httpTestingController, syncMeasurements } = setup();
-      service.getDiff(7).subscribe((diff) => {
-        expect(diff?.weight.toFixed(3)).toEqual('-0.010');
-      });
-      syncMeasurements.complete();
-      service.getDiff(7).subscribe((diff) => {
-        expect(diff?.weight.toFixed(3)).toEqual('-0.010');
-      });
-      httpTestingController
-        .expectOne('/api/weight?period=7')
-        .flush(mockResponse);
-      httpTestingController.verify();
-    });
-  });
-
-  it('caches across getWeight, getTodayWeight and getDiff functions', () => {
-    const { service, httpTestingController, syncMeasurements } = setup();
-    service.getWeight(1).subscribe();
-    service.getTodayWeight().subscribe();
-    service.getDiff(1).subscribe();
-    syncMeasurements.complete();
+  it('caches across getWeight and getTodayWeight functions', async () => {
+    const { service, httpTestingController } = setup();
+    const promise1 = service.getWeight(1);
+    await Promise.resolve();
     const request = httpTestingController.expectOne('/api/weight?period=1');
-    request.flush(mockResponse);
     expect(request.request.method).toBe('GET');
+    request.flush(mockResponse);
+    await promise1;
+
+    await service.getTodayWeight();
     httpTestingController.verify();
   });
 });

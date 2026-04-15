@@ -22,6 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestConstructor;
@@ -96,23 +97,25 @@ public class StravaControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  public void returns_forbidden_if_user_has_no_user_role() throws Exception {
-    authorizeStravaOAuth2Client();
-    MockHttpServletResponse response = mockMvc
+  @WithMockUser(username = "rob")
+  public void redirects_to_strava_request_authorization_page() throws Exception {
+    MockHttpServletResponse syncResponse = mockMvc
         .perform(
-            post("/strava/activities/sync")
-                .headers(getHeaders()))
+            post("/strava/activities/sync").headers(getHeaders()))
         .andReturn().getResponse();
 
-    assertThat(response.getStatus()).isEqualTo(403);
-  }
+    assertThat(syncResponse.getStatus()).isEqualTo(401);
+    String authorizeUrl = JsonPath.parse(syncResponse.getContentAsString())
+        .read("$._links.oauth2Login.href", String.class);
+    URI authorizeUri = new URI(authorizeUrl);
+    assertThat(authorizeUri).hasParameter("token");
 
-  @Test
-  @WithMockUserRoles
-  public void redirects_to_strava_request_authorization_page() throws Exception {
+    String token = UriComponentsBuilder.fromUriString(authorizeUrl).build()
+        .getQueryParams().getFirst("token");
+
     MockHttpServletResponse response = mockMvc
         .perform(
-            get("/strava/authorize").headers(getHeaders()))
+            get("/strava/authorize").queryParam("token", token).headers(getHeaders()))
         .andReturn().getResponse();
 
     assertThat(response.getStatus()).isEqualTo(302);
@@ -125,37 +128,54 @@ public class StravaControllerTests extends BaseIntegrationTest {
     assertThat(redirectUrl).hasParameter(OAuth2ParameterNames.SCOPE, "activity:read");
     assertThat(redirectUrl).hasParameter(OAuth2ParameterNames.STATE);
     assertThat(redirectUrl).hasParameter(OAuth2ParameterNames.REDIRECT_URI,
-        "http://localhost/strava/authorize");
+        "http://localhost/strava/authorize?token=" + token);
   }
 
   @Test
-  @WithMockUserRoles
+  @WithMockUser(username = "rob")
   public void requests_access_token_after_consent_is_granted() throws Exception {
     mockStravaServer.stubFor(WireMock.post("/oauth/token").willReturn(
         WireMock.aResponse()
             .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .withBodyFile("strava-authorize.json")));
 
+    MockHttpServletResponse syncResponse = mockMvc
+        .perform(
+            post("/strava/activities/sync").headers(getHeaders()))
+        .andReturn().getResponse();
+
+    String authorizeUrl = JsonPath.parse(syncResponse.getContentAsString())
+        .read("$._links.oauth2Login.href", String.class);
+    String token = UriComponentsBuilder.fromUriString(authorizeUrl).build()
+        .getQueryParams().getFirst("token");
+
     MockHttpSession mockHttpSession = new MockHttpSession();
     MockHttpServletResponse response1 = mockMvc.perform(
-        get("/strava/authorize").headers(getHeaders())
+        get("/strava/authorize").queryParam("token", token).headers(getHeaders())
             .session(mockHttpSession))
         .andReturn().getResponse();
-    UriComponents components = UriComponentsBuilder.fromUriString(response1.getRedirectedUrl()).build();
+    UriComponents components1 = UriComponentsBuilder.fromUriString(response1.getRedirectedUrl()).build();
     String state = URLDecoder.decode(
-        components.getQueryParams().getFirst(OAuth2ParameterNames.STATE),
+        components1.getQueryParams().getFirst(OAuth2ParameterNames.STATE),
+        StandardCharsets.UTF_8);
+
+    String redirectUri = URLDecoder.decode(
+        components1.getQueryParams().getFirst(OAuth2ParameterNames.REDIRECT_URI),
         StandardCharsets.UTF_8);
 
     MockHttpServletResponse response2 = mockMvc
-        .perform(get(components.getQueryParams().getFirst(OAuth2ParameterNames.REDIRECT_URI))
+        .perform(get(redirectUri)
             .headers(getHeaders())
             .queryParam(OAuth2ParameterNames.STATE, state)
             .queryParam(OAuth2ParameterNames.CODE, "test-authorization-code")
             .session(mockHttpSession))
         .andReturn().getResponse();
 
+    UriComponents components2 = UriComponentsBuilder.fromUriString(response2.getRedirectedUrl()).build();
+
     assertThat(response2.getStatus()).isEqualTo(302);
-    assertThat(response2.getRedirectedUrl()).isEqualTo("http://localhost/strava/authorize?continue");
+    assertThat(components2.getPath()).isEqualTo("/strava/authorize");
+    assertThat(components2.getQueryParams().getFirst("token")).isEqualTo(token);
 
     List<LoggedRequest> requests = mockStravaServer
         .findAll(WireMock.postRequestedFor(WireMock.urlEqualTo("/oauth/token")));
@@ -178,7 +198,7 @@ public class StravaControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  @WithMockUserRoles
+  @WithMockUser(username = "rob")
   public void requests_new_access_token_if_its_expired() throws Exception {
     mockStravaServer.stubFor(WireMock.post("/oauth/token").willReturn(
         WireMock.aResponse()
@@ -231,7 +251,7 @@ public class StravaControllerTests extends BaseIntegrationTest {
   }
 
   @Test
-  @WithMockUserRoles
+  @WithMockUser(username = "rob")
   public void returns_not_authorized_if_refresh_token_is_invalid() throws Exception {
     mockStravaServer.stubFor(WireMock.post("/oauth/token").willReturn(
         WireMock.aResponse()
@@ -259,12 +279,13 @@ public class StravaControllerTests extends BaseIntegrationTest {
 
     assertThat(authorizedClient.isPresent()).isFalse();
     assertThat(response.getStatus()).isEqualTo(401);
-    assertThat(JsonPath.parse(response.getContentAsString()).read("$._links.oauth2Login.href", String.class))
-        .isEqualTo("http://localhost/strava/authorize");
+    String authorizeUrl = JsonPath.parse(response.getContentAsString())
+        .read("$._links.oauth2Login.href", String.class);
+    assertThat(authorizeUrl).startsWith("http://localhost/strava/authorize?token=");
   }
 
   @Test
-  @WithMockUserRoles
+  @WithMockUser(username = "rob")
   public void pulls_todays_weight_from_strava_to_database() throws Exception {
     authorizeStravaOAuth2Client();
     mockStravaServer.stubFor(WireMock

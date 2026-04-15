@@ -1,174 +1,98 @@
 {
-  // For more information, visit: https://go.microsoft.com/fwlink/?LinkId=733558
   "version": "2.0.0",
   "tasks": [
     {
       "type": "shell",
+      "command": "bash",
+      "label": "Install dependencies",
+      "args": ["scripts/install_dependencies.sh"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "Start client",
-      "command": "ng",
-      "args": ["serve"],
-      "isBackground": true,
+      "type": "shell",
+      "command": "npm start",
       "options": {
         "cwd": "${workspaceFolder}/client"
       },
-      "problemMatcher": []
-    },
-    {
-      "type": "shell",
-      "label": "Start client with test env",
-      "command": "ng",
-      "args": ["serve", "--host", "0.0.0.0", "--configuration", "production"],
       "isBackground": true,
-      "options": {
-        "cwd": "${workspaceFolder}/client"
-      },
-      "problemMatcher": []
-    },
-    {
-      "type": "shell",
-      "command": "ng",
-      "label": "Run current client test",
-      "args": ["test", "--include", "**/${fileBasename}", "--no-watch"],
-      "options": {
-        "cwd": "${workspaceFolder}/client"
-      },
-      "problemMatcher": []
-    },
-    {
-      "type": "shell",
-      "command": "ng",
-      "label": "Run and watch current client test",
-      "args": ["test", "--include", "**/${fileBasename}"],
-      "options": {
-        "cwd": "${workspaceFolder}/client"
-      },
-      "problemMatcher": []
-    },
-    {
-      "type": "shell",
-      "command": "ng",
-      "label": "Run client tests",
-      "args": ["test", "--no-watch"],
-      "options": {
-        "cwd": "${workspaceFolder}/client"
-      },
-      "problemMatcher": []
-    },
-    {
-      "type": "shell",
-      "label": "Start server",
-      "command": "mvn",
-      "args": ["spring-boot:run", "-P", "local"],
-      "isBackground": true,
-      "options": {
-        "cwd": "${workspaceFolder}/server"
-      },
-      "problemMatcher": []
-    },
-    {
-      "type": "shell",
-      "label": "Run server tests",
-      "command": "mvn",
-      "args": ["test"],
-      "isBackground": true,
-      "options": {
-        "cwd": "${workspaceFolder}/server"
-      },
-      "problemMatcher": []
-    },
-    {
-      "type": "shell",
-      "label": "Compile server",
-      "command": "mvn",
-      "args": ["compile"],
-      "isBackground": true,
-      "options": {
-        "cwd": "${workspaceFolder}/server"
-      },
-      "problemMatcher": []
-    },
-    {
-      "type": "shell",
-      "label": "Start e2e environment",
-      "command": "node",
-      "args": [
-        "docker-compose.js",
-        "|",
-        "docker",
-        "compose",
-        "--file",
-        "-",
-        "up",
-        "--force-recreate",
-        "--build",
-        "--remove-orphans",
-        "--wait",
-        "--pull",
-        "always"
-      ],
-      "isBackground": true,
-      "options": {
-        "cwd": "${workspaceFolder}/test"
-      },
-      "problemMatcher": []
-    },
-    {
-      "type": "shell",
-      "label": "Start e2e environment with local apps",
-      "command": "node",
-      "args": [
-        "docker-compose.js",
-        "|",
-        "docker",
-        "compose",
-        "--file",
-        "-",
-        "up",
-        "--force-recreate",
-        "--build",
-        "--remove-orphans",
-        "--wait",
-        "--pull",
-        "always"
-      ],
-      "isBackground": true,
-      "options": {
-        "cwd": "${workspaceFolder}/test",
-        "env": {
-          "WITH_LOCAL_APPS": "true"
+      "problemMatcher": {
+        "pattern": [
+          {
+            "regexp": "^X \\[(ERROR)\\] ((TS|NG)\\d+): (.*)$",
+            "severity": 1,
+            "code": 2,
+            "message": 4
+          },
+          {
+            "regexp": ""
+          },
+          {
+            "regexp": "^\\s*(.*):(\\d+):(\\d+):$",
+            "file": 1,
+            "line": 2,
+            "column": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": {
+            "regexp": "Changes detected\\. Rebuilding\\.\\.\\."
+          },
+          "endsPattern": {
+            "regexp": "Application bundle generation (complete|failed)"
+          }
         }
+      }
+    },
+    {
+      "type": "shell",
+      "label": "Pod up",
+      "command": "scripts/pod_up.sh",
+      "problemMatcher": []
+    },
+    {
+      "type": "shell",
+      "label": "Pod down",
+      "command": "scripts/pod_down.sh",
+      "problemMatcher": []
+    },
+    {
+      "type": "shell",
+      "label": "Dev DB up",
+      "command": "scripts/dev_db_up.sh",
+      "problemMatcher": []
+    },
+    {
+      "type": "shell",
+      "label": "Dev DB down",
+      "command": "scripts/dev_db_down.sh",
+      "problemMatcher": []
+    },
+    {
+      "type": "shell",
+      "command": "scripts/deploy.sh",
+      "label": "Deploy",
+      "options": {
+        "cwd": "${workspaceFolder}"
       },
       "problemMatcher": []
     },
     {
       "type": "shell",
-      "label": "Stop e2e environment",
-      "command": "node",
-      "args": [
-        "docker-compose.js",
-        "|",
-        "docker",
-        "compose",
-        "--file",
-        "-",
-        "down"
-      ],
-      "isBackground": true,
+      "label": "Run Playwright Tests",
+      "command": "npm test",
       "options": {
         "cwd": "${workspaceFolder}/test"
       },
-      "problemMatcher": []
-    },
-    {
-      "type": "shell",
-      "label": "Run e2e tests",
-      "command": "mvn",
-      "args": ["test"],
-      "isBackground": true,
-      "options": {
-        "cwd": "${workspaceFolder}/test"
-      },
-      "problemMatcher": []
+      "problemMatcher": [],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
     }
   ]
 }

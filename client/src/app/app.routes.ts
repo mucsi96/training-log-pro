@@ -1,49 +1,46 @@
-import { Routes } from '@angular/router';
-import { HomeComponent } from './home/home.component';
-import { SigninComponent } from './auth/signin.component';
-import { SigninRedirectCallbackComponent } from './auth/signin-redirect-callback.component';
-import { hasRole } from './auth/hasRole';
+import { Routes, CanActivateFn } from '@angular/router';
+import { inject } from '@angular/core';
+import { MsalGuard } from '@azure/msal-angular';
+import { ENVIRONMENT_CONFIG } from './environment/environment.config';
 
-export enum RouterTokens {
-  SIGNIN = 'signin',
-  SIGNIN_REDIRECT_CALLBACK = 'signin-redirect-callback',
-  WEEK = '',
-  MONTH = 'month',
-  YEAR = 'year',
-  ALL_TIME = 'all-time',
-}
+const conditionalAuthGuard: CanActivateFn = (route, state) => {
+  const { mockAuth } = inject(ENVIRONMENT_CONFIG);
+
+  if (mockAuth) {
+    return true;
+  }
+
+  const msalGuard = inject(MsalGuard);
+  return msalGuard.canActivate(route, state);
+};
 
 export const routes: Routes = [
   {
-    path: RouterTokens.SIGNIN,
-    component: SigninComponent,
-  },
-  {
-    path: RouterTokens.SIGNIN_REDIRECT_CALLBACK,
-    component: SigninRedirectCallbackComponent,
-  },
-  {
-    path: RouterTokens.WEEK,
-    component: HomeComponent,
+    path: '',
+    loadComponent: () =>
+      import('./home/home.component').then((m) => m.HomeComponent),
     pathMatch: 'full',
     data: { period: 7 },
-    canActivate: [() => hasRole('user')],
+    canActivate: [conditionalAuthGuard],
   },
   {
-    path: RouterTokens.MONTH,
-    component: HomeComponent,
+    path: 'month',
+    loadComponent: () =>
+      import('./home/home.component').then((m) => m.HomeComponent),
     data: { period: 30 },
-    canActivate: [() => hasRole('user')],
+    canActivate: [conditionalAuthGuard],
   },
   {
-    path: RouterTokens.YEAR,
-    component: HomeComponent,
+    path: 'year',
+    loadComponent: () =>
+      import('./home/home.component').then((m) => m.HomeComponent),
     data: { period: 365 },
-    canActivate: [() => hasRole('user')],
+    canActivate: [conditionalAuthGuard],
   },
   {
-    path: RouterTokens.ALL_TIME,
-    component: HomeComponent,
-    canActivate: [() => hasRole('user')],
+    path: 'all-time',
+    loadComponent: () =>
+      import('./home/home.component').then((m) => m.HomeComponent),
+    canActivate: [conditionalAuthGuard],
   },
 ];
