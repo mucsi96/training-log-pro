@@ -77,6 +77,12 @@ spec:
           value: "8182"
         - name: SPRING_PROFILES_ACTIVE
           value: test
+        - name: DB_URL
+          value: jdbc:postgresql://localhost:5432/test
+        - name: DB_USERNAME
+          value: postgres
+        - name: DB_PASSWORD
+          value: postgres
       livenessProbe:
         httpGet:
           path: /actuator/health/readiness

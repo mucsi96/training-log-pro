@@ -18,10 +18,10 @@ export async function query(text: string, params?: any[]) {
 }
 
 export async function cleanupDb() {
-  await query('DELETE FROM weight');
-  await query('DELETE FROM ride');
-  await query('DELETE FROM fitness');
-  await query('DELETE FROM oauth2_authorized_client');
+  await query('DELETE FROM training_log.weight');
+  await query('DELETE FROM training_log.ride');
+  await query('DELETE FROM training_log.fitness');
+  await query('DELETE FROM training_log.oauth2_authorized_client');
 }
 
 export async function populateOAuthClients() {
@@ -29,7 +29,7 @@ export async function populateOAuthClients() {
   const tomorrow = new Date(Date.now() + 86400000).toISOString();
 
   await query(
-    `INSERT INTO oauth2_authorized_client (
+    `INSERT INTO training_log.oauth2_authorized_client (
       client_registration_id, principal_name, access_token_type,
       access_token_value, access_token_issued_at, access_token_expires_at,
       access_token_scopes, refresh_token_value, refresh_token_issued_at, created_at
@@ -42,7 +42,7 @@ export async function populateOAuthClients() {
   );
 
   await query(
-    `INSERT INTO oauth2_authorized_client (
+    `INSERT INTO training_log.oauth2_authorized_client (
       client_registration_id, principal_name, access_token_type,
       access_token_value, access_token_issued_at, access_token_expires_at,
       access_token_scopes, refresh_token_value, refresh_token_issued_at, created_at
@@ -63,7 +63,7 @@ export async function insertWeight(
 ) {
   const date = new Date(Date.now() - daysAgo * 86400000);
   await query(
-    'INSERT INTO weight (created_at, weight, fat_ratio, fat_mass_weight) VALUES ($1, $2, $3, $4)',
+    'INSERT INTO training_log.weight (created_at, weight, fat_ratio, fat_mass_weight) VALUES ($1, $2, $3, $4)',
     [date, weight, fatRatio, fatMassWeight]
   );
 }
@@ -80,7 +80,7 @@ export async function insertRide(
 ) {
   const date = new Date(Date.now() - daysAgo * 86400000);
   await query(
-    `INSERT INTO ride (
+    `INSERT INTO training_log.ride (
       created_at, calories, distance, moving_time, name,
       sport_type, total_elevation_gain, weighted_average_watts
     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
@@ -90,14 +90,14 @@ export async function insertRide(
 
 export async function deleteOAuthClient(clientRegistrationId: string) {
   await query(
-    'DELETE FROM oauth2_authorized_client WHERE client_registration_id = $1',
+    'DELETE FROM training_log.oauth2_authorized_client WHERE client_registration_id = $1',
     [clientRegistrationId]
   );
 }
 
 export async function getOAuthClient(clientRegistrationId: string) {
   const result = await query(
-    'SELECT principal_name FROM oauth2_authorized_client WHERE client_registration_id = $1',
+    'SELECT principal_name FROM training_log.oauth2_authorized_client WHERE client_registration_id = $1',
     [clientRegistrationId]
   );
   return result.rows[0];

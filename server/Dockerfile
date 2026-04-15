@@ -1,24 +1,35 @@
+# Stage 1: Build server with Maven
 FROM docker.io/library/maven:3-eclipse-temurin-21 AS build
 
 WORKDIR /workspace
 
-COPY pom.xml .
-COPY src src
+# Copy POM and source code
+COPY pom.xml ./
+COPY src ./src
 
-RUN mvn package -DskipTests && \
-    mkdir -p target/extracted && \
-    java -Djarmode=tools -jar target/*.jar extract --layers --launcher --destination target/extracted
+# Build the application
+RUN mvn package -DskipTests -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
 
+# Extract dependencies for layer caching
+RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar)
+
+# Stage 2: Runtime image
 FROM docker.io/library/eclipse-temurin:25-jre
+
+VOLUME /tmp
+
+ARG DEPENDENCY=/workspace/target/dependency
+ARG SPRING_PROFILES_ACTIVE=prod
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
-COPY --from=build /workspace/target/extracted/dependencies/ ./
-COPY --from=build /workspace/target/extracted/spring-boot-loader/ ./
-COPY --from=build /workspace/target/extracted/snapshot-dependencies/ ./
-COPY --from=build /workspace/target/extracted/application/ ./
+# Copy application layers
+COPY --from=build ${DEPENDENCY}/BOOT-INF/lib /app/lib
+COPY --from=build ${DEPENDENCY}/META-INF /app/META-INF
+COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
 
-ENV SPRING_PROFILES_ACTIVE=prod
+# Set environment variables
+ENV SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
 
-ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-XX:MaxHTTPHeaderSize=16384", "-cp", "/app:/app/lib/*", "mucsi96.traininglog.TrainingLogApplication"]
+# Run the application
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-Djdk.httpclient.allowRestrictedHeaders=content-length", "-cp", "app:app/lib/*", "mucsi96.traininglog.TrainingLogApplication"]
