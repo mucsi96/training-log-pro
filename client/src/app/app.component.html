@@ -1,9 +1,9 @@
-<header app-header>
+<mat-toolbar class="header">
   <nav>
-    <a app-header-menu routerLink="/"><h1 app-heading>W6</h1></a>
+    <a mat-button routerLink="">Training Log Pro</a>
     @if (isAuthenticated()) {
     <a
-      app-header-menu
+      mat-button
       routerLink=""
       [routerLinkActiveOptions]="{ exact: true }"
       routerLinkActive
@@ -11,33 +11,33 @@
       >Week</a
     >
     <a
-      app-header-menu
+      mat-button
       routerLink="month"
       routerLinkActive
       ariaCurrentWhenActive="page"
       >Month</a
     >
     <a
-      app-header-menu
+      mat-button
       routerLink="year"
       routerLinkActive
       ariaCurrentWhenActive="page"
       >Year</a
     >
     <a
-      app-header-menu
+      mat-button
       routerLink="all-time"
       routerLinkActive
       ariaCurrentWhenActive="page"
       >All time</a
     >
-    <app-user-badge></app-user-badge>
+    <div class="header-right">
+      <app-header></app-header>
+    </div>
     }
   </nav>
-</header>
-<main app-main>
-  <section class="main">
-    <router-outlet></router-outlet>
-  </section>
+</mat-toolbar>
+
+<main>
+  <router-outlet></router-outlet>
 </main>
-<ul app-notifications></ul>

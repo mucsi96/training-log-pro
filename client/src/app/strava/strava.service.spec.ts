@@ -4,13 +4,13 @@ import {
   provideHttpClientTesting,
 } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { NotificationService } from '../common-components/notification.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { WithingsService } from '../withings/withings.service';
 import { StravaService } from './strava.service';
 
 function setup() {
-  const mockNotificationService: jasmine.SpyObj<NotificationService> =
-    jasmine.createSpyObj(['showNotification']);
+  const mockSnackBar: jasmine.SpyObj<MatSnackBar> =
+    jasmine.createSpyObj(['open']);
   const mockWithingsService: jasmine.SpyObj<WithingsService> =
     jasmine.createSpyObj(['sync']);
 
@@ -21,13 +21,13 @@ function setup() {
       provideHttpClient(),
       provideHttpClientTesting(),
       StravaService,
-      { provide: NotificationService, useValue: mockNotificationService },
+      { provide: MatSnackBar, useValue: mockSnackBar },
       { provide: WithingsService, useValue: mockWithingsService },
     ],
   });
   const service = TestBed.inject(StravaService);
   const httpTestingController = TestBed.inject(HttpTestingController);
-  return { service, httpTestingController, mockNotificationService };
+  return { service, httpTestingController, mockSnackBar };
 }
 
 describe('StravaService', () => {
@@ -46,7 +46,7 @@ describe('StravaService', () => {
     });
 
     it('should show notification if fetching last backup was not succesful', async () => {
-      const { service, httpTestingController, mockNotificationService } =
+      const { service, httpTestingController, mockSnackBar } =
         setup();
       const promise = service.sync();
       await Promise.resolve();
@@ -55,14 +55,15 @@ describe('StravaService', () => {
         .error(new ProgressEvent(''));
       await promise;
       httpTestingController.verify();
-      expect(mockNotificationService.showNotification).toHaveBeenCalledWith(
+      expect(mockSnackBar.open).toHaveBeenCalledWith(
         'Unable to sync with Strava',
-        'error'
+        'Close',
+        jasmine.objectContaining({ panelClass: ['error'] })
       );
     });
 
     it('should redirect on 401 with oauth2Login link', async () => {
-      const { service, httpTestingController, mockNotificationService } =
+      const { service, httpTestingController, mockSnackBar } =
         setup();
 
       const originalHref = window.location.href;
@@ -86,7 +87,7 @@ describe('StravaService', () => {
 
       await promise;
       httpTestingController.verify();
-      expect(mockNotificationService.showNotification).not.toHaveBeenCalled();
+      expect(mockSnackBar.open).not.toHaveBeenCalled();
     });
 
     it('caches last backup time', async () => {

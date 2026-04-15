@@ -1,40 +1,42 @@
 @let today = todayRideStats.value();
 @let period = periodRideStats.value();
-@if (today && period) {
+@if (todayRideStats.isLoading() || periodRideStats.isLoading()) {
+<mat-spinner class="page-loading" />
+} @else if (today && period) {
 <section>
   <article>
-    <h2 app-text>Calories</h2>
-    <p app-heading large>
+    <h2>Calories</h2>
+    <p class="value">
       {{ today.calories | measurementWithUnit : "" : 0 }}
     </p>
-    <p app-text app-text-type="blue">
+    <p class="period-value">
       {{ period.calories | measurementWithUnit : "" : 0 }}
     </p>
   </article>
   <article>
-    <h2 app-text>Elevation gain</h2>
-    <p app-heading large>
+    <h2>Elevation gain</h2>
+    <p class="value">
       {{ today.elevationGain | measurementWithUnit : "m" : 0 }}
     </p>
-    <p app-text app-text-type="blue">
+    <p class="period-value">
       {{ period.elevationGain | measurementWithUnit : "m" : 0 }}
     </p>
   </article>
   <article>
-    <h2 app-text>Distance</h2>
-    <p app-heading large>
+    <h2>Distance</h2>
+    <p class="value">
       {{ today.distance | measurementWithUnit : "km" : 0 : 1000 }}
     </p>
-    <p app-text app-text-type="blue">
+    <p class="period-value">
       {{ period.distance | measurementWithUnit : "km" : 0 : 1000 }}
     </p>
   </article>
   <article>
-    <h2 app-text>Time</h2>
-    <p app-heading large>
+    <h2>Time</h2>
+    <p class="value">
       {{ today.time | measurementWithUnit : "min" : 0 : 60 }}
     </p>
-    <p app-text app-text-type="blue">
+    <p class="period-value">
       {{ period.time | measurementWithUnit : "min" : 0 : 60 }}
     </p>
   </article>

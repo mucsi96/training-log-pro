@@ -2,7 +2,6 @@ import { Component, Directive, Input } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { AppComponent } from './app.component';
-import { NotificationService } from './common-components/notification.service';
 import { provideHttpClient } from '@angular/common/http';
 import {
   IsActiveMatchOptions,
@@ -45,7 +44,6 @@ async function setup() {
     providers: [
       provideNoopAnimations(),
       provideHttpClient(),
-      NotificationService,
       {
         provide: ENVIRONMENT_CONFIG,
         useValue: { mockAuth: true, tenantId: '', clientId: '', apiClientId: '' },
@@ -74,6 +72,6 @@ async function setup() {
 describe('AppComponent', () => {
   it('should render header', async () => {
     const { element } = await setup();
-    expect(element.querySelector('header h1')?.textContent).toBe('W6');
+    expect(element.querySelector('mat-toolbar nav a')?.textContent?.trim()).toBe('Training Log Pro');
   });
 });

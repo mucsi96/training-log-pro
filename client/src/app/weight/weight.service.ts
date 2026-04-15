@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { NotificationService } from '../common-components/notification.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { WithingsService } from '../withings/withings.service';
 import { fetchJson } from '../utils/fetchJson';
 
@@ -15,7 +15,7 @@ export type WeightMeasurement = {
 export class WeightService {
   private readonly http = inject(HttpClient);
   private readonly withingsService = inject(WithingsService);
-  private readonly notificationService = inject(NotificationService);
+  private readonly snackBar = inject(MatSnackBar);
   private readonly cache = new Map<number, WeightMeasurement[]>();
 
   async getWeight(period = 0): Promise<WeightMeasurement[]> {
@@ -35,10 +35,11 @@ export class WeightService {
       this.cache.set(period, result);
       return result;
     } catch (e) {
-      this.notificationService.showNotification(
-        'Unable to fetch weight',
-        'error'
-      );
+      this.snackBar.open('Unable to fetch weight', 'Close', {
+        duration: 3000,
+        verticalPosition: 'top',
+        panelClass: ['error'],
+      });
       throw e;
     }
   }

@@ -3,9 +3,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { EChartsOption } from 'echarts';
 import { NgxEchartsModule } from 'ngx-echarts';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { map } from 'rxjs';
-import { HeadingComponent } from '../common-components/heading/heading.component';
-import { TextComponent } from '../common-components/text/text.component';
 import { WeightMeasurement, WeightService } from './weight.service';
 import { MeasurementWithUnitPipe } from '../utils/measurement-with-unit.pipe';
 import { PercentageDiffColorPipe } from '../utils/percentage-diff-color.pipe';
@@ -14,16 +13,15 @@ import { PercentageDiffPipe } from '../utils/percentage-diff.pipe';
 @Component({
   standalone: true,
   imports: [
-    HeadingComponent,
     NgxEchartsModule,
-    TextComponent,
+    MatProgressSpinnerModule,
     PercentageDiffPipe,
     PercentageDiffColorPipe,
     MeasurementWithUnitPipe,
   ],
   selector: 'app-weight',
   templateUrl: './weight.component.html',
-  styleUrls: ['./weight.component.css'],
+  styleUrl: './weight.component.css',
 })
 export class WeightComponent {
   private readonly weightService = inject(WeightService);

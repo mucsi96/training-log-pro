@@ -1,18 +1,17 @@
 import { Component, inject, resource } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { map } from 'rxjs';
-import { HeadingComponent } from '../common-components/heading/heading.component';
-import { TextComponent } from '../common-components/text/text.component';
 import { RideService } from './ride.service';
 import { MeasurementWithUnitPipe } from '../utils/measurement-with-unit.pipe';
 
 @Component({
   standalone: true,
-  imports: [HeadingComponent, TextComponent, MeasurementWithUnitPipe],
+  imports: [MatProgressSpinnerModule, MeasurementWithUnitPipe],
   selector: 'app-ride',
   templateUrl: './ride.component.html',
-  styleUrls: ['./ride.component.css'],
+  styleUrl: './ride.component.css',
 })
 export class RideComponent {
   private readonly rideService = inject(RideService);

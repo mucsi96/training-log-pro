@@ -4,13 +4,13 @@ import {
   provideHttpClientTesting,
 } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { NotificationService } from '../common-components/notification.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { StravaService } from '../strava/strava.service';
 import { RideService, RideStats } from './ride.service';
 
 function setup({ pendingSync = false } = {}) {
-  const mockNotificationService: jasmine.SpyObj<NotificationService> =
-    jasmine.createSpyObj(['showNotification']);
+  const mockSnackBar: jasmine.SpyObj<MatSnackBar> =
+    jasmine.createSpyObj(['open']);
   const mockStravaService: jasmine.SpyObj<StravaService> =
     jasmine.createSpyObj(['sync']);
 
@@ -25,7 +25,7 @@ function setup({ pendingSync = false } = {}) {
       provideHttpClient(),
       provideHttpClientTesting(),
       RideService,
-      { provide: NotificationService, useValue: mockNotificationService },
+      { provide: MatSnackBar, useValue: mockSnackBar },
       { provide: StravaService, useValue: mockStravaService },
     ],
   });
@@ -34,7 +34,7 @@ function setup({ pendingSync = false } = {}) {
   return {
     service,
     httpTestingController,
-    mockNotificationService,
+    mockSnackBar,
   };
 }
 const mockResponse: RideStats = {
@@ -72,7 +72,7 @@ describe('RideService', () => {
     });
 
     it('should show notification if fetching ride stats was not succesful', async () => {
-      const { service, httpTestingController, mockNotificationService } =
+      const { service, httpTestingController, mockSnackBar } =
         setup();
       const promise = service.getRideStats(30);
       await Promise.resolve();
@@ -81,9 +81,10 @@ describe('RideService', () => {
         .error(new ProgressEvent(''));
       await expectAsync(promise).toBeRejected();
       httpTestingController.verify();
-      expect(mockNotificationService.showNotification).toHaveBeenCalledWith(
+      expect(mockSnackBar.open).toHaveBeenCalledWith(
         'Unable to fetch ride stats',
-        'error'
+        'Close',
+        jasmine.objectContaining({ panelClass: ['error'] })
       );
     });
 

@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { NotificationService } from '../common-components/notification.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { StravaService } from '../strava/strava.service';
 import { fetchJson } from '../utils/fetchJson';
 
@@ -15,7 +15,7 @@ export type RideStats = {
 export class RideService {
   private readonly http = inject(HttpClient);
   private readonly stravaService = inject(StravaService);
-  private readonly notificationService = inject(NotificationService);
+  private readonly snackBar = inject(MatSnackBar);
   private readonly cache = new Map<number, RideStats>();
 
   async getRideStats(period = 0): Promise<RideStats> {
@@ -31,10 +31,11 @@ export class RideService {
       this.cache.set(period, stats);
       return stats;
     } catch (e) {
-      this.notificationService.showNotification(
-        'Unable to fetch ride stats',
-        'error'
-      );
+      this.snackBar.open('Unable to fetch ride stats', 'Close', {
+        duration: 3000,
+        verticalPosition: 'top',
+        panelClass: ['error'],
+      });
       throw e;
     }
   }
