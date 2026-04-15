@@ -1,20 +1,24 @@
 package mucsi96.traininglog.withings;
 
 import java.time.ZoneId;
+import java.util.Collections;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.core.OAuth2AuthorizationException;
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.view.RedirectView;
 
@@ -66,10 +70,14 @@ public class WithingsController {
 
   @GetMapping("/authorize")
   public RedirectView authorize(
-      Authentication principal,
+      @RequestParam String token,
       HttpServletRequest servletRequest,
       HttpServletResponse servletResponse) {
     log.info("authorizing Withings client");
+    String username = tokenService.consume(token);
+    Authentication principal = new PreAuthenticatedAuthenticationToken(
+        username, null, Collections.emptyList());
+    SecurityContextHolder.getContext().setAuthentication(principal);
     getAuthorizedClient(principal, servletRequest, servletResponse);
     return new RedirectView("/");
   }
