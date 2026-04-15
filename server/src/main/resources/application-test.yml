@@ -38,6 +38,8 @@ strava:
   username: ""
   password: ""
   api-uri: http://localhost:3002/strava
+playwright:
+  ws-endpoint: ${PLAYWRIGHT_WS_ENDPOINT:}
 management:
   server:
     port: ${server.port:0}
