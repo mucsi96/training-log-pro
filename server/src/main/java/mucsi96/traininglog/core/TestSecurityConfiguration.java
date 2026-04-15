@@ -17,7 +17,6 @@ public class TestSecurityConfiguration {
     public SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
-            .anonymous(anonymous -> anonymous.principal("rob"))
             .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
         return http.build();
     }
