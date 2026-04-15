@@ -143,7 +143,7 @@ public class WithingsControllerTests extends BaseIntegrationTest {
     assertThat(redirectUrl).hasParameter(OAuth2ParameterNames.SCOPE, "user.metrics");
     assertThat(redirectUrl).hasParameter(OAuth2ParameterNames.STATE);
     assertThat(redirectUrl).hasParameter(OAuth2ParameterNames.REDIRECT_URI,
-        "http://localhost/withings/authorize");
+        "http://localhost/withings/authorize?token=" + token);
   }
 
   @Test
@@ -174,8 +174,12 @@ public class WithingsControllerTests extends BaseIntegrationTest {
         components.getQueryParams().getFirst(OAuth2ParameterNames.STATE),
         StandardCharsets.UTF_8);
 
+    String redirectUri = URLDecoder.decode(
+        components.getQueryParams().getFirst(OAuth2ParameterNames.REDIRECT_URI),
+        StandardCharsets.UTF_8);
+
     MockHttpServletResponse response2 = mockMvc
-        .perform(get(components.getQueryParams().getFirst(OAuth2ParameterNames.REDIRECT_URI))
+        .perform(get(redirectUri)
             .headers(getHeaders())
             .queryParam(OAuth2ParameterNames.STATE, state)
             .queryParam(OAuth2ParameterNames.CODE, "test-authorization-code")

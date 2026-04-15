@@ -19,13 +19,17 @@ import org.springframework.security.oauth2.client.endpoint.OAuth2RefreshTokenGra
 import org.springframework.security.oauth2.client.endpoint.RestClientAuthorizationCodeTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.RestClientRefreshTokenTokenResponseClient;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 
@@ -48,8 +52,8 @@ public class StravaConfiguration {
 
   @Bean
   @Order(1)
-  SecurityFilterChain stravaSecurityFilterChain(HttpSecurity http, TokenService tokenService)
-      throws Exception {
+  SecurityFilterChain stravaSecurityFilterChain(HttpSecurity http, TokenService tokenService,
+      ClientRegistrationRepository clientRegistrationRepository) throws Exception {
     return http
         .securityMatcher("/strava/authorize")
         .csrf(AbstractHttpConfigurer::disable)
@@ -57,9 +61,45 @@ public class StravaConfiguration {
             AbstractPreAuthenticatedProcessingFilter.class)
         .oauth2Client(configurer -> configurer
             .authorizationCodeGrant(customizer -> customizer
+                .authorizationRequestResolver(tokenForwardingResolver(clientRegistrationRepository))
                 .accessTokenResponseClient(stravaAccessTokenResponseClient())))
         .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
         .build();
+  }
+
+  private OAuth2AuthorizationRequestResolver tokenForwardingResolver(
+      ClientRegistrationRepository clientRegistrationRepository) {
+    DefaultOAuth2AuthorizationRequestResolver defaultResolver =
+        new DefaultOAuth2AuthorizationRequestResolver(clientRegistrationRepository, "/oauth2/authorization");
+
+    return new OAuth2AuthorizationRequestResolver() {
+      @Override
+      public OAuth2AuthorizationRequest resolve(HttpServletRequest request) {
+        return addTokenToRedirectUri(request, defaultResolver.resolve(request));
+      }
+
+      @Override
+      public OAuth2AuthorizationRequest resolve(HttpServletRequest request, String clientRegistrationId) {
+        return addTokenToRedirectUri(request, defaultResolver.resolve(request, clientRegistrationId));
+      }
+
+      private OAuth2AuthorizationRequest addTokenToRedirectUri(HttpServletRequest request,
+          OAuth2AuthorizationRequest authorizationRequest) {
+        if (authorizationRequest == null) {
+          return null;
+        }
+        String token = request.getParameter("token");
+        if (token == null) {
+          return authorizationRequest;
+        }
+        String redirectUri = UriComponentsBuilder.fromUriString(authorizationRequest.getRedirectUri())
+            .queryParam("token", token)
+            .toUriString();
+        return OAuth2AuthorizationRequest.from(authorizationRequest)
+            .redirectUri(redirectUri)
+            .build();
+      }
+    };
   }
 
   @Bean

@@ -128,7 +128,7 @@ public class StravaControllerTests extends BaseIntegrationTest {
     assertThat(redirectUrl).hasParameter(OAuth2ParameterNames.SCOPE, "activity:read");
     assertThat(redirectUrl).hasParameter(OAuth2ParameterNames.STATE);
     assertThat(redirectUrl).hasParameter(OAuth2ParameterNames.REDIRECT_URI,
-        "http://localhost/strava/authorize");
+        "http://localhost/strava/authorize?token=" + token);
   }
 
   @Test
@@ -159,8 +159,12 @@ public class StravaControllerTests extends BaseIntegrationTest {
         components1.getQueryParams().getFirst(OAuth2ParameterNames.STATE),
         StandardCharsets.UTF_8);
 
+    String redirectUri = URLDecoder.decode(
+        components1.getQueryParams().getFirst(OAuth2ParameterNames.REDIRECT_URI),
+        StandardCharsets.UTF_8);
+
     MockHttpServletResponse response2 = mockMvc
-        .perform(get(components1.getQueryParams().getFirst(OAuth2ParameterNames.REDIRECT_URI))
+        .perform(get(redirectUri)
             .headers(getHeaders())
             .queryParam(OAuth2ParameterNames.STATE, state)
             .queryParam(OAuth2ParameterNames.CODE, "test-authorization-code")
