@@ -76,4 +76,4 @@ strava:
   password: ${strava-password}
   api-uri: https://www.strava.com
 playwright:
-  ws-endpoint: ${PLAYWRIGHT_WS_ENDPOINT:}
+  ws-endpoint: ${playwright-server-url}
