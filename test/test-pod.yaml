@@ -51,9 +51,9 @@ spec:
           value: "3001"
       livenessProbe:
         httpGet:
-          path: /
+          path: /health
           port: 3001
-        initialDelaySeconds: 2
+        initialDelaySeconds: 5
         periodSeconds: 2
         failureThreshold: 5
 
@@ -64,9 +64,9 @@ spec:
           value: "3002"
       livenessProbe:
         httpGet:
-          path: /
+          path: /health
           port: 3002
-        initialDelaySeconds: 2
+        initialDelaySeconds: 5
         periodSeconds: 2
         failureThreshold: 5
 
