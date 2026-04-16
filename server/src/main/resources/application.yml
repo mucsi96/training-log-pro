@@ -29,8 +29,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: https://login.microsoftonline.com/${tenant-id}/v2.0
-          audiences: ${api-client-id}
+          issuer-uri: https://login.microsoftonline.com/${tenant-id:}/v2.0
+          audiences: ${api-client-id:}
       client:
         provider:
           withings:

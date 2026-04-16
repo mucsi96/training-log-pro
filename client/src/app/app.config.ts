@@ -4,7 +4,6 @@ import { provideRouter } from '@angular/router';
 import {
   provideHttpClient,
   withInterceptors,
-  withInterceptorsFromDi,
 } from '@angular/common/http';
 import {
   MAT_RIPPLE_GLOBAL_OPTIONS,
@@ -16,7 +15,8 @@ import { NGX_ECHARTS_CONFIG } from 'ngx-echarts';
 import { routes } from './app.routes';
 import { errorInterceptor } from './utils/error.interceptor';
 import { timezoneInterceptor } from './utils/timezone.interceptor';
-import { provideMsalConfig } from './msal.config';
+import { authInterceptor } from 'angular-auth-oidc-client';
+import { provideOidcAuth } from './auth.config';
 import {
   EnvironmentConfig,
   ENVIRONMENT_CONFIG,
@@ -39,14 +39,13 @@ export function getAppConfig(environment: EnvironmentConfig): ApplicationConfig 
       provideZoneChangeDetection({ eventCoalescing: true }),
       provideRouter(routes),
       provideHttpClient(
-        withInterceptorsFromDi(),
-        withInterceptors([timezoneInterceptor, errorInterceptor])
+        withInterceptors([authInterceptor(), timezoneInterceptor, errorInterceptor])
       ),
       { provide: MAT_RIPPLE_GLOBAL_OPTIONS, useValue: globalRippleConfig },
       provideAnimationsAsync(),
       { provide: ENVIRONMENT_CONFIG, useValue: environment },
       provideECharts(),
-      ...(environment.mockAuth ? [] : provideMsalConfig()),
+      provideOidcAuth(environment),
     ],
   };
 }

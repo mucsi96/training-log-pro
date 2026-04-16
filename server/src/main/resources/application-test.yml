@@ -24,7 +24,9 @@ spring:
             client-secret: strava-client-secret
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8080
+          issuer-uri: http://localhost:8090/default
+          audiences: mock-api-client-id
+mock-oauth2-server-uri: ${MOCK_OAUTH2_SERVER_URI:}
 withings:
   api-uri: http://localhost:3001/withings
 strava:

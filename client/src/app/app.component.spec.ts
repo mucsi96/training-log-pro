@@ -46,7 +46,7 @@ async function setup() {
       provideHttpClient(),
       {
         provide: ENVIRONMENT_CONFIG,
-        useValue: { mockAuth: true, tenantId: '', clientId: '', apiClientId: '' },
+        useValue: { mockOAuth2ServerUri: 'http://localhost:8090', tenantId: '', clientId: '', apiClientId: '' },
       },
     ],
   }).compileComponents();
