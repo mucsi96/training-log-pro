@@ -24,6 +24,24 @@ jobs:
           cache: "maven"
       - run: mvn test -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
 
+  test-client:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-test-client-${{ github.ref }}
+      cancel-in-progress: true
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: client/package-lock.json
+      - run: npm ci
+      - run: npm test
+
   test-e2e:
     runs-on: ubuntu-latest
     concurrency:
@@ -111,6 +129,7 @@ jobs:
       cancel-in-progress: true
     needs:
       - test-server
+      - test-client
       - test-e2e
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
@@ -162,6 +181,7 @@ jobs:
       cancel-in-progress: true
     needs:
       - test-server
+      - test-client
       - test-e2e
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
