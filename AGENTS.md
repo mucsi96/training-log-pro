@@ -25,7 +25,9 @@
 - Write tests from user perspective
 - Use role-based selectors (getByRole)
 - Use semantic selectors (getByText, getByLabel)
-- E2E tests with Playwright
+- E2E tests with Playwright (in `test/`) are the only test layer; do not add Java unit tests in `server/`
+- Cover server behaviour by driving the running stack via Playwright and asserting on the UI or, when the behaviour is not user-visible, on the database via the helpers in `test/utils.ts`
+- Extend the mock servers under `mock_strava_server/` and `mock_withings_server/` to shape the data needed by a test instead of stubbing in Java
 
 ## Angular Style
 
