@@ -55,6 +55,7 @@ spring:
             redirect-uri: "{baseUrl}/strava/authorize"
             scope: activity:read
 server:
+  forward-headers-strategy: framework
   servlet:
     context-path: /api
 management:
