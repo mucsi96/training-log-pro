@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest';
 import { RelativeTimePipe } from './relative-time.pipe';
 
 describe('RelativeTimePipe', () => {
