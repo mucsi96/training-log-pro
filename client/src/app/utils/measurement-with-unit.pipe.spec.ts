@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest';
 import { MeasurementWithUnitPipe } from './measurement-with-unit.pipe';
 
 describe('MeasurementWithUnitPipe', () => {
