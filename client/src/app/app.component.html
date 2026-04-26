@@ -1,36 +1,38 @@
 <mat-toolbar class="header">
   <nav>
-    <a mat-button routerLink="">Training Log Pro</a>
-    @if (isAuthenticated()) {
-    <a
-      mat-button
-      routerLink=""
-      [routerLinkActiveOptions]="{ exact: true }"
-      routerLinkActive
-      ariaCurrentWhenActive="page"
-      >Week</a
-    >
-    <a
-      mat-button
-      routerLink="month"
-      routerLinkActive
-      ariaCurrentWhenActive="page"
-      >Month</a
-    >
-    <a
-      mat-button
-      routerLink="year"
-      routerLinkActive
-      ariaCurrentWhenActive="page"
-      >Year</a
-    >
-    <a
-      mat-button
-      routerLink="all-time"
-      routerLinkActive
-      ariaCurrentWhenActive="page"
-      >All time</a
-    >
+    <a class="brand" mat-button routerLink="">Training Log Pro</a>
+    @if (isAuthenticated() && isReady()) {
+    <div class="nav-links">
+      <a
+        mat-button
+        routerLink=""
+        [routerLinkActiveOptions]="{ exact: true }"
+        routerLinkActive
+        ariaCurrentWhenActive="page"
+        >Week</a
+      >
+      <a
+        mat-button
+        routerLink="month"
+        routerLinkActive
+        ariaCurrentWhenActive="page"
+        >Month</a
+      >
+      <a
+        mat-button
+        routerLink="year"
+        routerLinkActive
+        ariaCurrentWhenActive="page"
+        >Year</a
+      >
+      <a
+        mat-button
+        routerLink="all-time"
+        routerLinkActive
+        ariaCurrentWhenActive="page"
+        >All time</a
+      >
+    </div>
     <div class="header-right">
       <app-header></app-header>
     </div>
@@ -39,5 +41,9 @@
 </mat-toolbar>
 
 <main>
+  @if (isAuthenticated() && !isReady()) {
+  <mat-spinner class="page-loading" />
+  } @else {
   <router-outlet></router-outlet>
+  }
 </main>
