@@ -10,11 +10,11 @@ spring:
       client:
         provider:
           withings:
-            authorization-uri: http://localhost:3001/withings/oauth2_user/authorize2
-            token-uri: http://localhost:3001/withings/v2/oauth2
+            authorization-uri: http://localhost:8180/withings/oauth2_user/authorize2
+            token-uri: http://localhost:3080/withings/v2/oauth2
           strava:
-            authorization-uri: http://localhost:3002/strava/oauth/authorize
-            token-uri: http://localhost:3002/strava/oauth/token
+            authorization-uri: http://localhost:8180/strava/oauth/authorize
+            token-uri: http://localhost:3081/strava/oauth/token
         registration:
           withings-client:
             client-id: withings-client-id
@@ -24,15 +24,14 @@ spring:
             client-secret: strava-client-secret
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8080
+          issuer-uri: http://localhost:8089/default
+          audiences: mock-api-client-id
+mock-oauth2-server-uri: ${MOCK_OAUTH2_SERVER_URI:}
 withings:
-  api-uri: http://localhost:3001/withings
+  api-uri: http://localhost:3080/withings
 strava:
   username: "rob"
   password: "123"
-  api-uri: http://localhost:3002/strava
+  api-uri: http://localhost:3081/strava
 playwright:
   ws-endpoint: ${PLAYWRIGHT_WS_ENDPOINT:}
-management:
-  server:
-    port: ${server.port:0}

@@ -24,6 +24,24 @@ jobs:
           cache: "maven"
       - run: mvn test -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
 
+  test-client:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-test-client-${{ github.ref }}
+      cancel-in-progress: true
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: client/package-lock.json
+      - run: npm ci
+      - run: npm test
+
   test-e2e:
     runs-on: ubuntu-latest
     concurrency:
@@ -42,7 +60,49 @@ jobs:
       - name: Install Playwright browsers
         working-directory: test
         run: npx playwright install chromium --with-deps
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build server image
+        uses: docker/build-push-action@v6
+        with:
+          context: server
+          load: true
+          tags: localhost/training-log-pro-server:test
+          cache-from: type=gha,scope=server
+          cache-to: type=gha,mode=max,scope=server
+      - name: Build client image
+        uses: docker/build-push-action@v6
+        with:
+          context: client
+          load: true
+          tags: localhost/training-log-pro-client:test
+          cache-from: type=gha,scope=client
+          cache-to: type=gha,mode=max,scope=client
+      - name: Build mock withings image
+        uses: docker/build-push-action@v6
+        with:
+          context: mock_withings_server
+          load: true
+          tags: localhost/training-log-pro-mock-withings:test
+          cache-from: type=gha,scope=mock-withings
+          cache-to: type=gha,mode=max,scope=mock-withings
+      - name: Build mock strava image
+        uses: docker/build-push-action@v6
+        with:
+          context: mock_strava_server
+          load: true
+          tags: localhost/training-log-pro-mock-strava:test
+          cache-from: type=gha,scope=mock-strava
+          cache-to: type=gha,mode=max,scope=mock-strava
+      - name: Load images into Podman
+        run: |
+          docker save localhost/training-log-pro-server:test | podman load
+          docker save localhost/training-log-pro-client:test | podman load
+          docker save localhost/training-log-pro-mock-withings:test | podman load
+          docker save localhost/training-log-pro-mock-strava:test | podman load
       - name: Setup test environment and start pod
+        env:
+          SKIP_BUILD: "1"
         run: scripts/pod_up.sh
       - name: Run Playwright tests
         working-directory: test
@@ -66,9 +126,10 @@ jobs:
     runs-on: ubuntu-latest
     concurrency:
       group: ${{ github.workflow }}-publish-server-${{ github.ref }}
-      cancel-in-progress: false
+      cancel-in-progress: true
     needs:
       - test-server
+      - test-client
       - test-e2e
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
@@ -85,30 +146,42 @@ jobs:
           prefix: 'server'
           src: server
 
+      - name: Set up Docker Buildx
+        if: steps.get_next_version.outputs.hasNextVersion == 'true'
+        uses: docker/setup-buildx-action@v3
+
       - name: Login to Docker Hub
         if: steps.get_next_version.outputs.hasNextVersion == 'true'
-        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | podman login --username "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin docker.io
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push server image
         if: steps.get_next_version.outputs.hasNextVersion == 'true'
-        run: |
-          podman build -t docker.io/${{ secrets.DOCKERHUB_USERNAME }}/training-log-pro-server:${{ steps.get_next_version.outputs.version }} server
-          podman push docker.io/${{ secrets.DOCKERHUB_USERNAME }}/training-log-pro-server:${{ steps.get_next_version.outputs.version }}
+        uses: docker/build-push-action@v6
+        with:
+          context: server
+          push: true
+          tags: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/training-log-pro-server:${{ steps.get_next_version.outputs.version }}
+          cache-from: type=gha,scope=server
+          cache-to: type=gha,mode=max,scope=server
 
       - name: Create release
         if: steps.get_next_version.outputs.hasNextVersion == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: server-${{ steps.get_next_version.outputs.version }}
+          tag_name: ${{ steps.get_next_version.outputs.tag }}
           generate_release_notes: true
 
   publish-client:
     runs-on: ubuntu-latest
     concurrency:
       group: ${{ github.workflow }}-publish-client-${{ github.ref }}
-      cancel-in-progress: false
+      cancel-in-progress: true
     needs:
       - test-server
+      - test-client
       - test-e2e
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
@@ -125,21 +198,32 @@ jobs:
           prefix: 'client'
           src: client
 
+      - name: Set up Docker Buildx
+        if: steps.get_next_version.outputs.hasNextVersion == 'true'
+        uses: docker/setup-buildx-action@v3
+
       - name: Login to Docker Hub
         if: steps.get_next_version.outputs.hasNextVersion == 'true'
-        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | podman login --username "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin docker.io
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push client image
         if: steps.get_next_version.outputs.hasNextVersion == 'true'
-        run: |
-          podman build -t docker.io/${{ secrets.DOCKERHUB_USERNAME }}/training-log-pro-client:${{ steps.get_next_version.outputs.version }} client
-          podman push docker.io/${{ secrets.DOCKERHUB_USERNAME }}/training-log-pro-client:${{ steps.get_next_version.outputs.version }}
+        uses: docker/build-push-action@v6
+        with:
+          context: client
+          push: true
+          tags: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/training-log-pro-client:${{ steps.get_next_version.outputs.version }}
+          cache-from: type=gha,scope=client
+          cache-to: type=gha,mode=max,scope=client
 
       - name: Create release
         if: steps.get_next_version.outputs.hasNextVersion == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: client-${{ steps.get_next_version.outputs.version }}
+          tag_name: ${{ steps.get_next_version.outputs.tag }}
           generate_release_notes: true
 
   deploy:

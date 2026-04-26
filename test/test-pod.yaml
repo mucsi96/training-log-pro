@@ -29,7 +29,7 @@ spec:
       image: docker.io/library/postgres:17.5-bullseye
       ports:
         - containerPort: 5432
-          hostPort: 5460
+          hostPort: 5480
       env:
         - name: POSTGRES_DB
           value: test
@@ -48,11 +48,11 @@ spec:
       image: localhost/training-log-pro-mock-withings:test
       env:
         - name: PORT
-          value: "3001"
+          value: "3080"
       livenessProbe:
         httpGet:
           path: /health
-          port: 3001
+          port: 3080
         initialDelaySeconds: 5
         periodSeconds: 2
         failureThreshold: 5
@@ -61,24 +61,54 @@ spec:
       image: localhost/training-log-pro-mock-strava:test
       env:
         - name: PORT
-          value: "3002"
+          value: "3081"
       livenessProbe:
         httpGet:
           path: /health
-          port: 3002
+          port: 3081
         initialDelaySeconds: 5
+        periodSeconds: 2
+        failureThreshold: 5
+
+    - name: mock-oauth2
+      image: docker.io/mucsi96/mock-oidc-provider:latest
+      ports:
+        - containerPort: 8089
+          hostPort: 8089
+      env:
+        - name: PORT
+          value: "8089"
+        - name: ISSUER_ID
+          value: default
+        - name: SUB
+          value: test-user
+        - name: NAME
+          value: Test User
+        - name: PREFERRED_USERNAME
+          value: test-user@example.com
+        - name: ROLES
+          value: WorkoutReader,WorkoutCreator
+        - name: SCP
+          value: readWorkouts createWorkout
+        - name: AUD
+          value: mock-api-client-id
+      livenessProbe:
+        httpGet:
+          path: /health
+          port: 8089
+        initialDelaySeconds: 2
         periodSeconds: 2
         failureThreshold: 5
 
     - name: playwright
       image: mcr.microsoft.com/playwright:v1.59.1-noble
-      command: ["npx", "playwright", "run-server", "--port", "3003"]
+      command: ["npx", "playwright", "run-server", "--port", "3082"]
       livenessProbe:
-        tcpSocket:
-          port: 3003
+        exec:
+          command: ["node", "-e", "require('net').connect(3082,'localhost').on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))"]
         initialDelaySeconds: 5
         periodSeconds: 2
-        failureThreshold: 10
+        failureThreshold: 5
 
     - name: server
       image: localhost/training-log-pro-server:test
@@ -94,7 +124,9 @@ spec:
         - name: DB_PASSWORD
           value: postgres
         - name: PLAYWRIGHT_WS_ENDPOINT
-          value: "ws://localhost:3003"
+          value: "ws://localhost:3082"
+        - name: MOCK_OAUTH2_SERVER_URI
+          value: http://localhost:8089
       livenessProbe:
         httpGet:
           path: /actuator/health/readiness

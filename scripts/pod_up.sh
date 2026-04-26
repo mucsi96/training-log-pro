@@ -5,12 +5,16 @@ PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 POD_NAME="training-log-pro-test"
 MAX_WAIT=120
 
-echo "Building container images..."
-podman build -t localhost/training-log-pro-server:test "$PROJECT_DIR/server" &
-podman build -t localhost/training-log-pro-client:test "$PROJECT_DIR/client" &
-podman build -t localhost/training-log-pro-mock-withings:test "$PROJECT_DIR/mock_withings_server" &
-podman build -t localhost/training-log-pro-mock-strava:test "$PROJECT_DIR/mock_strava_server" &
-wait
+if [ "${SKIP_BUILD:-}" = "1" ]; then
+  echo "Skipping image build (SKIP_BUILD=1)..."
+else
+  echo "Building container images..."
+  podman build -t localhost/training-log-pro-server:test "$PROJECT_DIR/server" &
+  podman build -t localhost/training-log-pro-client:test "$PROJECT_DIR/client" &
+  podman build -t localhost/training-log-pro-mock-withings:test "$PROJECT_DIR/mock_withings_server" &
+  podman build -t localhost/training-log-pro-mock-strava:test "$PROJECT_DIR/mock_strava_server" &
+  wait
+fi
 
 echo "Cleaning up existing pod..."
 podman kube down "$PROJECT_DIR/test/test-pod.yaml" 2>/dev/null || true

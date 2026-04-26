@@ -1,18 +1,5 @@
-import { Routes, CanActivateFn } from '@angular/router';
-import { inject } from '@angular/core';
-import { MsalGuard } from '@azure/msal-angular';
-import { ENVIRONMENT_CONFIG } from './environment/environment.config';
-
-const conditionalAuthGuard: CanActivateFn = (route, state) => {
-  const { mockAuth } = inject(ENVIRONMENT_CONFIG);
-
-  if (mockAuth) {
-    return true;
-  }
-
-  const msalGuard = inject(MsalGuard);
-  return msalGuard.canActivate(route, state);
-};
+import { Routes } from '@angular/router';
+import { autoLoginPartialRoutesGuard } from 'angular-auth-oidc-client';
 
 export const routes: Routes = [
   {
@@ -21,26 +8,26 @@ export const routes: Routes = [
       import('./home/home.component').then((m) => m.HomeComponent),
     pathMatch: 'full',
     data: { period: 7 },
-    canActivate: [conditionalAuthGuard],
+    canActivate: [autoLoginPartialRoutesGuard],
   },
   {
     path: 'month',
     loadComponent: () =>
       import('./home/home.component').then((m) => m.HomeComponent),
     data: { period: 30 },
-    canActivate: [conditionalAuthGuard],
+    canActivate: [autoLoginPartialRoutesGuard],
   },
   {
     path: 'year',
     loadComponent: () =>
       import('./home/home.component').then((m) => m.HomeComponent),
     data: { period: 365 },
-    canActivate: [conditionalAuthGuard],
+    canActivate: [autoLoginPartialRoutesGuard],
   },
   {
     path: 'all-time',
     loadComponent: () =>
       import('./home/home.component').then((m) => m.HomeComponent),
-    canActivate: [conditionalAuthGuard],
+    canActivate: [autoLoginPartialRoutesGuard],
   },
 ];

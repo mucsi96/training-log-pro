@@ -35,7 +35,7 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-const port = process.env.PORT || 3002;
+const port = process.env.PORT || 3081;
 app.listen(port, () => {
   console.log(`Mock Strava server listening on port ${port}`);
 });
