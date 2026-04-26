@@ -32,11 +32,11 @@ http:
     mock-withings:
       loadBalancer:
         servers:
-          - url: "http://127.0.0.1:3001"
+          - url: "http://127.0.0.1:3080"
     mock-strava:
       loadBalancer:
         servers:
-          - url: "http://127.0.0.1:3002"
+          - url: "http://127.0.0.1:3081"
     client:
       loadBalancer:
         servers:

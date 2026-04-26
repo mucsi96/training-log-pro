@@ -26,7 +26,7 @@ while true; do
   fi
   STATUS=$(podman inspect --format='{{.State.Health.Status}}' "$DB_CONTAINER" 2>/dev/null || echo "missing")
   if [ "$STATUS" = "healthy" ]; then
-    echo "Test database is ready on port 5435"
+    echo "Test database is ready on port 5481"
     break
   fi
   sleep 2

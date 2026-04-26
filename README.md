@@ -32,3 +32,20 @@ All application secrets are pulled from Azure Key Vault using the Spring Cloud A
 | `AZURE_KEYVAULT_ENDPOINT` | Azure Key Vault endpoint URL |
 | `SPRING_ACTUATOR_PORT` | Port for Spring Boot Actuator endpoints |
 | `SPRING_PROFILES_ACTIVE` | Active Spring profile (`prod`, `local`, `test`) |
+
+## Port Mapping
+
+All host-bound ports use the 80-89 range to avoid conflicts.
+
+| Port | Service | Context |
+|------|---------|---------|
+| 3080 | Mock Withings API | Test pod |
+| 3081 | Mock Strava API | Test pod |
+| 3082 | Playwright server | Test pod |
+| 5480 | PostgreSQL | Test pod |
+| 5481 | PostgreSQL | Test DB pod |
+| 5482 | PostgreSQL | Dev pod |
+| 8089 | Mock OAuth2 provider | Test pod |
+| 8180 | Traefik HTTP | Test pod |
+| 8181 | Traefik dashboard | Test pod |
+| 8182 | Spring Boot actuator | Test pod / Local dev |
