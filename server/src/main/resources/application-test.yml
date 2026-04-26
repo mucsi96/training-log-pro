@@ -10,10 +10,10 @@ spring:
       client:
         provider:
           withings:
-            authorization-uri: http://localhost:3080/withings/oauth2_user/authorize2
+            authorization-uri: http://localhost:8180/withings/oauth2_user/authorize2
             token-uri: http://localhost:3080/withings/v2/oauth2
           strava:
-            authorization-uri: http://localhost:3081/strava/oauth/authorize
+            authorization-uri: http://localhost:8180/strava/oauth/authorize
             token-uri: http://localhost:3081/strava/oauth/token
         registration:
           withings-client:

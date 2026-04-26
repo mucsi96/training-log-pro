@@ -10,10 +10,10 @@ test.describe('Withings', () => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Mock Withings' })).toBeVisible();
     await page.getByRole('link', { name: 'Authorize' }).click();
-    await page.waitForURL('**/week');
+    await page.waitForURL('/');
 
     const client = await getOAuthClient('withings-client');
-    expect(client.principal_name).toBe('rob');
+    expect(client.principal_name).toBe('test-user');
   });
 
   test('should pull today\'s weight measurements from withings', async ({ page }) => {
