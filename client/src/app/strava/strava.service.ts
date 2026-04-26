@@ -1,5 +1,5 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { WithingsService } from '../withings/withings.service';
 import { fetchJson } from '../utils/fetchJson';
@@ -10,19 +10,21 @@ export class StravaService {
   private readonly snackBar = inject(MatSnackBar);
   private readonly withingsService = inject(WithingsService);
   private syncPromise: Promise<void> | undefined;
+  private readonly _isSynced = signal(false);
+  readonly isSynced = this._isSynced.asReadonly();
 
   sync(): Promise<void> {
     if (!this.syncPromise) {
-      this.syncPromise = this.withingsService
-        .sync()
-        .then(() =>
-          fetchJson<void>(this.http, '/api/strava/activities/sync', {
+      this.syncPromise = (async () => {
+        await this.withingsService.sync();
+        try {
+          await fetchJson<void>(this.http, '/api/strava/activities/sync', {
             method: 'post',
-          })
-        )
-        .catch((error: HttpErrorResponse) => {
-          const authorizeUrl = error.error?._links?.oauth2Login?.href;
-          if (error.status === 401 && authorizeUrl) {
+          });
+        } catch (error) {
+          const httpError = error as HttpErrorResponse;
+          const authorizeUrl = httpError.error?._links?.oauth2Login?.href;
+          if (httpError.status === 401 && authorizeUrl) {
             window.location.href = authorizeUrl;
             return;
           }
@@ -31,7 +33,9 @@ export class StravaService {
             verticalPosition: 'top',
             panelClass: ['error'],
           });
-        });
+        }
+        this._isSynced.set(true);
+      })();
     }
     return this.syncPromise;
   }
