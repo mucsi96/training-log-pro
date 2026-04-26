@@ -103,12 +103,6 @@ spec:
     - name: playwright
       image: mcr.microsoft.com/playwright:v1.59.1-noble
       command: ["npx", "playwright", "run-server", "--port", "3082"]
-      livenessProbe:
-        tcpSocket:
-          port: 3082
-        initialDelaySeconds: 5
-        periodSeconds: 2
-        failureThreshold: 10
 
     - name: server
       image: localhost/training-log-pro-server:test
