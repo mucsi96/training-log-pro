@@ -35,6 +35,3 @@ strava:
   api-uri: http://localhost:3081/strava
 playwright:
   ws-endpoint: ${PLAYWRIGHT_WS_ENDPOINT:}
-management:
-  server:
-    port: ${server.port:0}
