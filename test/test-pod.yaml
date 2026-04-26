@@ -29,7 +29,7 @@ spec:
       image: docker.io/library/postgres:17.5-bullseye
       ports:
         - containerPort: 5432
-          hostPort: 5460
+          hostPort: 5480
       env:
         - name: POSTGRES_DB
           value: test
@@ -48,11 +48,11 @@ spec:
       image: localhost/training-log-pro-mock-withings:test
       env:
         - name: PORT
-          value: "3001"
+          value: "3080"
       livenessProbe:
         httpGet:
           path: /health
-          port: 3001
+          port: 3080
         initialDelaySeconds: 5
         periodSeconds: 2
         failureThreshold: 5
@@ -61,11 +61,11 @@ spec:
       image: localhost/training-log-pro-mock-strava:test
       env:
         - name: PORT
-          value: "3002"
+          value: "3081"
       livenessProbe:
         httpGet:
           path: /health
-          port: 3002
+          port: 3081
         initialDelaySeconds: 5
         periodSeconds: 2
         failureThreshold: 5
@@ -73,11 +73,11 @@ spec:
     - name: mock-oauth2
       image: docker.io/mucsi96/mock-oidc-provider:latest
       ports:
-        - containerPort: 8090
-          hostPort: 8090
+        - containerPort: 8089
+          hostPort: 8089
       env:
         - name: PORT
-          value: "8090"
+          value: "8089"
         - name: ISSUER_ID
           value: default
         - name: SUB
@@ -95,17 +95,17 @@ spec:
       livenessProbe:
         httpGet:
           path: /health
-          port: 8090
+          port: 8089
         initialDelaySeconds: 2
         periodSeconds: 2
         failureThreshold: 5
 
     - name: playwright
       image: mcr.microsoft.com/playwright:v1.59.1-noble
-      command: ["npx", "playwright", "run-server", "--port", "3003"]
+      command: ["npx", "playwright", "run-server", "--port", "3082"]
       livenessProbe:
         tcpSocket:
-          port: 3003
+          port: 3082
         initialDelaySeconds: 5
         periodSeconds: 2
         failureThreshold: 10
@@ -124,9 +124,9 @@ spec:
         - name: DB_PASSWORD
           value: postgres
         - name: PLAYWRIGHT_WS_ENDPOINT
-          value: "ws://localhost:3003"
+          value: "ws://localhost:3082"
         - name: MOCK_OAUTH2_SERVER_URI
-          value: http://localhost:8090
+          value: http://localhost:8089
       livenessProbe:
         httpGet:
           path: /actuator/health/readiness

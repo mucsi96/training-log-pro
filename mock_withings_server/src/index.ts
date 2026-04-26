@@ -23,7 +23,7 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 3080;
 app.listen(port, () => {
   console.log(`Mock Withings server listening on port ${port}`);
 });
