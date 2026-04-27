@@ -89,7 +89,7 @@ cd client && npm run build    # Production build
 
 ### Backend
 ```bash
-scripts/dev_up.sh             # Start dev pod (database + playwright)
+scripts/dev_up.sh             # Start dev pod (database)
 scripts/dev_down.sh           # Stop dev pod
 cd server && mvn spring-boot:run -Dspring-boot.run.profiles=local  # Start with local profile
 ```

@@ -6,12 +6,7 @@
   },
   {
     "name": "strava",
-    "type": "mucsi96.traininglog.strava.StravaCOnfiguration",
+    "type": "mucsi96.traininglog.strava.StravaConfiguration",
     "description": "Configuration for Strava API"
-  },
-  {
-    "name": "playwright",
-    "type": "mucsi96.traininglog.core.PlaywrightConfiguration",
-    "description": "Configuration for Playwright browser"
   }
 ]}

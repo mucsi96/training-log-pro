@@ -15,14 +15,6 @@ RUN mvn package -DskipTests -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli
 RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar) \
     && rm -f target/dependency/META-INF/services/java.nio.file.spi.FileSystemProvider
 
-# Pre-extract Playwright driver from driver-bundle JAR
-RUN mkdir -p /workspace/playwright-driver /tmp/pw-extract \
-    && cd /tmp/pw-extract \
-    && jar -xf /workspace/target/dependency/BOOT-INF/lib/driver-bundle-*.jar driver/linux/ \
-    && cp -r driver/linux/* /workspace/playwright-driver/ \
-    && chmod -R +x /workspace/playwright-driver/ \
-    && rm -rf /tmp/pw-extract
-
 # Stage 2: Runtime image
 FROM docker.io/library/eclipse-temurin:25-jre
 
@@ -38,12 +30,8 @@ COPY --from=build ${DEPENDENCY}/BOOT-INF/lib /app/lib
 COPY --from=build ${DEPENDENCY}/META-INF /app/META-INF
 COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
 
-# Copy pre-extracted Playwright driver
-COPY --from=build /workspace/playwright-driver /opt/playwright-driver
-
 # Set environment variables
 ENV SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
-ENV PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1
 
 # Run the application
-ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-Djdk.httpclient.allowRestrictedHeaders=content-length", "-Dplaywright.cli.dir=/opt/playwright-driver", "-cp", "app:app/lib/*", "mucsi96.traininglog.TrainingLogApplication"]
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-Djdk.httpclient.allowRestrictedHeaders=content-length", "-cp", "app:app/lib/*", "mucsi96.traininglog.TrainingLogApplication"]

@@ -4,7 +4,6 @@ set -e
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 POD_NAME="training-log-pro-dev"
 DB_CONTAINER="training-log-pro-dev-db"
-PLAYWRIGHT_CONTAINER="training-log-pro-dev-playwright"
 MAX_WAIT=60
 
 if podman inspect --format='{{.State.Running}}' "$DB_CONTAINER" 2>/dev/null | grep -q "true"; then
@@ -18,7 +17,7 @@ podman kube down "$PROJECT_DIR/server/dev-pod.yaml" 2>/dev/null || true
 echo "Starting dev pod..."
 podman kube play "$PROJECT_DIR/server/dev-pod.yaml"
 
-for container in "$DB_CONTAINER" "$PLAYWRIGHT_CONTAINER"; do
+for container in "$DB_CONTAINER"; do
   echo "Waiting for $container to become healthy..."
   ELAPSED=0
   while true; do
@@ -36,4 +35,4 @@ for container in "$DB_CONTAINER" "$PLAYWRIGHT_CONTAINER"; do
   done
 done
 
-echo "Dev pod is ready (database on port 5482, playwright on port 3082)"
+echo "Dev pod is ready (database on port 5482)"

@@ -9,8 +9,7 @@
       "mainClass": "mucsi96.traininglog.TrainingLogApplication",
       "args": "--spring.profiles.active=local",
       "env": {
-        "AZURE_KEYVAULT_ENDPOINT": "https://p06-training-log.vault.azure.net",
-        "PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS": "1"
+        "AZURE_KEYVAULT_ENDPOINT": "https://p06-training-log.vault.azure.net"
       }
     }
   ]

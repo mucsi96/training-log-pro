@@ -22,6 +22,9 @@ public class Fitness {
   private ZonedDateTime createdAt;
 
   @Column
+  private ZonedDateTime pulledAt;
+
+  @Column
   private float fitness;
 
   @Column

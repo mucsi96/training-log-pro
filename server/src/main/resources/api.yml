@@ -61,4 +61,44 @@ paths:
                     type: integer
                     format: int64
 
+  /fitness:
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                title: FitnessTimeline
+                type: object
+                required:
+                  - measurements
+                properties:
+                  pulledAt:
+                    type: string
+                    format: date-time
+                  measurements:
+                    type: array
+                    items:
+                      title: FitnessMeasurement
+                      type: object
+                      required:
+                        - date
+                        - fitness
+                        - fatigue
+                        - form
+                      properties:
+                        date:
+                          type: string
+                          format: date-time
+                        fitness:
+                          type: number
+                          format: float
+                        fatigue:
+                          type: number
+                          format: float
+                        form:
+                          type: number
+                          format: float
+
 

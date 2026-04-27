@@ -76,48 +76,45 @@ export async function insertRide(
   name: string,
   sportType: string,
   totalElevationGain: number,
-  weightedAverageWatts: number
+  weightedAverageWatts: number,
+  sufferScore: number | null = null
 ) {
   const date = new Date(Date.now() - daysAgo * 86400000);
   await query(
     `INSERT INTO training_log.ride (
       created_at, calories, distance, moving_time, name,
-      sport_type, total_elevation_gain, weighted_average_watts
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-    [date, calories, distance, movingTime, name, sportType, totalElevationGain, weightedAverageWatts]
+      sport_type, total_elevation_gain, weighted_average_watts, suffer_score
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+    [date, calories, distance, movingTime, name, sportType, totalElevationGain, weightedAverageWatts, sufferScore]
   );
 }
 
-export async function insertFitness(
-  daysAgo: number,
-  fitness: number,
-  fatigue: number,
-  form: number
-) {
-  const date = new Date(Date.now() - daysAgo * 86400000);
-  await query(
-    'INSERT INTO training_log.fitness (created_at, fitness, fatigue, form) VALUES ($1, $2, $3, $4)',
-    [date, fitness, fatigue, form]
+export async function getRideRows() {
+  const result = await query(
+    'SELECT created_at, suffer_score FROM training_log.ride ORDER BY created_at ASC'
   );
-}
-
-export async function insertFitnessAt(
-  date: Date,
-  fitness: number,
-  fatigue: number,
-  form: number
-) {
-  await query(
-    'INSERT INTO training_log.fitness (created_at, fitness, fatigue, form) VALUES ($1, $2, $3, $4)',
-    [date, fitness, fatigue, form]
-  );
+  return result.rows;
 }
 
 export async function getFitnessRows() {
   const result = await query(
-    'SELECT created_at, fitness, fatigue, form FROM training_log.fitness ORDER BY created_at ASC'
+    'SELECT created_at, pulled_at, fitness, fatigue, form FROM training_log.fitness ORDER BY created_at ASC'
   );
   return result.rows;
+}
+
+export async function insertFitnessAt(
+  date: Date,
+  pulledAt: Date,
+  fitness: number,
+  fatigue: number,
+  form: number
+) {
+  await query(
+    `INSERT INTO training_log.fitness (created_at, pulled_at, fitness, fatigue, form)
+     VALUES ($1, $2, $3, $4, $5)`,
+    [date, pulledAt, fitness, fatigue, form]
+  );
 }
 
 export async function deleteOAuthClient(clientRegistrationId: string) {

@@ -167,3 +167,29 @@ databaseChangeLog:
                   type: float4
                   constraints:
                     nullable: true
+
+  - changeSet:
+      id: 5-add-suffer-score-to-ride
+      author: mucsi96
+      changes:
+        - addColumn:
+            tableName: ride
+            columns:
+              - column:
+                  name: suffer_score
+                  type: float4
+                  constraints:
+                    nullable: true
+
+  - changeSet:
+      id: 6-add-pulled-at-to-fitness
+      author: mucsi96
+      changes:
+        - addColumn:
+            tableName: fitness
+            columns:
+              - column:
+                  name: pulled_at
+                  type: timestamp(6)
+                  constraints:
+                    nullable: true

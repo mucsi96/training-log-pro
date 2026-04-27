@@ -73,8 +73,4 @@ management:
 withings:
   api-uri: https://wbsapi.withings.net
 strava:
-  username: ${strava-username}
-  password: ${strava-password}
   api-uri: https://www.strava.com
-playwright:
-  ws-endpoint: ${playwright-server-url}

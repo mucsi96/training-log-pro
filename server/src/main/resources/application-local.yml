@@ -8,5 +8,3 @@ spring:
 management:
   server:
     port: 8182
-playwright:
-  ws-endpoint: ws://localhost:3082

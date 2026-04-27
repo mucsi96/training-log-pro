@@ -30,8 +30,4 @@ mock-oauth2-server-uri: ${MOCK_OAUTH2_SERVER_URI:}
 withings:
   api-uri: http://localhost:3080/withings
 strava:
-  username: "rob"
-  password: "123"
   api-uri: http://localhost:3081/strava
-playwright:
-  ws-endpoint: ${PLAYWRIGHT_WS_ENDPOINT:}

@@ -41,4 +41,7 @@ public class Ride {
 
   @Column
   private String sportType;
+
+  @Column
+  private Float sufferScore;
 }

@@ -50,7 +50,7 @@ public class StravaActivityService {
         .toUriString();
   }
 
-  private List<Long> getTodayRideActivityIds(OAuth2AuthorizedClient authorizedClient, ZoneId zoneId) {
+  private List<StravaSummaryActivity> getTodayRideActivities(OAuth2AuthorizedClient authorizedClient, ZoneId zoneId) {
     HttpHeaders headers = new HttpHeaders();
     headers.setBearerAuth(authorizedClient.getAccessToken().getTokenValue());
     HttpEntity<String> request = new HttpEntity<>("", headers);
@@ -83,19 +83,18 @@ public class StravaActivityService {
     List<SportTypeEnum> rideActivities = List.of(SportTypeEnum.RIDE, SportTypeEnum.GRAVELRIDE,
         SportTypeEnum.MOUNTAINBIKERIDE, SportTypeEnum.VIRTUALRIDE);
 
-    return activities.stream().filter((activity) -> rideActivities.contains(activity.getSportType()))
-        .map(StravaSummaryActivity::getId).toList();
+    return activities.stream().filter((activity) -> rideActivities.contains(activity.getSportType())).toList();
   }
 
   public List<Ride> getTodayRides(OAuth2AuthorizedClient authorizedClient, ZoneId zoneId) {
-    return getTodayRideActivityIds(authorizedClient, zoneId).stream().map(id -> {
-      log.info("Getting Strava activity with id" + id);
+    return getTodayRideActivities(authorizedClient, zoneId).stream().map(summary -> {
+      log.info("Getting Strava activity with id" + summary.getId());
       HttpHeaders headers = new HttpHeaders();
       headers.setBearerAuth(authorizedClient.getAccessToken().getTokenValue());
       HttpEntity<String> request = new HttpEntity<>("", headers);
       RestTemplate restTemplate = new RestTemplate();
       ResponseEntity<StravaDetailedActivity> response = restTemplate.exchange(
-          configuration.getApiUri() + "/api/v3/activities/" + id,
+          configuration.getApiUri() + "/api/v3/activities/" + summary.getId(),
           HttpMethod.GET, request,
           StravaDetailedActivity.class, headers);
       StravaDetailedActivity activity = response.getBody();
@@ -119,6 +118,8 @@ public class StravaActivityService {
         throw new RuntimeException("No matching activity");
       }
 
+      Float sufferScore = activity.getSufferScore() != null ? activity.getSufferScore() : summary.getSufferScore();
+
       return Ride.builder()
           .createdAt(activity.getStartDate().atZoneSameInstant(ZoneOffset.UTC))
           .name(activity.getName())
@@ -128,6 +129,7 @@ public class StravaActivityService {
           .weightedAverageWatts(activity.getWeightedAverageWatts())
           .calories(activity.getCalories())
           .sportType(activity.getSportType())
+          .sufferScore(sufferScore)
           .build();
     }).toList();
   }

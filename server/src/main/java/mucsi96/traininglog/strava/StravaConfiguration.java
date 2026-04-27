@@ -46,8 +46,6 @@ import mucsi96.traininglog.core.TokenService;
 @Slf4j
 public class StravaConfiguration {
   public static final String registrationId = "strava-client";
-  private String username;
-  private String password;
   private String apiUri;
 
   @Bean
