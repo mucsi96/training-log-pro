@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -18,19 +17,16 @@ import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Route;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mucsi96.traininglog.fitness.Fitness;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class StravaFintnessService {
   private final Browser browser;
   private final StravaConfiguration configuration;
-
-  public StravaFintnessService(@Lazy Browser browser, StravaConfiguration configuration) {
-    this.browser = browser;
-    this.configuration = configuration;
-  }
 
   private Optional<StravaFitnessProfile> getTodayFitnessProfile(String responseBody) {
     ObjectMapper mapper = new ObjectMapper();
