@@ -1,8 +1,11 @@
 import { Request, Response } from 'express';
 
 const ATHLETE_ID = 2323;
-const EXPECTED_USERNAME = process.env.STRAVA_USERNAME || '';
-const EXPECTED_PASSWORD = process.env.STRAVA_PASSWORD || '';
+if (!process.env.STRAVA_USERNAME) throw new Error('STRAVA_USERNAME is not set');
+if (!process.env.STRAVA_PASSWORD) throw new Error('STRAVA_PASSWORD is not set');
+
+const EXPECTED_USERNAME = process.env.STRAVA_USERNAME;
+const EXPECTED_PASSWORD = process.env.STRAVA_PASSWORD;
 
 export function fitnessPage(req: Request, res: Response) {
   console.log('[fitnessPage] Serving fitness page with login form');
@@ -23,9 +26,10 @@ export function fitnessPage(req: Request, res: Response) {
         <label for="password">Password</label>
         <input type="password" id="password" name="password" />
         <button type="button" id="login-button">Log In</button>
+        <div id="login-error" style="display:none;color:red;"></div>
       </div>
       <div id="fitness-content" style="display:none;">
-        <div class="fitness-dot"></div>
+        <div class="fitness-dot" style="width:10px;height:10px;background:#000;border-radius:50%;"></div>
       </div>
       <script>
         document.getElementById('login-button').addEventListener('click', function() {
@@ -35,8 +39,9 @@ export function fitnessPage(req: Request, res: Response) {
           console.log('[fitness] Login attempt with email: ' + email);
 
           if (email !== '${EXPECTED_USERNAME}' || password !== '${EXPECTED_PASSWORD}') {
-            console.error('[fitness] Invalid credentials');
-            alert('Invalid credentials');
+            var errorEl = document.getElementById('login-error');
+            errorEl.textContent = 'Invalid credentials';
+            errorEl.style.display = 'block';
             return;
           }
 

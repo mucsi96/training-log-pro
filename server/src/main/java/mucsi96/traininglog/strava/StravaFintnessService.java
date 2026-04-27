@@ -105,18 +105,29 @@ public class StravaFintnessService {
         }
       });
 
-      page.navigate(configuration.getApiUri() + "/athlete/fitness");
+      try {
+        page.navigate(configuration.getApiUri() + "/athlete/fitness");
 
-      log.info("Waiting for login form");
-      page.waitForSelector("#email");
+        log.info("Waiting for login form");
+        page.waitForSelector("#email");
 
-      page.fill("#email", configuration.getUsername());
-      page.fill("#password", configuration.getPassword());
-      page.click("#login-button");
+        page.fill("#email", configuration.getUsername());
+        page.fill("#password", configuration.getPassword());
+        page.click("#login-button");
 
-      log.info("Waiting for fitness data to load");
-      page.waitForSelector(".fitness-dot");
-      log.info("Successful login");
+        log.info("Waiting for fitness data to load");
+        page.waitForSelector(".fitness-dot");
+        log.info("Successful login");
+      } catch (Exception e) {
+        log.error("Playwright error during fitness scraping", e);
+        try {
+          String ariaSnapshot = page.locator("body").ariaSnapshot();
+          log.error("Accessibility tree:\n{}", ariaSnapshot);
+        } catch (Exception snapshotError) {
+          log.error("Failed to capture accessibility tree", snapshotError);
+        }
+        return Optional.empty();
+      }
 
       String body = fitnessResponseBody.get();
 

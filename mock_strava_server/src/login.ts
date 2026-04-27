@@ -1,7 +1,10 @@
 import { Request, Response } from 'express';
 
-const EXPECTED_USERNAME = process.env.STRAVA_USERNAME || '';
-const EXPECTED_PASSWORD = process.env.STRAVA_PASSWORD || '';
+if (!process.env.STRAVA_USERNAME) throw new Error('STRAVA_USERNAME is not set');
+if (!process.env.STRAVA_PASSWORD) throw new Error('STRAVA_PASSWORD is not set');
+
+const EXPECTED_USERNAME = process.env.STRAVA_USERNAME;
+const EXPECTED_PASSWORD = process.env.STRAVA_PASSWORD;
 
 export function loginPage(req: Request, res: Response) {
   console.log('[loginPage] Serving login page');
