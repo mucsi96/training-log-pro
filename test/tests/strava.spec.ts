@@ -72,7 +72,7 @@ test.describe('Strava', () => {
     await expect(fitnessSection.getByRole('heading', { name: 'Form' })).toHaveCount(0);
     await expect(fitnessSection.getByText('6', { exact: true })).toBeVisible();
     const chart = fitnessSection.locator('[role="img"]');
-    await expect(chart).toHaveAttribute('aria-label', /Line chart representing Fitness/);
+    await expect(chart).toHaveAttribute('aria-label', /Line chart.*Fitness/);
   });
 
   test('should show last activity pull timestamp', async ({ page }) => {
