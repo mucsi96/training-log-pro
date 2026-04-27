@@ -74,7 +74,9 @@ test.describe('Strava', () => {
     await expect(fitnessSection.getByText('32', { exact: true })).toBeVisible();
     await expect(fitnessSection.getByText('-27', { exact: true })).toBeVisible();
     const chart = fitnessSection.locator('[role="img"]');
-    await expect(chart).toHaveAttribute('aria-label', /This is a chart with type Line chart/);
+    await expect(chart).toHaveAttribute('aria-label', /Line chart representing Fitness/);
+    await expect(chart).toHaveAttribute('aria-label', /Line chart representing Fatigue/);
+    await expect(chart).toHaveAttribute('aria-label', /Line chart representing Form/);
   });
 
   test('should show last activity pull timestamp', async ({ page }) => {
