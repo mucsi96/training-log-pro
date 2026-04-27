@@ -62,14 +62,14 @@
     },
     {
       "type": "shell",
-      "label": "Dev DB up",
-      "command": "scripts/dev_db_up.sh",
+      "label": "Dev up",
+      "command": "scripts/dev_up.sh",
       "problemMatcher": []
     },
     {
       "type": "shell",
-      "label": "Dev DB down",
-      "command": "scripts/dev_db_down.sh",
+      "label": "Dev down",
+      "command": "scripts/dev_down.sh",
       "problemMatcher": []
     },
     {

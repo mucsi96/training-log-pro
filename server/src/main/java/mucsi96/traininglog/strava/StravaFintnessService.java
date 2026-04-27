@@ -1,5 +1,9 @@
 package mucsi96.traininglog.strava;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -10,6 +14,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -18,10 +23,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.Page;
+import com.microsoft.playwright.Playwright;
 import com.microsoft.playwright.Route;
+import com.microsoft.playwright.options.AriaRole;
+import com.microsoft.playwright.options.LoadState;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import mucsi96.traininglog.core.PlaywrightConfiguration;
 import mucsi96.traininglog.fitness.Fitness;
 import mucsi96.traininglog.fitness.FitnessRepository;
 import mucsi96.traininglog.rides.Ride;
@@ -30,10 +39,11 @@ import mucsi96.traininglog.rides.Ride;
 @Slf4j
 @RequiredArgsConstructor
 public class StravaFintnessService {
-  private final Browser browser;
+  private final PlaywrightConfiguration playwrightConfiguration;
   private final StravaConfiguration configuration;
   private final FitnessRepository fitnessRepository;
   private final Clock clock;
+  private final Environment environment;
 
   static Optional<StravaFitnessProfile> getTodayFitnessProfile(String responseBody) {
     ObjectMapper mapper = new ObjectMapper();
@@ -87,8 +97,21 @@ public class StravaFintnessService {
 
   public Optional<Fitness> getFitnessLevel() {
     log.info("Getting fitness");
+    String wsEndpoint = playwrightConfiguration.getWsEndpoint();
+    log.info("Connecting to remote Playwright server at {}", wsEndpoint);
 
-    try (BrowserContext context = browser.newContext()) {
+    try (Playwright playwright = Playwright.create();
+        Browser browser = playwright.chromium().connect(wsEndpoint);
+        BrowserContext context = browser.newContext(new Browser.NewContextOptions()
+            .setUserAgent(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
+            .setViewportSize(1920, 1080)
+            .setLocale("en-US"))) {
+      try (InputStream is = getClass().getResourceAsStream("/stealth.js")) {
+        context.addInitScript(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+      } catch (IOException e) {
+        throw new RuntimeException("Failed to load stealth script", e);
+      }
       Page page = context.newPage();
 
       AtomicReference<String> fitnessResponseBody = new AtomicReference<>();
@@ -108,18 +131,54 @@ public class StravaFintnessService {
       try {
         page.navigate(configuration.getApiUri() + "/athlete/fitness");
 
-        log.info("Waiting for login form");
-        page.waitForSelector("#email");
+        page.waitForLoadState(LoadState.NETWORKIDLE);
 
-        page.fill("#email", configuration.getUsername());
-        page.fill("#password", configuration.getPassword());
-        page.click("#login-button");
+        page.waitForTimeout(3000);
+
+        page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Accept All"))
+            .click();
+        log.info("Accepted cookies");
+
+        page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Log In")).waitFor();
+
+        log.info("Waiting for login form");
+
+        page.waitForTimeout(3000);
+
+        page.getByRole(AriaRole.TEXTBOX, new Page.GetByRoleOptions().setName("Email"))
+            .fill(configuration.getUsername());
+
+        page.waitForTimeout(1000);
+
+        page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Log In"))
+            .click();
+        page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Use password instead"))
+            .click();
+
+        page.waitForTimeout(1000);
+
+        page.getByRole(AriaRole.TEXTBOX, new Page.GetByRoleOptions().setName("Password"))
+            .fill(configuration.getPassword());
+
+        page.waitForTimeout(1000);
+
+        page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Log In"))
+            .click();
 
         log.info("Waiting for fitness data to load");
         page.waitForSelector(".fitness-dot");
         log.info("Successful login");
       } catch (Exception e) {
         log.error("Playwright error during fitness scraping", e);
+        if (environment.matchesProfiles("local")) {
+          try {
+            Path screenshotPath = Path.of("playwright-error.png");
+            page.screenshot(new Page.ScreenshotOptions().setPath(screenshotPath).setFullPage(true));
+            log.error("Screenshot saved to {}", screenshotPath.toAbsolutePath());
+          } catch (Exception screenshotError) {
+            log.error("Failed to capture screenshot", screenshotError);
+          }
+        }
         try {
           String ariaSnapshot = page.locator("body").ariaSnapshot();
           log.error("Accessibility tree:\n{}", ariaSnapshot);

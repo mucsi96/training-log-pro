@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: training-log-pro-dev-db
+  name: training-log-pro-dev
 spec:
   containers:
     - name: db
@@ -24,6 +24,19 @@ spec:
           command: ["pg_isready", "-U", "postgres"]
         initialDelaySeconds: 5
         periodSeconds: 10
+        failureThreshold: 5
+
+    - name: playwright
+      image: mcr.microsoft.com/playwright:v1.59.1-noble
+      command: ["npx", "playwright", "run-server", "--port", "3082"]
+      ports:
+        - containerPort: 3082
+          hostPort: 3082
+      livenessProbe:
+        exec:
+          command: ["node", "-e", "require('net').connect(3082,'localhost').on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))"]
+        initialDelaySeconds: 5
+        periodSeconds: 2
         failureThreshold: 5
   volumes:
     - name: postgres-data
