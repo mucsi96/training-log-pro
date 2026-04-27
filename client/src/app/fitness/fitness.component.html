@@ -1,8 +1,19 @@
-@let value = fitness.value();
-@if (fitness.isLoading()) {
+@let value = latest();
+@let chart = chartOptions();
+@let lastPull = pulledAt();
+@if (todayFitness.isLoading() || periodFitness.isLoading()) {
 <mat-spinner class="page-loading" />
-} @else if (value) {
+} @else if (value && chart) {
 <section>
+  <div class="chart-wrapper">
+    <div
+      role="img"
+      class="chart"
+      echarts
+      [options]="chart"
+      [initOpts]="initOpts"
+    ></div>
+  </div>
   <article>
     <h2>Fitness</h2>
     <p class="value">{{ value.fitness | measurementWithUnit : "" : 0 }}</p>
@@ -15,5 +26,10 @@
     <h2>Form</h2>
     <p class="value">{{ value.form | measurementWithUnit : "" : 0 }}</p>
   </article>
+  @if (lastPull) {
+  <p class="last-pull" data-testid="fitness-last-pull">
+    Last activity pull {{ lastPull | relativeTime }}
+  </p>
+  }
 </section>
 }

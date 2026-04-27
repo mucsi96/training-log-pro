@@ -182,8 +182,14 @@ databaseChangeLog:
                     nullable: true
 
   - changeSet:
-      id: 6-drop-fitness-table
+      id: 6-add-pulled-at-to-fitness
       author: mucsi96
       changes:
-        - dropTable:
+        - addColumn:
             tableName: fitness
+            columns:
+              - column:
+                  name: pulled_at
+                  type: timestamp(6)
+                  constraints:
+                    nullable: true

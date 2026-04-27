@@ -20,6 +20,7 @@ export async function query(text: string, params?: any[]) {
 export async function cleanupDb() {
   await query('DELETE FROM training_log.weight');
   await query('DELETE FROM training_log.ride');
+  await query('DELETE FROM training_log.fitness');
   await query('DELETE FROM training_log.oauth2_authorized_client');
 }
 
@@ -93,6 +94,27 @@ export async function getRideRows() {
     'SELECT created_at, suffer_score FROM training_log.ride ORDER BY created_at ASC'
   );
   return result.rows;
+}
+
+export async function getFitnessRows() {
+  const result = await query(
+    'SELECT created_at, pulled_at, fitness, fatigue, form FROM training_log.fitness ORDER BY created_at ASC'
+  );
+  return result.rows;
+}
+
+export async function insertFitnessAt(
+  date: Date,
+  pulledAt: Date,
+  fitness: number,
+  fatigue: number,
+  form: number
+) {
+  await query(
+    `INSERT INTO training_log.fitness (created_at, pulled_at, fitness, fatigue, form)
+     VALUES ($1, $2, $3, $4, $5)`,
+    [date, pulledAt, fitness, fatigue, form]
+  );
 }
 
 export async function deleteOAuthClient(clientRegistrationId: string) {
