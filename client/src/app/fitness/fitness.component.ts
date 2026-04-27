@@ -85,20 +85,6 @@ export class FitnessComponent {
           showSymbol: false,
           data: measurements.map((m) => [m.date, m.fitness]),
         },
-        {
-          name: 'Fatigue',
-          type: 'line',
-          smooth: true,
-          showSymbol: false,
-          data: measurements.map((m) => [m.date, m.fatigue]),
-        },
-        {
-          name: 'Form',
-          type: 'line',
-          smooth: true,
-          showSymbol: false,
-          data: measurements.map((m) => [m.date, m.form]),
-        },
       ],
     };
   });

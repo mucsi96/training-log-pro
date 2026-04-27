@@ -64,19 +64,15 @@ test.describe('Strava', () => {
     expect(rows[0].pulled_at).not.toBeNull();
   });
 
-  test('should display fitness, fatigue, form values and a chart', async ({ page }) => {
+  test('should display fitness value and a chart', async ({ page }) => {
     await page.goto('/');
-    const fitnessSection = page.locator('section').filter({ hasText: 'Fatigue' });
+    const fitnessSection = page.locator('section').filter({ hasText: 'Fitness' });
     await expect(fitnessSection.getByRole('heading', { name: 'Fitness' })).toBeVisible();
-    await expect(fitnessSection.getByRole('heading', { name: 'Fatigue' })).toBeVisible();
-    await expect(fitnessSection.getByRole('heading', { name: 'Form' })).toBeVisible();
+    await expect(fitnessSection.getByRole('heading', { name: 'Fatigue' })).toHaveCount(0);
+    await expect(fitnessSection.getByRole('heading', { name: 'Form' })).toHaveCount(0);
     await expect(fitnessSection.getByText('6', { exact: true })).toBeVisible();
-    await expect(fitnessSection.getByText('32', { exact: true })).toBeVisible();
-    await expect(fitnessSection.getByText('-27', { exact: true })).toBeVisible();
     const chart = fitnessSection.locator('[role="img"]');
     await expect(chart).toHaveAttribute('aria-label', /Line chart representing Fitness/);
-    await expect(chart).toHaveAttribute('aria-label', /Line chart representing Fatigue/);
-    await expect(chart).toHaveAttribute('aria-label', /Line chart representing Form/);
   });
 
   test('should show last activity pull timestamp', async ({ page }) => {
