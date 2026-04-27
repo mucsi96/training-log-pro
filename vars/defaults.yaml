@@ -16,5 +16,3 @@ db_backup_region: us-east-1
 withings_accounts_uri: https://account.withings.com
 withings_api_uri: https://wbsapi.withings.net
 strava_api_uri: https://www.strava.com
-playwright_host: playwright
-playwright_port: 3000

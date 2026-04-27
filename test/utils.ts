@@ -20,7 +20,6 @@ export async function query(text: string, params?: any[]) {
 export async function cleanupDb() {
   await query('DELETE FROM training_log.weight');
   await query('DELETE FROM training_log.ride');
-  await query('DELETE FROM training_log.fitness');
   await query('DELETE FROM training_log.oauth2_authorized_client');
 }
 
@@ -76,46 +75,22 @@ export async function insertRide(
   name: string,
   sportType: string,
   totalElevationGain: number,
-  weightedAverageWatts: number
+  weightedAverageWatts: number,
+  sufferScore: number | null = null
 ) {
   const date = new Date(Date.now() - daysAgo * 86400000);
   await query(
     `INSERT INTO training_log.ride (
       created_at, calories, distance, moving_time, name,
-      sport_type, total_elevation_gain, weighted_average_watts
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-    [date, calories, distance, movingTime, name, sportType, totalElevationGain, weightedAverageWatts]
+      sport_type, total_elevation_gain, weighted_average_watts, suffer_score
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+    [date, calories, distance, movingTime, name, sportType, totalElevationGain, weightedAverageWatts, sufferScore]
   );
 }
 
-export async function insertFitness(
-  daysAgo: number,
-  fitness: number,
-  fatigue: number,
-  form: number
-) {
-  const date = new Date(Date.now() - daysAgo * 86400000);
-  await query(
-    'INSERT INTO training_log.fitness (created_at, fitness, fatigue, form) VALUES ($1, $2, $3, $4)',
-    [date, fitness, fatigue, form]
-  );
-}
-
-export async function insertFitnessAt(
-  date: Date,
-  fitness: number,
-  fatigue: number,
-  form: number
-) {
-  await query(
-    'INSERT INTO training_log.fitness (created_at, fitness, fatigue, form) VALUES ($1, $2, $3, $4)',
-    [date, fitness, fatigue, form]
-  );
-}
-
-export async function getFitnessRows() {
+export async function getRideRows() {
   const result = await query(
-    'SELECT created_at, fitness, fatigue, form FROM training_log.fitness ORDER BY created_at ASC'
+    'SELECT created_at, suffer_score FROM training_log.ride ORDER BY created_at ASC'
   );
   return result.rows;
 }

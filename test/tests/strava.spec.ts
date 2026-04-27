@@ -4,9 +4,7 @@ import {
   populateOAuthClients,
   deleteOAuthClient,
   getOAuthClient,
-  getFitnessRows,
-  insertFitness,
-  insertFitnessAt,
+  getRideRows,
 } from '../utils';
 
 test.describe('Strava', () => {
@@ -36,55 +34,30 @@ test.describe('Strava', () => {
     await expect(page.getByText('2 h 20 min').first()).toBeVisible();
   });
 
-  test('should pull and persist fitness on first daily sync', async ({ page }) => {
+  test('should persist suffer_score from synced activities', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
     await expect(page.getByText('1 740').first()).toBeVisible();
 
-    const rows = await getFitnessRows();
-    expect(rows).toHaveLength(1);
-    expect(rows[0].fitness).toBeCloseTo(45.2, 1);
-    expect(rows[0].fatigue).toBeCloseTo(52.1, 1);
-    expect(rows[0].form).toBeCloseTo(-6.9, 1);
-  });
-
-  test('should pull fitness again when last pull was before today', async ({ page }) => {
-    await insertFitness(2, 30, 40, -10);
-
-    await page.goto('/');
-    await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
-    await expect(page.getByText('1 740').first()).toBeVisible();
-
-    const rows = await getFitnessRows();
+    const rows = await getRideRows();
     expect(rows).toHaveLength(2);
-    expect(rows[1].fitness).toBeCloseTo(45.2, 1);
+    const sufferScores = rows.map(row => row.suffer_score).sort((a, b) => a - b);
+    expect(sufferScores[0]).toBeCloseTo(82, 0);
+    expect(sufferScores[1]).toBeCloseTo(162, 0);
   });
 
-  test('should skip fitness sync when already pulled today after activities', async ({ page }) => {
-    const lateToday = new Date();
-    lateToday.setUTCHours(23, 59, 0, 0);
-    await insertFitnessAt(lateToday, 30, 40, -10);
-
+  test('should compute fitness, fatigue, and form from synced activities', async ({ page }) => {
+    // Synced activities contribute today's load = 82 + 162 = 244 (suffer_score)
+    // CTL: fitness ≈ (1 - exp(-1/42)) * 244 ≈ 5.7
+    // ATL: fatigue ≈ (1 - exp(-1/7)) * 244 ≈ 32.5
+    // form = fitness - fatigue ≈ -27
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
-    await expect(page.getByText('1 740').first()).toBeVisible();
-
-    const rows = await getFitnessRows();
-    expect(rows).toHaveLength(1);
-    expect(rows[0].fitness).toBeCloseTo(30, 1);
-  });
-
-  test('should pull fitness when a new activity arrives after last pull', async ({ page }) => {
-    const earlyToday = new Date();
-    earlyToday.setUTCHours(0, 1, 0, 0);
-    await insertFitnessAt(earlyToday, 30, 40, -10);
-
-    await page.goto('/');
-    await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
-    await expect(page.getByText('1 740').first()).toBeVisible();
-
-    const rows = await getFitnessRows();
-    expect(rows).toHaveLength(2);
-    expect(rows[1].fitness).toBeCloseTo(45.2, 1);
+    const fitnessSection = page.locator('section').filter({ hasText: 'Fatigue' });
+    await expect(fitnessSection.getByRole('heading', { name: 'Fitness' })).toBeVisible();
+    await expect(fitnessSection.getByRole('heading', { name: 'Fatigue' })).toBeVisible();
+    await expect(fitnessSection.getByRole('heading', { name: 'Form' })).toBeVisible();
+    await expect(fitnessSection.getByText('6', { exact: true })).toBeVisible();
+    await expect(fitnessSection.getByText('32', { exact: true })).toBeVisible();
+    await expect(fitnessSection.getByText('-27', { exact: true })).toBeVisible();
   });
 });

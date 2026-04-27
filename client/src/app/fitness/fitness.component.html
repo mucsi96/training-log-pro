@@ -1,0 +1,19 @@
+@let value = fitness.value();
+@if (fitness.isLoading()) {
+<mat-spinner class="page-loading" />
+} @else if (value) {
+<section>
+  <article>
+    <h2>Fitness</h2>
+    <p class="value">{{ value.fitness | measurementWithUnit : "" : 0 }}</p>
+  </article>
+  <article>
+    <h2>Fatigue</h2>
+    <p class="value">{{ value.fatigue | measurementWithUnit : "" : 0 }}</p>
+  </article>
+  <article>
+    <h2>Form</h2>
+    <p class="value">{{ value.form | measurementWithUnit : "" : 0 }}</p>
+  </article>
+</section>
+}

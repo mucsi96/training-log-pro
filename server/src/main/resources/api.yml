@@ -61,4 +61,29 @@ paths:
                     type: integer
                     format: int64
 
+  /fitness:
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                title: Fitness
+                type: object
+                required:
+                  - fitness
+                  - fatigue
+                  - form
+                properties:
+                  fitness:
+                    type: number
+                    format: double
+                  fatigue:
+                    type: number
+                    format: double
+                  form:
+                    type: number
+                    format: double
+
 

@@ -1,0 +1,26 @@
+section {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 60px 20px;
+  align-items: start;
+}
+
+section > * {
+  display: grid;
+  gap: 4px;
+}
+
+h2 {
+  color: var(--mat-app-text-color);
+  font-size: 14px;
+}
+
+.value {
+  color: var(--mat-sys-on-primary);
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.page-loading {
+  margin: 150px auto;
+}

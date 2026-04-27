@@ -36,7 +36,6 @@ import mucsi96.traininglog.rides.RideService;
 public class StravaController {
 
   private final StravaActivityService stravaActivityService;
-  private final StravaFintnessService stravaFintnessService;
   private final RideService rideService;
   private final OAuth2AuthorizedClientManager stravaAuthorizedClientManager;
   private final TokenService tokenService;
@@ -55,7 +54,6 @@ public class StravaController {
       OAuth2AuthorizedClient authorizedClient = getAuthorizedClient(principal, servletRequest, servletResponse);
       List<Ride> todayRides = stravaActivityService.getTodayRides(authorizedClient, zoneId);
       todayRides.forEach(rideService::saveRide);
-      stravaFintnessService.syncFitness(todayRides, zoneId);
     } catch (OAuth2AuthorizationException ex) {
       String token = tokenService.generate(principal.getName());
       String authorizeUrl = ServletUriComponentsBuilder.fromRequestUri(servletRequest)

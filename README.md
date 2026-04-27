@@ -22,8 +22,6 @@ All application secrets are pulled from Azure Key Vault using the Spring Cloud A
 | `withings-client-secret` | Withings OAuth2 client secret | [Withings Developer Dashboard](https://developer.withings.com/dashboard/) |
 | `strava-client-id` | Strava OAuth2 client ID | [Strava API Settings](https://www.strava.com/settings/api) |
 | `strava-client-secret` | Strava OAuth2 client secret | [Strava API Settings](https://www.strava.com/settings/api) |
-| `strava-username` | Strava account username | [Strava Account](https://www.strava.com/account) |
-| `strava-password` | Strava account password | [Strava Account](https://www.strava.com/account) |
 
 ## Runtime Environment Variables
 
@@ -41,7 +39,6 @@ All host-bound ports use the 80-89 range to avoid conflicts.
 |------|---------|---------|
 | 3080 | Mock Withings API | Test pod |
 | 3081 | Mock Strava API | Test pod |
-| 3082 | Playwright server | Test pod |
 | 5480 | PostgreSQL | Test pod |
 | 5481 | PostgreSQL | Test DB pod |
 | 5482 | PostgreSQL | Dev pod |
