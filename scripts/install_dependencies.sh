@@ -96,5 +96,11 @@ cd server && mvn clean install && cd ..
 echo "Installing client dependencies..."
 cd client && npm install && cd ..
 
+echo "Installing mock Strava server dependencies..."
+cd mock_strava_server && npm install && cd ..
+
+echo "Installing mock Withings server dependencies..."
+cd mock_withings_server && npm install && cd ..
+
 echo "Installing test dependencies..."
 cd test && npm install && npx playwright install --with-deps chromium && cd ..

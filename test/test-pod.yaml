@@ -62,6 +62,10 @@ spec:
       env:
         - name: PORT
           value: "3081"
+        - name: STRAVA_USERNAME
+          value: rob
+        - name: STRAVA_PASSWORD
+          value: 123
       livenessProbe:
         httpGet:
           path: /health

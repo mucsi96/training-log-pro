@@ -88,6 +88,38 @@ export async function insertRide(
   );
 }
 
+export async function insertFitness(
+  daysAgo: number,
+  fitness: number,
+  fatigue: number,
+  form: number
+) {
+  const date = new Date(Date.now() - daysAgo * 86400000);
+  await query(
+    'INSERT INTO training_log.fitness (created_at, fitness, fatigue, form) VALUES ($1, $2, $3, $4)',
+    [date, fitness, fatigue, form]
+  );
+}
+
+export async function insertFitnessAt(
+  date: Date,
+  fitness: number,
+  fatigue: number,
+  form: number
+) {
+  await query(
+    'INSERT INTO training_log.fitness (created_at, fitness, fatigue, form) VALUES ($1, $2, $3, $4)',
+    [date, fitness, fatigue, form]
+  );
+}
+
+export async function getFitnessRows() {
+  const result = await query(
+    'SELECT created_at, fitness, fatigue, form FROM training_log.fitness ORDER BY created_at ASC'
+  );
+  return result.rows;
+}
+
 export async function deleteOAuthClient(clientRegistrationId: string) {
   await query(
     'DELETE FROM training_log.oauth2_authorized_client WHERE client_registration_id = $1',

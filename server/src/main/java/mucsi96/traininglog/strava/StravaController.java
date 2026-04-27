@@ -1,6 +1,7 @@
 package mucsi96.traininglog.strava;
 
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
@@ -25,6 +26,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mucsi96.traininglog.core.TokenService;
+import mucsi96.traininglog.rides.Ride;
 import mucsi96.traininglog.rides.RideService;
 
 @RestController
@@ -34,6 +36,7 @@ import mucsi96.traininglog.rides.RideService;
 public class StravaController {
 
   private final StravaActivityService stravaActivityService;
+  private final StravaFintnessService stravaFintnessService;
   private final RideService rideService;
   private final OAuth2AuthorizedClientManager stravaAuthorizedClientManager;
   private final TokenService tokenService;
@@ -50,7 +53,9 @@ public class StravaController {
 
     try {
       OAuth2AuthorizedClient authorizedClient = getAuthorizedClient(principal, servletRequest, servletResponse);
-      stravaActivityService.getTodayRides(authorizedClient, zoneId).forEach(rideService::saveRide);
+      List<Ride> todayRides = stravaActivityService.getTodayRides(authorizedClient, zoneId);
+      todayRides.forEach(rideService::saveRide);
+      stravaFintnessService.syncFitness(todayRides, zoneId);
     } catch (OAuth2AuthorizationException ex) {
       String token = tokenService.generate(principal.getName());
       String authorizeUrl = ServletUriComponentsBuilder.fromRequestUri(servletRequest)
