@@ -3,14 +3,14 @@ package mucsi96.traininglog;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import mucsi96.traininglog.core.DatabaseStartupInitializer;
+import mucsi96.traininglog.core.DevPodStartupInitializer;
 
 @SpringBootApplication
 public class TrainingLogApplication {
 
 	public static void main(String[] args) {
 		final SpringApplication app = new SpringApplication(TrainingLogApplication.class);
-		app.addInitializers(new DatabaseStartupInitializer());
+		app.addInitializers(new DevPodStartupInitializer());
 		app.run(args);
 	}
 

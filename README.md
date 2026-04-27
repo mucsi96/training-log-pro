@@ -42,7 +42,10 @@ All host-bound ports use the 80-89 range to avoid conflicts.
 | 5480 | PostgreSQL | Test pod |
 | 5481 | PostgreSQL | Test DB pod |
 | 5482 | PostgreSQL | Dev pod |
+| 8080 | Spring Boot server | Test pod (internal, behind Traefik) |
+| 8081 | Spring Boot server | Local dev (VSCode) |
 | 8089 | Mock OAuth2 provider | Test pod |
 | 8180 | Traefik HTTP | Test pod |
 | 8181 | Traefik dashboard | Test pod |
+| 4280 | Angular dev server | Local dev |
 | 8182 | Spring Boot actuator | Test pod / Local dev |
