@@ -51,11 +51,7 @@ public class SecurityConfiguration {
                             .flatMap(Collection::stream)
                             .map(role -> (GrantedAuthority) new SimpleGrantedAuthority("APPROLE_" + role)))
                     .toList();
-            // `oid` is the user's tenant-wide stable UUID in Azure AD v2.0 tokens.
-            // Fall back to `sub` so test tokens (which don't carry `oid`) still work.
-            String principal = Optional.ofNullable(jwt.getClaimAsString("oid"))
-                    .orElseGet(() -> jwt.getClaimAsString("sub"));
-            return new JwtAuthenticationToken(jwt, authorities, principal);
+            return new JwtAuthenticationToken(jwt, authorities, jwt.getClaimAsString("oid"));
         };
     }
 }

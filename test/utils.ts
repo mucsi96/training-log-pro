@@ -36,7 +36,7 @@ export async function populateOAuthClients() {
       access_token_scopes, refresh_token_value, refresh_token_issued_at, created_at
     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
     [
-      'withings-client', 'test-user', 'Bearer',
+      'withings-client', '00000000-0000-0000-0000-000000000001', 'Bearer',
       Buffer.from('test-access-token'), now, tomorrow,
       'user.metrics', Buffer.from('test-refresh-token'), now, now,
     ]
@@ -49,7 +49,7 @@ export async function populateOAuthClients() {
       access_token_scopes, refresh_token_value, refresh_token_issued_at, created_at
     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
     [
-      'strava-client', 'test-user', 'Bearer',
+      'strava-client', '00000000-0000-0000-0000-000000000001', 'Bearer',
       Buffer.from('test-access-token'), now, tomorrow,
       'activity:read', Buffer.from('test-refresh-token'), now, now,
     ]
