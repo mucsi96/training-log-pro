@@ -26,7 +26,7 @@ test.describe('Strava', () => {
     await page.waitForURL('/');
 
     const client = await getOAuthClient('strava-client');
-    expect(client.principal_name).toBe('test-user');
+    expect(client.principal_name).toBe('test-user@example.com');
   });
 
   test('should pull today\'s ride stats from strava', async ({ page }) => {
