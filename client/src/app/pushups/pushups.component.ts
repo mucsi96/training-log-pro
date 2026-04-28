@@ -1,0 +1,143 @@
+import { Component, computed, inject, resource, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute } from '@angular/router';
+import { DatePipe } from '@angular/common';
+import { EChartsOption } from 'echarts';
+import { NgxEchartsModule } from 'ngx-echarts';
+import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { map } from 'rxjs';
+import { PushupSet, PushupsService } from './pushups.service';
+
+const DAILY_GOAL = 100;
+const QUICK_ADD_VALUES = [5, 10, 15, 20, 25] as const;
+
+@Component({
+  standalone: true,
+  imports: [
+    FormsModule,
+    DatePipe,
+    NgxEchartsModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+  ],
+  selector: 'app-pushups',
+  templateUrl: './pushups.component.html',
+  styleUrl: './pushups.component.css',
+})
+export class PushupsComponent {
+  private readonly pushupsService = inject(PushupsService);
+  private readonly period = toSignal(
+    inject(ActivatedRoute).data.pipe(map((data) => (data['period'] as number) ?? 0))
+  );
+
+  readonly initOpts = { renderer: 'svg' as const };
+  readonly goal = DAILY_GOAL;
+  readonly quickAddValues = QUICK_ADD_VALUES;
+  readonly customCount = signal(10);
+  readonly busy = signal(false);
+
+  readonly todaySets = resource({
+    params: () => this.pushupsService.version(),
+    loader: () => this.pushupsService.getSets(1),
+  });
+
+  readonly periodSets = resource({
+    params: () => ({ period: this.period(), version: this.pushupsService.version() }),
+    loader: ({ params }) => this.pushupsService.getSets(params.period),
+  });
+
+  readonly todayCount = computed(
+    () => this.todaySets.value()?.reduce((total, set) => total + set.count, 0) ?? 0
+  );
+
+  readonly progressPercent = computed(() =>
+    Math.min(100, (this.todayCount() / this.goal) * 100)
+  );
+
+  readonly remaining = computed(() => Math.max(0, this.goal - this.todayCount()));
+
+  readonly goalReached = computed(() => this.todayCount() >= this.goal);
+
+  readonly todaySetsReversed = computed<PushupSet[]>(
+    () => [...(this.todaySets.value() ?? [])].reverse()
+  );
+
+  readonly chartOptions = computed<EChartsOption | undefined>(() => {
+    const sets = this.periodSets.value();
+    if (!sets) {
+      return undefined;
+    }
+
+    const totalsByDay = new Map<string, number>();
+    for (const set of sets) {
+      const day = set.createdAt.toISOString().slice(0, 10);
+      totalsByDay.set(day, (totalsByDay.get(day) ?? 0) + set.count);
+    }
+
+    const data = [...totalsByDay.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([day, total]) => [new Date(day), total]);
+
+    return {
+      aria: { enabled: true },
+      animation: false,
+      grid: { top: 10, right: 10, bottom: 10, left: 10 },
+      xAxis: { type: 'time', show: false },
+      yAxis: { type: 'value', show: false, min: 0 },
+      series: [
+        {
+          name: 'Pushups',
+          type: 'bar',
+          data,
+          itemStyle: { color: 'hsl(220, 89%, 53%)' },
+          markLine: {
+            silent: true,
+            symbol: 'none',
+            label: { show: false },
+            lineStyle: { color: 'hsl(218, 11%, 65%)', type: 'dashed' },
+            data: [{ yAxis: this.goal }],
+          },
+        },
+      ],
+    };
+  });
+
+  async add(count: number) {
+    if (this.busy() || count <= 0) {
+      return;
+    }
+    this.busy.set(true);
+    try {
+      await this.pushupsService.addSet(count);
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  async addCustom() {
+    const count = this.customCount();
+    if (!Number.isFinite(count) || count <= 0) {
+      return;
+    }
+    await this.add(Math.floor(count));
+  }
+
+  async remove(set: PushupSet) {
+    if (this.busy()) {
+      return;
+    }
+    this.busy.set(true);
+    try {
+      await this.pushupsService.deleteSet(set.createdAt);
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  onCustomInput(value: string) {
+    const parsed = Number(value);
+    this.customCount.set(Number.isFinite(parsed) ? parsed : 0);
+  }
+}

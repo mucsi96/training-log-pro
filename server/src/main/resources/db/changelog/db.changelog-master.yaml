@@ -193,3 +193,22 @@ databaseChangeLog:
                   type: timestamp(6)
                   constraints:
                     nullable: true
+
+  - changeSet:
+      id: 7-create-pushup-set-table
+      author: mucsi96
+      changes:
+        - createTable:
+            tableName: pushup_set
+            columns:
+              - column:
+                  name: created_at
+                  type: timestamp(6)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: count
+                  type: integer
+                  constraints:
+                    nullable: false

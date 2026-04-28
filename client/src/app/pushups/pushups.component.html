@@ -1,0 +1,114 @@
+@let chart = chartOptions();
+@if (todaySets.isLoading()) {
+<mat-spinner class="page-loading" />
+} @else {
+<section aria-labelledby="pushups-heading">
+  <header class="header">
+    <h2 id="pushups-heading">Pushups</h2>
+    <p class="subtitle">
+      @if (goalReached()) {
+      Daily goal reached
+      } @else {
+      {{ remaining() }} to go
+      }
+    </p>
+  </header>
+
+  <div class="ring-wrapper" role="img"
+       [attr.aria-label]="todayCount() + ' of ' + goal + ' pushups today'">
+    <svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
+      <circle class="ring-track" cx="60" cy="60" r="52" />
+      <circle
+        class="ring-progress"
+        [class.ring-progress--complete]="goalReached()"
+        cx="60"
+        cy="60"
+        r="52"
+        [style.stroke-dashoffset.px]="326.7 - (326.7 * progressPercent()) / 100"
+      />
+    </svg>
+    <div class="ring-content">
+      <span class="ring-count">{{ todayCount() }}</span>
+      <span class="ring-goal">/ {{ goal }}</span>
+    </div>
+  </div>
+
+  <div class="quick-add">
+    @for (value of quickAddValues; track value) {
+    <button
+      type="button"
+      mat-flat-button
+      class="quick-add-button"
+      [class.primary-quick-add]="value === 10"
+      [disabled]="busy()"
+      (click)="add(value)"
+      [attr.aria-label]="'Add ' + value + ' pushups'"
+    >
+      +{{ value }}
+    </button>
+    }
+  </div>
+
+  <form class="custom-row" (ngSubmit)="addCustom()">
+    <label class="custom-label" for="pushups-custom-count">Custom</label>
+    <input
+      id="pushups-custom-count"
+      class="custom-input"
+      type="number"
+      inputmode="numeric"
+      min="1"
+      max="500"
+      step="1"
+      [value]="customCount()"
+      (input)="onCustomInput($any($event.target).value)"
+      aria-label="Custom pushup count"
+    />
+    <button
+      type="submit"
+      mat-flat-button
+      class="custom-add-button"
+      [disabled]="busy() || customCount() <= 0"
+    >
+      Add
+    </button>
+  </form>
+
+  @if (todaySetsReversed().length) {
+  <div class="today-sets" aria-label="Today's sets">
+    <h3 class="today-sets-title">Today</h3>
+    <ul class="set-list">
+      @for (set of todaySetsReversed(); track set.createdAt.toISOString()) {
+      <li class="set-row">
+        <span class="set-count">+{{ set.count }}</span>
+        <time class="set-time" [attr.datetime]="set.createdAt.toISOString()">
+          {{ set.createdAt | date : 'shortTime' }}
+        </time>
+        <button
+          type="button"
+          mat-button
+          class="set-remove"
+          [disabled]="busy()"
+          (click)="remove(set)"
+          [attr.aria-label]="'Remove set of ' + set.count + ' pushups'"
+        >
+          Remove
+        </button>
+      </li>
+      }
+    </ul>
+  </div>
+  }
+
+  @if (chart) {
+  <div class="chart-wrapper">
+    <div
+      role="img"
+      class="chart"
+      echarts
+      [options]="chart"
+      [initOpts]="initOpts"
+    ></div>
+  </div>
+  }
+</section>
+}
