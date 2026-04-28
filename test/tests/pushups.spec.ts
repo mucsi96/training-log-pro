@@ -30,23 +30,26 @@ test.describe('Pushups', () => {
 
     await page.goto('/');
 
-    const section = page.locator('section:has(#pushups-heading)');
-    await expect(section.getByRole('heading', { name: 'Pushups' })).toBeVisible();
-    await expect(section.getByText('35', { exact: true })).toBeVisible();
-    await expect(section.getByText('/ 100')).toBeVisible();
+    const section = page.getByRole('region', { name: 'Pushups' });
+    await expect(
+      section.getByRole('img', { name: '35 of 100 pushups today' })
+    ).toBeVisible();
     await expect(section.getByText('65 to go')).toBeVisible();
   });
 
   test('adds a pushup set via the +10 quick-add button', async ({ page }) => {
     await page.goto('/');
-    const section = page.locator('section:has(#pushups-heading)');
+    const section = page.getByRole('region', { name: 'Pushups' });
 
     await section.getByRole('button', { name: 'Add 10 pushups' }).click();
 
-    await expect(section.getByText('10', { exact: true })).toBeVisible();
+    await expect(
+      section.getByRole('img', { name: '10 of 100 pushups today' })
+    ).toBeVisible();
     await expect(section.getByText('90 to go')).toBeVisible();
-    await expect(section.getByRole('heading', { name: 'Today' })).toBeVisible();
-    await expect(section.locator('.set-list').getByText('+10')).toBeVisible();
+    await expect(
+      section.getByRole('button', { name: 'Remove set of 10 pushups' })
+    ).toBeVisible();
 
     const rows = await getPushupSetRows();
     expect(rows).toHaveLength(1);
@@ -55,14 +58,18 @@ test.describe('Pushups', () => {
 
   test('adds a pushup set via the custom input', async ({ page }) => {
     await page.goto('/');
-    const section = page.locator('section:has(#pushups-heading)');
+    const section = page.getByRole('region', { name: 'Pushups' });
 
-    const input = section.getByLabel('Custom pushup count');
-    await input.fill('7');
+    await section.getByLabel('Custom pushup count').fill('7');
     await section.getByRole('button', { name: 'Add', exact: true }).click();
 
-    await expect(section.getByText('7', { exact: true })).toBeVisible();
+    await expect(
+      section.getByRole('img', { name: '7 of 100 pushups today' })
+    ).toBeVisible();
     await expect(section.getByText('93 to go')).toBeVisible();
+    await expect(
+      section.getByRole('button', { name: 'Remove set of 7 pushups' })
+    ).toBeVisible();
 
     const rows = await getPushupSetRows();
     expect(rows).toHaveLength(1);
@@ -73,11 +80,15 @@ test.describe('Pushups', () => {
     await insertPushupSet(daysAgoAt(0, 9), 12);
 
     await page.goto('/');
-    const section = page.locator('section:has(#pushups-heading)');
+    const section = page.getByRole('region', { name: 'Pushups' });
 
-    await expect(section.getByText('12', { exact: true })).toBeVisible();
-    await section.getByRole('button', { name: 'Remove set of 12 pushups' }).click();
+    await section
+      .getByRole('button', { name: 'Remove set of 12 pushups' })
+      .click();
 
+    await expect(
+      section.getByRole('img', { name: '0 of 100 pushups today' })
+    ).toBeVisible();
     await expect(section.getByText('100 to go')).toBeVisible();
     expect(await getPushupSetRows()).toHaveLength(0);
   });
@@ -87,9 +98,11 @@ test.describe('Pushups', () => {
     await insertPushupSet(daysAgoAt(0, 14), 50);
 
     await page.goto('/');
-    const section = page.locator('section:has(#pushups-heading)');
+    const section = page.getByRole('region', { name: 'Pushups' });
 
-    await expect(section.getByText('100', { exact: true })).toBeVisible();
+    await expect(
+      section.getByRole('img', { name: '100 of 100 pushups today' })
+    ).toBeVisible();
     await expect(section.getByText('Daily goal reached')).toBeVisible();
   });
 
@@ -99,9 +112,8 @@ test.describe('Pushups', () => {
     await insertPushupSet(daysAgoAt(0, 9), 25);
 
     await page.goto('/');
-    const section = page.locator('section:has(#pushups-heading)');
-    const chart = section.locator('.chart-wrapper [role="img"]');
-    await expect(chart).toHaveAttribute('aria-label', /chart/i);
+    const section = page.getByRole('region', { name: 'Pushups' });
+    const chart = section.getByRole('img', { name: /chart/i });
     const label = await chart.getAttribute('aria-label');
     expect(label).toContain('70');
     expect(label).toContain('25');
