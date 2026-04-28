@@ -4,6 +4,7 @@ import {
   populateOAuthClients,
   insertPushupSet,
   getPushupSetRows,
+  setGoldenDayGoal,
 } from '../utils';
 
 const startOfTodayUtc = () => {
@@ -88,6 +89,32 @@ test.describe('Pushups', () => {
 
     await expect(
       section.getByRole('img', { name: '100 of 100 pushups today' })
+    ).toBeVisible();
+    await expect(section.getByText('Daily goal reached')).toBeVisible();
+  });
+
+  test('reflects the configured golden day pushup goal', async ({ page }) => {
+    await setGoldenDayGoal(50, 250);
+    await insertPushupSet(daysAgoAt(0, 8), 20);
+
+    await page.goto('/');
+
+    const section = page.getByRole('region', { name: 'Pushups' });
+    await expect(
+      section.getByRole('img', { name: '20 of 50 pushups today' })
+    ).toBeVisible();
+    await expect(section.getByText('30 to go')).toBeVisible();
+  });
+
+  test('marks the daily goal reached when totals match the configured goal', async ({ page }) => {
+    await setGoldenDayGoal(40, 250);
+    await insertPushupSet(daysAgoAt(0, 8), 40);
+
+    await page.goto('/');
+
+    const section = page.getByRole('region', { name: 'Pushups' });
+    await expect(
+      section.getByRole('img', { name: '40 of 40 pushups today' })
     ).toBeVisible();
     await expect(section.getByText('Daily goal reached')).toBeVisible();
   });
