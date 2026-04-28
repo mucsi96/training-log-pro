@@ -13,7 +13,7 @@ test.describe('Withings', () => {
     await page.waitForURL('/');
 
     const client = await getOAuthClient('withings-client');
-    expect(client.principal_name).toBe('test-user');
+    expect(client.principal_name).toBe('00000000-0000-0000-0000-000000000001');
   });
 
   test('should pull today\'s weight measurements from withings', async ({ page }) => {

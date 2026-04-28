@@ -1,16 +1,21 @@
 package mucsi96.traininglog.core;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.converter.Converter;
 
+import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -35,17 +40,18 @@ public class SecurityConfiguration {
         return http.build();
     }
 
-    private JwtAuthenticationConverter jwtAuthenticationConverter() {
+    private Converter<Jwt, AbstractAuthenticationToken> jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter scopeConverter = new JwtGrantedAuthoritiesConverter();
 
-        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(jwt -> Stream.concat(
-                scopeConverter.convert(jwt).stream(),
-                Optional.ofNullable(jwt.getClaimAsStringList("roles"))
-                        .stream()
-                        .flatMap(Collection::stream)
-                        .map(role -> new SimpleGrantedAuthority("APPROLE_" + role)))
-                .toList());
-        return converter;
+        return jwt -> {
+            List<GrantedAuthority> authorities = Stream.concat(
+                    scopeConverter.convert(jwt).stream(),
+                    Optional.ofNullable(jwt.getClaimAsStringList("roles"))
+                            .stream()
+                            .flatMap(Collection::stream)
+                            .map(role -> (GrantedAuthority) new SimpleGrantedAuthority("APPROLE_" + role)))
+                    .toList();
+            return new JwtAuthenticationToken(jwt, authorities, jwt.getClaimAsString("oid"));
+        };
     }
 }
