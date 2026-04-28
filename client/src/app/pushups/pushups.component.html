@@ -1,5 +1,5 @@
 @let chart = chartOptions();
-@if (todaySets.isLoading()) {
+@if (todaySets.isLoading() || goldenDayGoal.isLoading()) {
 <mat-spinner class="page-loading" />
 } @else {
 <section aria-labelledby="pushups-heading">
@@ -15,7 +15,7 @@
   </header>
 
   <div class="ring-wrapper" role="img"
-       [attr.aria-label]="todayCount() + ' of ' + goal + ' pushups today'">
+       [attr.aria-label]="todayCount() + ' of ' + goal() + ' pushups today'">
     <svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
       <circle class="ring-track" cx="60" cy="60" r="52" />
       <circle
@@ -29,7 +29,7 @@
     </svg>
     <div class="ring-content">
       <span class="ring-count">{{ todayCount() }}</span>
-      <span class="ring-goal">/ {{ goal }}</span>
+      <span class="ring-goal">/ {{ goal() }}</span>
     </div>
   </div>
 

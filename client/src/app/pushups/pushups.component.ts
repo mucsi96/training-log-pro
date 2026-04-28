@@ -7,8 +7,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { map } from 'rxjs';
 import { PushupsService } from './pushups.service';
+import { SettingsService } from '../settings/settings.service';
 
-const DAILY_GOAL = 100;
 const QUICK_ADD_VALUES = [-5, 5, 10] as const;
 
 @Component({
@@ -24,14 +24,21 @@ const QUICK_ADD_VALUES = [-5, 5, 10] as const;
 })
 export class PushupsComponent {
   private readonly pushupsService = inject(PushupsService);
+  private readonly settingsService = inject(SettingsService);
   private readonly period = toSignal(
     inject(ActivatedRoute).data.pipe(map((data) => (data['period'] as number) ?? 0))
   );
 
   readonly initOpts = { renderer: 'svg' as const };
-  readonly goal = DAILY_GOAL;
   readonly quickAddValues = QUICK_ADD_VALUES;
   readonly busy = signal(false);
+
+  readonly goldenDayGoal = resource({
+    params: () => this.settingsService.version(),
+    loader: () => this.settingsService.getGoldenDayGoal(),
+  });
+
+  readonly goal = computed(() => this.goldenDayGoal.value()?.pushupGoal ?? 0);
 
   readonly todaySets = resource({
     params: () => this.pushupsService.version(),
@@ -47,13 +54,14 @@ export class PushupsComponent {
     () => this.todaySets.value()?.reduce((total, set) => total + set.count, 0) ?? 0
   );
 
-  readonly progressPercent = computed(() =>
-    Math.min(100, (this.todayCount() / this.goal) * 100)
-  );
+  readonly progressPercent = computed(() => {
+    const goal = this.goal();
+    return goal > 0 ? Math.min(100, (this.todayCount() / goal) * 100) : 0;
+  });
 
-  readonly remaining = computed(() => Math.max(0, this.goal - this.todayCount()));
+  readonly remaining = computed(() => Math.max(0, this.goal() - this.todayCount()));
 
-  readonly goalReached = computed(() => this.todayCount() >= this.goal);
+  readonly goalReached = computed(() => this.goal() > 0 && this.todayCount() >= this.goal());
 
   readonly chartOptions = computed<EChartsOption | undefined>(() => {
     const sets = this.periodSets.value();
@@ -88,7 +96,7 @@ export class PushupsComponent {
             symbol: 'none',
             label: { show: false },
             lineStyle: { color: 'hsl(218, 11%, 65%)', type: 'dashed' },
-            data: [{ yAxis: this.goal }],
+            data: [{ yAxis: this.goal() }],
           },
         },
       ],
