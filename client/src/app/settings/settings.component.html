@@ -13,7 +13,8 @@
     <form
       class="form"
       aria-labelledby="golden-day-goal-heading"
-      (ngSubmit)="save()"
+      [formRoot]="goalForm"
+      (submit)="save()"
     >
       <h2 id="golden-day-goal-heading">Golden day goals</h2>
       <mat-form-field appearance="outline">

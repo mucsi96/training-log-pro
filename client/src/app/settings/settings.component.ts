@@ -1,5 +1,5 @@
 import { Component, computed, effect, inject, resource, signal } from '@angular/core';
-import { form, FormField, max, min, required, submit } from '@angular/forms/signals';
+import { form, FormField, FormRoot, max, min, required, submit } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -11,6 +11,7 @@ import { GoldenDayGoal, SettingsService } from './settings.service';
   selector: 'app-settings',
   imports: [
     FormField,
+    FormRoot,
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
