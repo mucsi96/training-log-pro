@@ -40,11 +40,12 @@
       mat-flat-button
       class="quick-add-button"
       [class.primary-quick-add]="value === 10"
-      [disabled]="busy()"
+      [class.correction-quick-add]="value < 0"
+      [disabled]="busy() || !canApply(value)"
       (click)="add(value)"
-      [attr.aria-label]="'Add ' + value + ' pushups'"
+      [attr.aria-label]="ariaForValue(value)"
     >
-      +{{ value }}
+      {{ formatValue(value) }}
     </button>
     }
   </div>

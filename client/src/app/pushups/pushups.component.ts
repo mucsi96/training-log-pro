@@ -11,7 +11,7 @@ import { map } from 'rxjs';
 import { PushupSet, PushupsService } from './pushups.service';
 
 const DAILY_GOAL = 100;
-const QUICK_ADD_VALUES = [5, 10, 15, 20, 25] as const;
+const QUICK_ADD_VALUES = [-5, 5, 10] as const;
 
 @Component({
   standalone: true,
@@ -105,7 +105,7 @@ export class PushupsComponent {
   });
 
   async add(count: number) {
-    if (this.busy() || count <= 0) {
+    if (this.busy() || count === 0 || this.todayCount() + count < 0) {
       return;
     }
     this.busy.set(true);
@@ -114,6 +114,20 @@ export class PushupsComponent {
     } finally {
       this.busy.set(false);
     }
+  }
+
+  canApply(value: number): boolean {
+    return this.todayCount() + value >= 0;
+  }
+
+  formatValue(value: number): string {
+    return value > 0 ? `+${value}` : `${value}`;
+  }
+
+  ariaForValue(value: number): string {
+    return value > 0
+      ? `Add ${value} pushups`
+      : `Subtract ${-value} pushups`;
   }
 
   async addCustom() {

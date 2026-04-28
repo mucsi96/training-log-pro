@@ -73,7 +73,7 @@ public class PushupController {
   @Data
   public static class AddPushupSetRequest {
     @NotNull
-    @Min(1)
+    @Min(-500)
     @Max(500)
     private Integer count;
   }

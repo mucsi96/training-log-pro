@@ -76,6 +76,32 @@ test.describe('Pushups', () => {
     expect(rows[0].count).toBe(7);
   });
 
+  test('corrects an over-count with the -5 button', async ({ page }) => {
+    await insertPushupSet(daysAgoAt(0, 9), 10);
+
+    await page.goto('/');
+    const section = page.getByRole('region', { name: 'Pushups' });
+
+    await section.getByRole('button', { name: 'Subtract 5 pushups' }).click();
+
+    await expect(
+      section.getByRole('img', { name: '5 of 100 pushups today' })
+    ).toBeVisible();
+    await expect(section.getByText('95 to go')).toBeVisible();
+
+    const rows = await getPushupSetRows();
+    expect(rows.map((r) => r.count).sort()).toEqual([-5, 10]);
+  });
+
+  test('disables the -5 button when the day total would go negative', async ({ page }) => {
+    await page.goto('/');
+    const section = page.getByRole('region', { name: 'Pushups' });
+
+    await expect(
+      section.getByRole('button', { name: 'Subtract 5 pushups' })
+    ).toBeDisabled();
+  });
+
   test('removes a logged set', async ({ page }) => {
     await insertPushupSet(daysAgoAt(0, 9), 12);
 
