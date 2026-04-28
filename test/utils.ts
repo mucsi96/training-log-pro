@@ -21,6 +21,7 @@ export async function cleanupDb() {
   await query('DELETE FROM training_log.weight');
   await query('DELETE FROM training_log.ride');
   await query('DELETE FROM training_log.fitness');
+  await query('DELETE FROM training_log.pushup_set');
   await query('DELETE FROM training_log.oauth2_authorized_client');
 }
 
@@ -115,6 +116,20 @@ export async function insertFitnessAt(
      VALUES ($1, $2, $3, $4, $5)`,
     [date, pulledAt, fitness, fatigue, form]
   );
+}
+
+export async function insertPushupSet(date: Date, count: number) {
+  await query(
+    'INSERT INTO training_log.pushup_set (created_at, count) VALUES ($1, $2)',
+    [date, count]
+  );
+}
+
+export async function getPushupSetRows() {
+  const result = await query(
+    'SELECT created_at, count FROM training_log.pushup_set ORDER BY created_at ASC'
+  );
+  return result.rows;
 }
 
 export async function deleteOAuthClient(clientRegistrationId: string) {

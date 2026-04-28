@@ -1,0 +1,65 @@
+@let chart = chartOptions();
+@if (todaySets.isLoading()) {
+<mat-spinner class="page-loading" />
+} @else {
+<section aria-labelledby="pushups-heading">
+  <header class="header">
+    <h2 id="pushups-heading">Pushups</h2>
+    <p class="subtitle">
+      @if (goalReached()) {
+      Daily goal reached
+      } @else {
+      {{ remaining() }} to go
+      }
+    </p>
+  </header>
+
+  <div class="ring-wrapper" role="img"
+       [attr.aria-label]="todayCount() + ' of ' + goal + ' pushups today'">
+    <svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
+      <circle class="ring-track" cx="60" cy="60" r="52" />
+      <circle
+        class="ring-progress"
+        [class.ring-progress--complete]="goalReached()"
+        cx="60"
+        cy="60"
+        r="52"
+        [style.stroke-dashoffset.px]="326.7 - (326.7 * progressPercent()) / 100"
+      />
+    </svg>
+    <div class="ring-content">
+      <span class="ring-count">{{ todayCount() }}</span>
+      <span class="ring-goal">/ {{ goal }}</span>
+    </div>
+  </div>
+
+  <div class="quick-add">
+    @for (value of quickAddValues; track value) {
+    <button
+      type="button"
+      mat-flat-button
+      class="quick-add-button"
+      [class.primary-quick-add]="value === 10"
+      [class.correction-quick-add]="value < 0"
+      [disabled]="busy() || !canApply(value)"
+      (click)="add(value)"
+      [attr.aria-label]="ariaForValue(value)"
+    >
+      {{ formatValue(value) }}
+    </button>
+    }
+  </div>
+
+  @if (chart) {
+  <div class="chart-wrapper">
+    <div
+      role="img"
+      class="chart"
+      echarts
+      [options]="chart"
+      [initOpts]="initOpts"
+    ></div>
+  </div>
+  }
+</section>
+}

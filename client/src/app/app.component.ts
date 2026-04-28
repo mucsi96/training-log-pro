@@ -1,5 +1,6 @@
 import { Component, computed, effect, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -17,6 +18,7 @@ import { WithingsService } from './withings/withings.service';
     RouterLinkActive,
     MatToolbarModule,
     MatButtonModule,
+    MatMenuModule,
     MatTooltipModule,
     MatProgressSpinnerModule,
     HeaderComponent,

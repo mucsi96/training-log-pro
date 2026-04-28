@@ -25,6 +25,38 @@
   margin-left: auto;
 }
 
+.nav-toggle {
+  display: none;
+  margin-left: auto;
+  min-width: 0;
+  padding: 0 0.75rem;
+}
+
+.nav-toggle-icon {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 22px;
+  height: 16px;
+  vertical-align: middle;
+}
+
+.nav-toggle-icon > span {
+  display: block;
+  height: 2px;
+  background: currentColor;
+  border-radius: 1px;
+}
+
+@media screen and (width < 500px) {
+  .nav-links {
+    display: none;
+  }
+  .nav-toggle {
+    display: inline-flex;
+  }
+}
+
 .header-right {
   display: flex;
   align-items: center;

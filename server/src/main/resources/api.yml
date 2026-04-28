@@ -61,6 +61,46 @@ paths:
                     type: integer
                     format: int64
 
+  /pushups:
+    get:
+      parameters:
+        - in: query
+          name: period
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PushupSet'
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - count
+              properties:
+                count:
+                  type: integer
+                  minimum: -500
+                  maximum: 500
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushupSet'
+
   /fitness:
     get:
       responses:
@@ -101,4 +141,16 @@ paths:
                           type: number
                           format: float
 
-
+components:
+  schemas:
+    PushupSet:
+      type: object
+      required:
+        - createdAt
+        - count
+      properties:
+        createdAt:
+          type: string
+          format: date-time
+        count:
+          type: integer

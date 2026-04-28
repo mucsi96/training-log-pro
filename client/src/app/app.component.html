@@ -33,6 +33,50 @@
         >All time</a
       >
     </div>
+    <button
+      type="button"
+      class="nav-toggle"
+      mat-button
+      [matMenuTriggerFor]="navMenu"
+      aria-label="Open navigation"
+    >
+      <span class="nav-toggle-icon" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+      </span>
+    </button>
+    <mat-menu #navMenu="matMenu">
+      <a
+        mat-menu-item
+        routerLink=""
+        [routerLinkActiveOptions]="{ exact: true }"
+        routerLinkActive
+        ariaCurrentWhenActive="page"
+        >Week</a
+      >
+      <a
+        mat-menu-item
+        routerLink="month"
+        routerLinkActive
+        ariaCurrentWhenActive="page"
+        >Month</a
+      >
+      <a
+        mat-menu-item
+        routerLink="year"
+        routerLinkActive
+        ariaCurrentWhenActive="page"
+        >Year</a
+      >
+      <a
+        mat-menu-item
+        routerLink="all-time"
+        routerLinkActive
+        ariaCurrentWhenActive="page"
+        >All time</a
+      >
+    </mat-menu>
     <div class="header-right">
       <app-header></app-header>
     </div>
