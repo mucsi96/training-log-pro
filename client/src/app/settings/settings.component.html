@@ -21,13 +21,7 @@
         <input
           matInput
           type="number"
-          name="pushupGoal"
-          min="1"
-          max="10000"
-          step="1"
-          required
-          [ngModel]="pushupGoal()"
-          (ngModelChange)="pushupGoal.set($event)"
+          [formField]="goalForm.pushupGoal"
         />
         <span matTextSuffix>pushups</span>
       </mat-form-field>
@@ -37,13 +31,7 @@
         <input
           matInput
           type="number"
-          name="elevationGoal"
-          min="1"
-          max="100000"
-          step="1"
-          required
-          [ngModel]="elevationGoal()"
-          (ngModelChange)="elevationGoal.set($event)"
+          [formField]="goalForm.elevationGoal"
         />
         <span matTextSuffix>m</span>
       </mat-form-field>
