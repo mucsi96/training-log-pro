@@ -50,8 +50,6 @@ export class GoldenDayComponent {
   readonly elevation = computed(() => this.stats.value()?.todayElevationGain ?? 0);
   readonly pushupGoal = computed(() => this.stats.value()?.pushupGoal ?? 100);
   readonly elevationGoal = computed(() => this.stats.value()?.elevationGoal ?? 250);
-  readonly pushupsMet = computed(() => this.pushups() >= this.pushupGoal());
-  readonly elevationMet = computed(() => this.elevation() >= this.elevationGoal());
   readonly elevationDisplay = computed(() => Math.round(this.elevation()));
 
   constructor() {

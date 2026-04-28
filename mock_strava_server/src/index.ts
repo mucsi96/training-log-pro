@@ -1,7 +1,12 @@
 import express from 'express';
 import { authorize } from './authorize';
 import { getAccessToken } from './getAccessToken';
-import { getActivities, getActivity } from './activities';
+import {
+  getActivities,
+  getActivity,
+  pushActivity,
+  resetActivities,
+} from './activities';
 
 const app = express();
 
@@ -22,6 +27,10 @@ app.post('/strava/oauth/token', getAccessToken);
 // API endpoints
 app.get('/strava/api/v3/athlete/activities', getActivities);
 app.get('/strava/api/v3/activities/:id', getActivity);
+
+// Test-only endpoints
+app.post('/strava/test/activities', pushActivity);
+app.post('/strava/test/reset', resetActivities);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });

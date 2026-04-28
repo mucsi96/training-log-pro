@@ -10,9 +10,9 @@
       <p class="status status--celebrate" role="status">Today is golden</p>
     } @else if (s) {
       <p class="status">
-        {{ pushupsMet() ? '100 pushups' : pushups() + '/' + pushupGoal() + ' pushups' }}
+        {{ pushups() }}/{{ pushupGoal() }} pushups
         ·
-        {{ elevationMet() ? elevationGoal() + ' m' : elevationDisplay() + '/' + elevationGoal() + ' m' }}
+        {{ elevationDisplay() }}/{{ elevationGoal() }} m
       </p>
     }
   </header>

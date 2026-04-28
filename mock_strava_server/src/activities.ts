@@ -1,7 +1,54 @@
 import { Request, Response } from 'express';
 
-let activity1Date = new Date();
-let activity2Date = new Date();
+type PushedActivity = {
+  id: number;
+  totalElevationGain: number;
+  sufferScore: number | null;
+  distance: number;
+  movingTime: number;
+  calories: number;
+  averageWatts: number;
+  weightedAverageWatts: number;
+  name: string;
+  sportType: string;
+};
+
+const DEFAULT_SUFFER_SCORES = [82, 162];
+
+let activities: PushedActivity[] = [];
+let nextId = 1;
+const startDateById = new Map<number, string>();
+
+export function pushActivity(req: Request, res: Response) {
+  const body = req.body ?? {};
+  const id = nextId++;
+  const activity: PushedActivity = {
+    id,
+    totalElevationGain: body.totalElevationGain ?? 516,
+    sufferScore:
+      body.sufferScore === null
+        ? null
+        : body.sufferScore ?? DEFAULT_SUFFER_SCORES[(id - 1) % DEFAULT_SUFFER_SCORES.length],
+    distance: body.distance ?? 28099,
+    movingTime: body.movingTime ?? 4207,
+    calories: body.calories ?? 870.2,
+    averageWatts: body.averageWatts ?? 185.5,
+    weightedAverageWatts: body.weightedAverageWatts ?? 230,
+    name: body.name ?? `Test activity ${id}`,
+    sportType: body.sportType ?? 'MountainBikeRide',
+  };
+  activities.push(activity);
+  console.log('[pushActivity] Stored activity', activity);
+  res.json(activity);
+}
+
+export function resetActivities(req: Request, res: Response) {
+  activities = [];
+  nextId = 1;
+  startDateById.clear();
+  console.log('[resetActivities] Cleared all pushed activities');
+  res.json({ count: 0 });
+}
 
 export function getActivities(req: Request, res: Response) {
   const authorization = req.headers.authorization;
@@ -12,6 +59,7 @@ export function getActivities(req: Request, res: Response) {
     authorization,
     after,
     before,
+    pushedCount: activities.length,
   });
 
   if (authorization !== 'Bearer test-access-token') {
@@ -34,29 +82,30 @@ export function getActivities(req: Request, res: Response) {
 
   const afterTs = parseInt(after);
   const beforeTs = parseInt(before);
+  const middayTs = afterTs + (beforeTs - afterTs) / 2;
 
-  activity1Date = new Date(1000 * (afterTs + (beforeTs - afterTs) / 2));
-  activity1Date.setUTCHours(12, 35);
-  activity2Date = new Date(1000 * (afterTs + (beforeTs - afterTs) / 2));
-  activity2Date.setUTCHours(12, 45);
+  const response = activities.map((activity, index) => {
+    const startDate = new Date(1000 * middayTs);
+    startDate.setUTCHours(12, 35 + index * 10);
+    const startDateIso = startDate.toISOString();
+    startDateById.set(activity.id, startDateIso);
 
-  const response = [
-    {
+    return {
       resource_state: 2,
       athlete: { id: 134815, resource_state: 1 },
-      name: 'Happy Friday',
-      distance: 24931.4,
-      moving_time: 4500,
-      elapsed_time: 4500,
-      total_elevation_gain: 0,
+      name: activity.name,
+      distance: activity.distance,
+      moving_time: activity.movingTime,
+      elapsed_time: activity.movingTime,
+      total_elevation_gain: activity.totalElevationGain,
       type: 'Ride',
-      sport_type: 'MountainBikeRide',
+      sport_type: activity.sportType,
       workout_type: null,
-      id: 1,
-      external_id: 'garmin_push_12345678987654321',
-      upload_id: 1,
-      start_date: '2018-05-02T12:15:09Z',
-      start_date_local: '2018-05-02T05:15:09Z',
+      id: activity.id,
+      external_id: `garmin_push_${activity.id}`,
+      upload_id: activity.id,
+      start_date: startDateIso,
+      start_date_local: startDateIso,
       timezone: '(GMT-08:00) America/Los_Angeles',
       utc_offset: -25200,
       start_latlng: null,
@@ -65,23 +114,23 @@ export function getActivities(req: Request, res: Response) {
       location_state: null,
       location_country: 'United States',
       achievement_count: 0,
-      kudos_count: 3,
-      comment_count: 1,
+      kudos_count: 0,
+      comment_count: 0,
       athlete_count: 1,
       photo_count: 0,
-      map: { id: 'a12345678987654321', summary_polyline: null, resource_state: 2 },
+      map: { id: `m${activity.id}`, summary_polyline: null, resource_state: 2 },
       trainer: true,
       commute: false,
       manual: false,
       private: false,
       flagged: false,
-      gear_id: 'b12345678987654321',
+      gear_id: 'b1',
       from_accepted_tag: false,
       average_speed: 5.54,
       max_speed: 11,
       average_cadence: 67.1,
-      average_watts: 175.3,
-      weighted_average_watts: 210,
+      average_watts: activity.averageWatts,
+      weighted_average_watts: activity.weightedAverageWatts,
       kilojoules: 788.7,
       device_watts: true,
       has_heartrate: true,
@@ -89,63 +138,11 @@ export function getActivities(req: Request, res: Response) {
       max_heartrate: 178,
       max_watts: 406,
       pr_count: 0,
-      total_photo_count: 1,
+      total_photo_count: 0,
       has_kudoed: false,
-      suffer_score: 82,
-    },
-    {
-      resource_state: 2,
-      athlete: { id: 167560, resource_state: 1 },
-      name: 'Bondcliff',
-      distance: 23676.5,
-      moving_time: 5400,
-      elapsed_time: 5400,
-      total_elevation_gain: 0,
-      type: 'Ride',
-      sport_type: 'MountainBikeRide',
-      workout_type: null,
-      id: 2,
-      external_id: 'garmin_push_12345678987654321',
-      upload_id: 2,
-      start_date: '2018-04-30T12:35:51Z',
-      start_date_local: '2018-04-30T05:35:51Z',
-      timezone: '(GMT-08:00) America/Los_Angeles',
-      utc_offset: -25200,
-      start_latlng: null,
-      end_latlng: null,
-      location_city: null,
-      location_state: null,
-      location_country: 'United States',
-      achievement_count: 0,
-      kudos_count: 4,
-      comment_count: 0,
-      athlete_count: 1,
-      photo_count: 0,
-      map: { id: 'a12345689', summary_polyline: null, resource_state: 2 },
-      trainer: true,
-      commute: false,
-      manual: false,
-      private: false,
-      flagged: false,
-      gear_id: 'b12345678912343',
-      from_accepted_tag: false,
-      average_speed: 4.385,
-      max_speed: 8.8,
-      average_cadence: 69.8,
-      average_watts: 200,
-      weighted_average_watts: 214,
-      kilojoules: 1080,
-      device_watts: true,
-      has_heartrate: true,
-      average_heartrate: 152.4,
-      max_heartrate: 183,
-      max_watts: 403,
-      pr_count: 0,
-      total_photo_count: 1,
-      has_kudoed: false,
-      suffer_score: 162,
-    },
-  ];
+      suffer_score: activity.sufferScore,
+    };
+  });
 
   console.log('[getActivities] Returning', response.length, 'activities');
   res.json(response);
@@ -153,11 +150,11 @@ export function getActivities(req: Request, res: Response) {
 
 export function getActivity(req: Request, res: Response) {
   const authorization = req.headers.authorization;
-  const id = req.params.id as string;
+  const idParam = req.params.id as string;
 
   console.log('[getActivity] Parameters:', {
     authorization,
-    id,
+    id: idParam,
   });
 
   if (authorization !== 'Bearer test-access-token') {
@@ -166,27 +163,34 @@ export function getActivity(req: Request, res: Response) {
     return;
   }
 
-  if (!id || isNaN(parseInt(id))) {
-    console.error(`[getActivity] Invalid activity id: "${id}"`);
-    res.status(400).json({ error: `Invalid activity id: "${id}"` });
+  const id = parseInt(idParam);
+  if (!idParam || isNaN(id)) {
+    console.error(`[getActivity] Invalid activity id: "${idParam}"`);
+    res.status(400).json({ error: `Invalid activity id: "${idParam}"` });
     return;
   }
 
-  const startDate = id === '1' ? activity1Date.toISOString() : activity2Date.toISOString();
+  const activity = activities.find((a) => a.id === id);
+  if (!activity) {
+    console.error(`[getActivity] Activity ${id} not found`);
+    res.status(404).json({ error: `Activity ${id} not found` });
+    return;
+  }
+
+  const startDate = startDateById.get(activity.id) ?? new Date().toISOString();
 
   const response = {
-    id: 12345678987654321,
+    id: activity.id,
     resource_state: 3,
-    external_id: 'garmin_push_12345678987654321',
-    upload_id: 98765432123456789,
+    external_id: `garmin_push_${activity.id}`,
+    upload_id: activity.id,
     athlete: { id: 134815, resource_state: 1 },
-    name: 'Happy Friday',
-    distance: 28099,
-    moving_time: 4207,
-    elapsed_time: 4410,
-    total_elevation_gain: 516,
+    name: activity.name,
+    distance: activity.distance,
+    moving_time: activity.movingTime,
+    elapsed_time: activity.movingTime,
     type: 'Ride',
-    sport_type: 'MountainBikeRide',
+    sport_type: activity.sportType,
     start_date: startDate,
     start_date_local: startDate,
     timezone: '(GMT-08:00) America/Los_Angeles',
@@ -194,23 +198,24 @@ export function getActivity(req: Request, res: Response) {
     start_latlng: [37.83, -122.26],
     end_latlng: [37.83, -122.26],
     achievement_count: 0,
-    kudos_count: 19,
+    kudos_count: 0,
     comment_count: 0,
     athlete_count: 1,
     photo_count: 0,
+    total_elevation_gain: activity.totalElevationGain,
     trainer: false,
     commute: false,
     manual: false,
     private: false,
     flagged: false,
-    gear_id: 'b12345678987654321',
+    gear_id: 'b1',
     from_accepted_tag: false,
     average_speed: 6.679,
     max_speed: 18.5,
     average_cadence: 78.5,
     average_temp: 4,
-    average_watts: 185.5,
-    weighted_average_watts: 230,
+    average_watts: activity.averageWatts,
+    weighted_average_watts: activity.weightedAverageWatts,
     kilojoules: 780.5,
     device_watts: true,
     has_heartrate: false,
@@ -218,14 +223,14 @@ export function getActivity(req: Request, res: Response) {
     elev_high: 446.6,
     elev_low: 17.2,
     pr_count: 0,
-    total_photo_count: 2,
+    total_photo_count: 0,
     has_kudoed: false,
     workout_type: 10,
-    suffer_score: null,
+    suffer_score: activity.sufferScore,
     description: '',
-    calories: 870.2,
+    calories: activity.calories,
     gear: {
-      id: 'b12345678987654321',
+      id: 'b1',
       primary: true,
       name: 'Tarmac',
       resource_state: 2,
@@ -234,7 +239,7 @@ export function getActivity(req: Request, res: Response) {
     partner_brand_tag: null,
     hide_from_home: false,
     device_name: 'Garmin Edge 1030',
-    embed_token: '18e4615989b47dd4ff3dc711b0aa4502e4b311a9',
+    embed_token: 'embed-token',
     segment_leaderboard_opt_out: false,
     leaderboard_opt_out: false,
   };

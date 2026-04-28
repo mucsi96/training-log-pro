@@ -146,3 +146,41 @@ export async function getOAuthClient(clientRegistrationId: string) {
   );
   return result.rows[0];
 }
+
+export type PushStravaActivityOptions = {
+  totalElevationGain?: number;
+  sufferScore?: number | null;
+  distance?: number;
+  movingTime?: number;
+  calories?: number;
+  averageWatts?: number;
+  weightedAverageWatts?: number;
+  name?: string;
+  sportType?: string;
+};
+
+export async function pushStravaActivity(options: PushStravaActivityOptions = {}) {
+  const response = await fetch('http://localhost:8180/strava/test/activities', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(options),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to push Strava activity: ${response.status}`);
+  }
+}
+
+export async function pushStravaActivities(count: number, options: PushStravaActivityOptions = {}) {
+  for (let i = 0; i < count; i++) {
+    await pushStravaActivity(options);
+  }
+}
+
+export async function resetStravaActivities() {
+  const response = await fetch('http://localhost:8180/strava/test/reset', {
+    method: 'POST',
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to reset Strava activities: ${response.status}`);
+  }
+}

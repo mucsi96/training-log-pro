@@ -31,15 +31,17 @@ test.describe('Golden day', () => {
     await populateOAuthClients();
   });
 
-  test('shows zero state when no golden days', async ({ page }) => {
+  test('shows zero state when there are no golden days', async ({ page }) => {
     await page.goto('/');
 
     const section = page.getByRole('region', { name: 'Golden day' });
     await expect(section).toBeVisible();
-    await expect(section.getByText('This month')).toBeVisible();
-    await expect(section.getByText('Streak')).toBeVisible();
+    const month = section.getByText('This month').locator('..');
+    await expect(month.getByText('0', { exact: true })).toBeVisible();
+    const streak = section.getByText('Streak').locator('..');
+    await expect(streak.getByText('0', { exact: true })).toBeVisible();
     await expect(section.getByText('0/100 pushups')).toBeVisible();
-    await expect(section.getByText('0/250 m')).toBeVisible();
+    await expect(section.getByText('Today is golden')).toBeHidden();
   });
 
   test('counts golden days for the current month and shows the streak', async ({ page }) => {
@@ -54,25 +56,26 @@ test.describe('Golden day', () => {
 
     const section = page.getByRole('region', { name: 'Golden day' });
     const month = section.getByText('This month').locator('..');
-    await expect(month.getByText('3')).toBeVisible();
+    await expect(month.getByText('3', { exact: true })).toBeVisible();
     const streak = section.getByText('Streak').locator('..');
-    await expect(streak.getByText('3')).toBeVisible();
+    await expect(streak.getByText('3', { exact: true })).toBeVisible();
     await expect(section.getByText('Today is golden')).toBeVisible();
   });
 
   test('does not count days that meet only one goal', async ({ page }) => {
     await insertPushupSet(daysAgoAt(0, 8), 100);
-    await insertGoldenRide(0, 200);
 
     await page.goto('/');
 
     const section = page.getByRole('region', { name: 'Golden day' });
     const month = section.getByText('This month').locator('..');
-    await expect(month.getByText('0')).toBeVisible();
-    await expect(section.getByText('100 pushups · 200/250 m')).toBeVisible();
+    await expect(month.getByText('0', { exact: true })).toBeVisible();
+    const streak = section.getByText('Streak').locator('..');
+    await expect(streak.getByText('0', { exact: true })).toBeVisible();
+    await expect(section.getByText('Today is golden')).toBeHidden();
   });
 
-  test('triggers confetti when today becomes golden after adding pushups', async ({ page }) => {
+  test('lights up when today becomes golden after adding pushups', async ({ page }) => {
     await insertPushupSet(daysAgoAt(0, 8), 95);
     await insertGoldenRide(0, 260);
 
@@ -80,12 +83,13 @@ test.describe('Golden day', () => {
 
     const section = page.getByRole('region', { name: 'Golden day' });
     await expect(section.getByText('95/100 pushups')).toBeVisible();
+    await expect(section.getByText('Today is golden')).toBeHidden();
 
     const pushups = page.getByRole('region', { name: 'Pushups' });
     await pushups.getByRole('button', { name: 'Add 10 pushups' }).click();
 
     await expect(section.getByText('Today is golden')).toBeVisible();
     const month = section.getByText('This month').locator('..');
-    await expect(month.getByText('1')).toBeVisible();
+    await expect(month.getByText('1', { exact: true })).toBeVisible();
   });
 });
