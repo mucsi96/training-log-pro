@@ -74,32 +74,6 @@
     </button>
   </form>
 
-  @if (todaySetsReversed().length) {
-  <div class="today-sets" aria-label="Today's sets">
-    <h3 class="today-sets-title">Today</h3>
-    <ul class="set-list">
-      @for (set of todaySetsReversed(); track set.createdAt.toISOString()) {
-      <li class="set-row">
-        <span class="set-count">+{{ set.count }}</span>
-        <time class="set-time" [attr.datetime]="set.createdAt.toISOString()">
-          {{ set.createdAt | date : 'shortTime' }}
-        </time>
-        <button
-          type="button"
-          mat-button
-          class="set-remove"
-          [disabled]="busy()"
-          (click)="remove(set)"
-          [attr.aria-label]="'Remove set of ' + set.count + ' pushups'"
-        >
-          Remove
-        </button>
-      </li>
-      }
-    </ul>
-  </div>
-  }
-
   @if (chart) {
   <div class="chart-wrapper">
     <div

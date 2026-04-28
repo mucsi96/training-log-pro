@@ -2,13 +2,12 @@ import { Component, computed, inject, resource, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
-import { DatePipe } from '@angular/common';
 import { EChartsOption } from 'echarts';
 import { NgxEchartsModule } from 'ngx-echarts';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { map } from 'rxjs';
-import { PushupSet, PushupsService } from './pushups.service';
+import { PushupsService } from './pushups.service';
 
 const DAILY_GOAL = 100;
 const QUICK_ADD_VALUES = [-5, 5, 10] as const;
@@ -17,7 +16,6 @@ const QUICK_ADD_VALUES = [-5, 5, 10] as const;
   standalone: true,
   imports: [
     FormsModule,
-    DatePipe,
     NgxEchartsModule,
     MatButtonModule,
     MatProgressSpinnerModule,
@@ -59,10 +57,6 @@ export class PushupsComponent {
   readonly remaining = computed(() => Math.max(0, this.goal - this.todayCount()));
 
   readonly goalReached = computed(() => this.todayCount() >= this.goal);
-
-  readonly todaySetsReversed = computed<PushupSet[]>(
-    () => [...(this.todaySets.value() ?? [])].reverse()
-  );
 
   readonly chartOptions = computed<EChartsOption | undefined>(() => {
     const sets = this.periodSets.value();
@@ -136,18 +130,6 @@ export class PushupsComponent {
       return;
     }
     await this.add(Math.floor(count));
-  }
-
-  async remove(set: PushupSet) {
-    if (this.busy()) {
-      return;
-    }
-    this.busy.set(true);
-    try {
-      await this.pushupsService.deleteSet(set.createdAt);
-    } finally {
-      this.busy.set(false);
-    }
   }
 
   onCustomInput(value: string) {

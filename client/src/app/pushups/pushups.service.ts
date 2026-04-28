@@ -44,18 +44,6 @@ export class PushupsService {
     }
   }
 
-  async deleteSet(createdAt: Date): Promise<void> {
-    try {
-      await fetchJson<void>(this.http, `/api/pushups/${createdAt.getTime()}`, {
-        method: 'delete',
-      });
-      this.version.update((v) => v + 1);
-    } catch (e) {
-      this.showError('Unable to remove set');
-      throw e;
-    }
-  }
-
   private showError(message: string) {
     this.snackBar.open(message, 'Close', {
       duration: 3000,

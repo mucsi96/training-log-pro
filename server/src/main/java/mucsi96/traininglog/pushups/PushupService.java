@@ -30,11 +30,6 @@ public class PushupService {
     return pushupSetRepository.save(set);
   }
 
-  public void deleteSet(ZonedDateTime createdAt) {
-    log.info("deleting pushup set at {}", createdAt);
-    pushupSetRepository.deleteById(createdAt);
-  }
-
   public List<PushupSet> getSets(Optional<Integer> period, ZoneId zoneId) {
     ZonedDateTime endTime = ZonedDateTime.now(clock).withZoneSameInstant(zoneId).truncatedTo(ChronoUnit.DAYS)
         .plusDays(1);

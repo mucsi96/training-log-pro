@@ -47,9 +47,6 @@ test.describe('Pushups', () => {
       section.getByRole('img', { name: '10 of 100 pushups today' })
     ).toBeVisible();
     await expect(section.getByText('90 to go')).toBeVisible();
-    await expect(
-      section.getByRole('button', { name: 'Remove set of 10 pushups' })
-    ).toBeVisible();
 
     const rows = await getPushupSetRows();
     expect(rows).toHaveLength(1);
@@ -67,9 +64,6 @@ test.describe('Pushups', () => {
       section.getByRole('img', { name: '7 of 100 pushups today' })
     ).toBeVisible();
     await expect(section.getByText('93 to go')).toBeVisible();
-    await expect(
-      section.getByRole('button', { name: 'Remove set of 7 pushups' })
-    ).toBeVisible();
 
     const rows = await getPushupSetRows();
     expect(rows).toHaveLength(1);
@@ -100,23 +94,6 @@ test.describe('Pushups', () => {
     await expect(
       section.getByRole('button', { name: 'Subtract 5 pushups' })
     ).toBeDisabled();
-  });
-
-  test('removes a logged set', async ({ page }) => {
-    await insertPushupSet(daysAgoAt(0, 9), 12);
-
-    await page.goto('/');
-    const section = page.getByRole('region', { name: 'Pushups' });
-
-    await section
-      .getByRole('button', { name: 'Remove set of 12 pushups' })
-      .click();
-
-    await expect(
-      section.getByRole('img', { name: '0 of 100 pushups today' })
-    ).toBeVisible();
-    await expect(section.getByText('100 to go')).toBeVisible();
-    expect(await getPushupSetRows()).toHaveLength(0);
   });
 
   test('shows daily-goal-reached state when total hits 100', async ({ page }) => {

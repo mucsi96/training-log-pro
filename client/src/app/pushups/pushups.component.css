@@ -153,57 +153,6 @@ h2 {
   border-radius: 0.5rem;
 }
 
-.today-sets {
-  display: grid;
-  gap: 8px;
-}
-
-.today-sets-title {
-  color: var(--mat-sys-on-primary);
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-
-.set-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 6px;
-}
-
-.set-row {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: 0.5rem;
-  background: var(--mat-sys-surface);
-}
-
-.set-count {
-  color: var(--mat-sys-on-primary);
-  font-size: 18px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  min-width: 48px;
-}
-
-.set-time {
-  color: var(--mat-app-text-color);
-  font-size: 14px;
-  font-variant-numeric: tabular-nums;
-}
-
-.set-remove {
-  color: var(--mat-app-text-color);
-  font-size: 13px;
-  min-width: 0;
-  padding: 0 12px;
-}
-
 .chart-wrapper {
   position: relative;
   width: 100%;
@@ -226,7 +175,6 @@ h2 {
       'header header'
       'ring quick'
       'ring custom'
-      'sets sets'
       'chart chart';
     column-gap: 32px;
     align-items: start;
@@ -235,6 +183,5 @@ h2 {
   .ring-wrapper { grid-area: ring; margin: 0; }
   .quick-add { grid-area: quick; }
   .custom-row { grid-area: custom; }
-  .today-sets { grid-area: sets; }
   .chart-wrapper { grid-area: chart; height: 160px; }
 }
