@@ -46,7 +46,7 @@ test.describe('Pushups', () => {
     await expect(section.getByText('10', { exact: true })).toBeVisible();
     await expect(section.getByText('90 to go')).toBeVisible();
     await expect(section.getByRole('heading', { name: 'Today' })).toBeVisible();
-    await expect(section.getByText('+10')).toBeVisible();
+    await expect(section.locator('.set-list').getByText('+10')).toBeVisible();
 
     const rows = await getPushupSetRows();
     expect(rows).toHaveLength(1);
