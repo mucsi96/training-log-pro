@@ -212,3 +212,85 @@ databaseChangeLog:
                   type: integer
                   constraints:
                     nullable: false
+
+  - changeSet:
+      id: 8-create-golden-day-goal-table
+      author: mucsi96
+      changes:
+        - createTable:
+            tableName: golden_day_goal
+            columns:
+              - column:
+                  name: id
+                  type: integer
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: pushup_goal
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: elevation_goal
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp(6)
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+        - insert:
+            tableName: golden_day_goal
+            columns:
+              - column:
+                  name: id
+                  valueNumeric: 1
+              - column:
+                  name: pushup_goal
+                  valueNumeric: 100
+              - column:
+                  name: elevation_goal
+                  valueNumeric: 250
+
+  - changeSet:
+      id: 9-create-golden-day-table
+      author: mucsi96
+      changes:
+        - createTable:
+            tableName: golden_day
+            columns:
+              - column:
+                  name: date
+                  type: date
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp(6)
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+        - sql:
+            dbms: postgresql
+            sql: |
+              INSERT INTO training_log.golden_day (date)
+              SELECT day FROM (
+                SELECT
+                  (p.created_at AT TIME ZONE 'UTC')::date AS day,
+                  SUM(p.count) AS pushups
+                FROM training_log.pushup_set p
+                GROUP BY day
+              ) pushups_by_day
+              JOIN (
+                SELECT
+                  (r.created_at AT TIME ZONE 'UTC')::date AS day,
+                  SUM(r.total_elevation_gain) AS elevation
+                FROM training_log.ride r
+                GROUP BY day
+              ) elevation_by_day USING (day)
+              WHERE pushups >= 100 AND elevation >= 250
+              ON CONFLICT DO NOTHING;

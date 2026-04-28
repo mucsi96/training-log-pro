@@ -23,6 +23,39 @@ export async function cleanupDb() {
   await query('DELETE FROM training_log.fitness');
   await query('DELETE FROM training_log.pushup_set');
   await query('DELETE FROM training_log.oauth2_authorized_client');
+  await query('DELETE FROM training_log.golden_day');
+  await query(
+    `UPDATE training_log.golden_day_goal SET pushup_goal = $1, elevation_goal = $2 WHERE id = 1`,
+    [100, 250]
+  );
+}
+
+export async function getGoldenDayGoal() {
+  const result = await query(
+    'SELECT pushup_goal, elevation_goal FROM training_log.golden_day_goal WHERE id = 1'
+  );
+  return result.rows[0];
+}
+
+export async function setGoldenDayGoal(pushupGoal: number, elevationGoal: number) {
+  await query(
+    `UPDATE training_log.golden_day_goal SET pushup_goal = $1, elevation_goal = $2 WHERE id = 1`,
+    [pushupGoal, elevationGoal]
+  );
+}
+
+export async function getGoldenDayDates(): Promise<string[]> {
+  const result = await query(
+    `SELECT to_char(date, 'YYYY-MM-DD') AS date FROM training_log.golden_day ORDER BY date ASC`
+  );
+  return result.rows.map((row) => row.date as string);
+}
+
+export async function insertGoldenDay(date: Date | string) {
+  await query(
+    `INSERT INTO training_log.golden_day (date) VALUES ($1) ON CONFLICT DO NOTHING`,
+    [date]
+  );
 }
 
 export async function populateOAuthClients() {

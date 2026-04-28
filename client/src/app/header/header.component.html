@@ -1,8 +1,14 @@
-<button class="avatar" [matMenuTriggerFor]="menu">
+<button
+  class="avatar"
+  type="button"
+  aria-label="Open profile menu"
+  [matMenuTriggerFor]="menu"
+>
   {{ profile()?.initials }}
 </button>
 <mat-menu #menu="matMenu">
   <span class="profile-name">
     {{ profile()?.name }}
   </span>
+  <a mat-menu-item routerLink="/settings">Settings</a>
 </mat-menu>

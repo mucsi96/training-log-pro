@@ -1,0 +1,45 @@
+.settings {
+  display: grid;
+  gap: 24px;
+  max-width: 480px;
+}
+
+.header {
+  display: grid;
+  gap: 4px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 22px;
+  color: var(--mat-sys-on-primary);
+}
+
+h2 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mat-sys-on-primary);
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--mat-app-text-color);
+  font-size: 13px;
+}
+
+.form {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, hsl(217, 28%, 18%), hsl(217, 28%, 14%));
+  border: 1px solid hsl(217, 19%, 27%);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
