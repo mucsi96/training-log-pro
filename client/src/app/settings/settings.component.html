@@ -1,0 +1,63 @@
+<section class="settings" aria-labelledby="settings-heading">
+  <header class="header">
+    <h1 id="settings-heading">Settings</h1>
+    <p class="subtitle">
+      Configure golden day goals. Changes apply from today onwards and never
+      change the status of past golden days.
+    </p>
+  </header>
+
+  @if (goal.isLoading()) {
+    <mat-spinner class="page-loading" />
+  } @else {
+    <form
+      class="form"
+      aria-labelledby="golden-day-goal-heading"
+      (ngSubmit)="save()"
+    >
+      <h2 id="golden-day-goal-heading">Golden day goals</h2>
+      <mat-form-field appearance="outline">
+        <mat-label>Daily pushup goal</mat-label>
+        <input
+          matInput
+          type="number"
+          name="pushupGoal"
+          min="1"
+          max="10000"
+          step="1"
+          required
+          [ngModel]="pushupGoal()"
+          (ngModelChange)="pushupGoal.set($event)"
+        />
+        <span matTextSuffix>pushups</span>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Daily ride elevation goal</mat-label>
+        <input
+          matInput
+          type="number"
+          name="elevationGoal"
+          min="1"
+          max="100000"
+          step="1"
+          required
+          [ngModel]="elevationGoal()"
+          (ngModelChange)="elevationGoal.set($event)"
+        />
+        <span matTextSuffix>m</span>
+      </mat-form-field>
+
+      <div class="actions">
+        <button
+          mat-flat-button
+          color="primary"
+          type="submit"
+          [disabled]="!canSave()"
+        >
+          Save
+        </button>
+      </div>
+    </form>
+  }
+</section>

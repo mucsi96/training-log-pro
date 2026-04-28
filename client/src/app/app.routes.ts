@@ -30,4 +30,10 @@ export const routes: Routes = [
       import('./home/home.component').then((m) => m.HomeComponent),
     canActivate: [autoLoginPartialRoutesGuard],
   },
+  {
+    path: 'settings',
+    loadComponent: () =>
+      import('./settings/settings.component').then((m) => m.SettingsComponent),
+    canActivate: [autoLoginPartialRoutesGuard],
+  },
 ];

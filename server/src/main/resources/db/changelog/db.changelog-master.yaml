@@ -212,3 +212,51 @@ databaseChangeLog:
                   type: integer
                   constraints:
                     nullable: false
+
+  - changeSet:
+      id: 8-create-golden-day-goal-table
+      author: mucsi96
+      changes:
+        - createTable:
+            tableName: golden_day_goal
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: effective_from
+                  type: date
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: pushup_goal
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: elevation_goal
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp(6)
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+        - insert:
+            tableName: golden_day_goal
+            columns:
+              - column:
+                  name: effective_from
+                  valueDate: '1970-01-01'
+              - column:
+                  name: pushup_goal
+                  valueNumeric: 100
+              - column:
+                  name: elevation_goal
+                  valueNumeric: 250

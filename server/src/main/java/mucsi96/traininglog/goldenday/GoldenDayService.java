@@ -4,6 +4,7 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -18,15 +19,16 @@ import mucsi96.traininglog.pushups.PushupSet;
 import mucsi96.traininglog.pushups.PushupSetRepository;
 import mucsi96.traininglog.rides.Ride;
 import mucsi96.traininglog.rides.RideRepository;
+import mucsi96.traininglog.settings.GoldenDayGoalEntity;
+import mucsi96.traininglog.settings.GoldenDayGoalService;
 
 @Service
 @RequiredArgsConstructor
 public class GoldenDayService {
-  static final int PUSHUP_GOAL = 100;
-  static final int ELEVATION_GOAL = 250;
 
   private final PushupSetRepository pushupSetRepository;
   private final RideRepository rideRepository;
+  private final GoldenDayGoalService goldenDayGoalService;
   private final Clock clock;
 
   public GoldenDayStats getStats(ZoneId zoneId) {
@@ -44,13 +46,19 @@ public class GoldenDayService {
             TreeMap::new,
             Collectors.summingDouble(ride -> (double) ride.getTotalElevationGain())));
 
+    List<GoldenDayGoalEntity> goalsAsc = goldenDayGoalService.getAllOrderedAsc();
+
     Set<LocalDate> goldenDates = pushupsByDay.keySet().stream()
-        .filter(date -> pushupsByDay.getOrDefault(date, 0) >= PUSHUP_GOAL)
-        .filter(date -> elevationByDay.getOrDefault(date, 0d) >= ELEVATION_GOAL)
+        .filter(date -> {
+          GoldenDayGoalEntity goal = goldenDayGoalService.getEffectiveOn(date, goalsAsc);
+          return pushupsByDay.getOrDefault(date, 0) >= goal.getPushupGoal()
+              && elevationByDay.getOrDefault(date, 0d) >= goal.getElevationGoal();
+        })
         .collect(Collectors.toCollection(java.util.TreeSet::new));
 
     LocalDate today = LocalDate.now(clock.withZone(zoneId));
     YearMonth currentMonth = YearMonth.from(today);
+    GoldenDayGoalEntity currentGoal = goldenDayGoalService.getEffectiveOn(today, goalsAsc);
 
     int monthCount = (int) goldenDates.stream()
         .filter(date -> YearMonth.from(date).equals(currentMonth))
@@ -64,10 +72,27 @@ public class GoldenDayService {
         .todayGolden(goldenDates.contains(today))
         .todayPushups(pushupsByDay.getOrDefault(today, 0))
         .todayElevationGain(elevationByDay.getOrDefault(today, 0d))
-        .pushupGoal(PUSHUP_GOAL)
-        .elevationGoal(ELEVATION_GOAL)
+        .pushupGoal(currentGoal.getPushupGoal())
+        .elevationGoal(currentGoal.getElevationGoal())
         .goldenDates(goldenDates.stream().sorted().toList())
         .build();
+  }
+
+  public boolean isTodayGolden(ZoneId zoneId) {
+    LocalDate today = LocalDate.now(clock.withZone(zoneId));
+    int todayPushups = pushupSetRepository
+        .findAll(Sort.by(Sort.Direction.ASC, "createdAt")).stream()
+        .filter(set -> set.getCreatedAt().withZoneSameInstant(zoneId).toLocalDate().equals(today))
+        .mapToInt(PushupSet::getCount)
+        .sum();
+    double todayElevation = rideRepository
+        .findAll(Sort.by(Sort.Direction.ASC, "createdAt")).stream()
+        .filter(ride -> ride.getCreatedAt().withZoneSameInstant(zoneId).toLocalDate().equals(today))
+        .mapToDouble(ride -> (double) ride.getTotalElevationGain())
+        .sum();
+    GoldenDayGoalEntity goal = goldenDayGoalService.getEffectiveOn(
+        today, goldenDayGoalService.getAllOrderedAsc());
+    return todayPushups >= goal.getPushupGoal() && todayElevation >= goal.getElevationGoal();
   }
 
   private int computeStreak(Set<LocalDate> goldenDates, LocalDate today) {

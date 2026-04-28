@@ -23,6 +23,34 @@ export async function cleanupDb() {
   await query('DELETE FROM training_log.fitness');
   await query('DELETE FROM training_log.pushup_set');
   await query('DELETE FROM training_log.oauth2_authorized_client');
+  await query('DELETE FROM training_log.golden_day_goal');
+  await query(
+    `INSERT INTO training_log.golden_day_goal (effective_from, pushup_goal, elevation_goal)
+     VALUES ($1, $2, $3)`,
+    ['1970-01-01', 100, 250]
+  );
+}
+
+export async function getGoldenDayGoalRows() {
+  const result = await query(
+    'SELECT effective_from, pushup_goal, elevation_goal FROM training_log.golden_day_goal ORDER BY effective_from ASC'
+  );
+  return result.rows;
+}
+
+export async function setGoldenDayGoal(
+  pushupGoal: number,
+  elevationGoal: number,
+  effectiveFrom: string = '1970-01-01'
+) {
+  await query(
+    `INSERT INTO training_log.golden_day_goal (effective_from, pushup_goal, elevation_goal)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (effective_from) DO UPDATE SET
+       pushup_goal = EXCLUDED.pushup_goal,
+       elevation_goal = EXCLUDED.elevation_goal`,
+    [effectiveFrom, pushupGoal, elevationGoal]
+  );
 }
 
 export async function populateOAuthClients() {

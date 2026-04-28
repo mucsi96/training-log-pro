@@ -147,6 +147,30 @@ paths:
                       type: string
                       format: date
 
+  /settings/golden-day-goal:
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoldenDayGoal'
+    put:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoldenDayGoal'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoldenDayGoal'
+
   /fitness:
     get:
       responses:
@@ -200,3 +224,19 @@ components:
           format: date-time
         count:
           type: integer
+    GoldenDayGoal:
+      type: object
+      required:
+        - pushupGoal
+        - elevationGoal
+      properties:
+        pushupGoal:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 10000
+        elevationGoal:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 100000
