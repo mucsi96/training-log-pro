@@ -46,11 +46,9 @@ export async function setGoldenDayGoal(pushupGoal: number, elevationGoal: number
 
 export async function getGoldenDayDates(): Promise<string[]> {
   const result = await query(
-    'SELECT date FROM training_log.golden_day ORDER BY date ASC'
+    `SELECT to_char(date, 'YYYY-MM-DD') AS date FROM training_log.golden_day ORDER BY date ASC`
   );
-  return result.rows.map((row) =>
-    new Date(row.date).toISOString().slice(0, 10)
-  );
+  return result.rows.map((row) => row.date as string);
 }
 
 export async function insertGoldenDay(date: Date | string) {

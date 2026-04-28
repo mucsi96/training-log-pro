@@ -20,10 +20,16 @@ const daysAgoAt = (daysAgo: number, hour: number) => {
   return base;
 };
 
+const formatLocalDate = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+    d.getDate()
+  ).padStart(2, '0')}`;
+
 const isoDate = (daysAgo: number) => {
-  const date = startOfTodayUtc();
-  date.setUTCDate(date.getUTCDate() - daysAgo);
-  return date.toISOString().slice(0, 10);
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - daysAgo);
+  return formatLocalDate(d);
 };
 
 const insertGoldenRide = (daysAgo: number, totalElevationGain: number) =>
