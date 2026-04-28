@@ -33,29 +33,19 @@
 }
 
 .nav-toggle-icon {
-  display: inline-block;
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: space-between;
   width: 22px;
+  height: 16px;
+  vertical-align: middle;
+}
+
+.nav-toggle-icon > span {
+  display: block;
   height: 2px;
   background: currentColor;
-  position: relative;
-}
-
-.nav-toggle-icon::before,
-.nav-toggle-icon::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: currentColor;
-}
-
-.nav-toggle-icon::before {
-  top: -7px;
-}
-
-.nav-toggle-icon::after {
-  top: 7px;
+  border-radius: 1px;
 }
 
 @media screen and (width < 500px) {
