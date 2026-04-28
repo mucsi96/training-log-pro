@@ -3,7 +3,7 @@ package mucsi96.traininglog.goldenday;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -35,21 +35,21 @@ public class GoldenDayService {
   private final Clock clock;
 
   @Transactional
-  public GoldenDayStats getStats(ZoneId zoneId) {
-    LocalDate today = LocalDate.now(clock.withZone(zoneId));
+  public GoldenDayStats getStats() {
+    LocalDate today = LocalDate.now(clock.withZone(ZoneOffset.UTC));
     GoldenDayGoalEntity goal = goldenDayGoalService.getCurrent();
 
     Map<LocalDate, Integer> pushupsByDay = pushupSetRepository
         .findAll(Sort.by(Sort.Direction.ASC, "createdAt")).stream()
         .collect(Collectors.groupingBy(
-            (PushupSet set) -> set.getCreatedAt().withZoneSameInstant(zoneId).toLocalDate(),
+            (PushupSet set) -> set.getCreatedAt().withZoneSameInstant(ZoneOffset.UTC).toLocalDate(),
             TreeMap::new,
             Collectors.summingInt(PushupSet::getCount)));
 
     Map<LocalDate, Double> elevationByDay = rideRepository
         .findAll(Sort.by(Sort.Direction.ASC, "createdAt")).stream()
         .collect(Collectors.groupingBy(
-            (Ride ride) -> ride.getCreatedAt().withZoneSameInstant(zoneId).toLocalDate(),
+            (Ride ride) -> ride.getCreatedAt().withZoneSameInstant(ZoneOffset.UTC).toLocalDate(),
             TreeMap::new,
             Collectors.summingDouble(ride -> (double) ride.getTotalElevationGain())));
 
