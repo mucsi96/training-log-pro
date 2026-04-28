@@ -1,10 +1,11 @@
 import { test, expect } from '../fixtures';
-import { cleanupDb, populateOAuthClients, insertRide } from '../utils';
+import { cleanupDb, populateOAuthClients, insertRide, pushStravaActivities } from '../utils';
 
 test.describe('Ride', () => {
   test.beforeEach(async () => {
     await cleanupDb();
     await populateOAuthClients();
+    await pushStravaActivities(2);
     await insertRide(400, 646, 11747.7, 3074, 'Ride 1', 'MountainBikeRide', 408, 210);
     await insertRide(355, 646, 11747.7, 3074, 'Ride 1', 'MountainBikeRide', 408, 210);
     await insertRide(14, 646, 11747.7, 3074, 'Ride 1', 'MountainBikeRide', 408, 210);

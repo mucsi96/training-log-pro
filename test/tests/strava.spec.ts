@@ -7,9 +7,14 @@ import {
   getRideRows,
   getFitnessRows,
   insertFitnessAt,
+  pushStravaActivities,
 } from '../utils';
 
 test.describe('Strava', () => {
+  test.beforeEach(async () => {
+    await pushStravaActivities(2);
+  });
+
   test('should authorize strava', async ({ page }) => {
     await cleanupDb();
     await populateOAuthClients();

@@ -1,0 +1,53 @@
+@let s = stats.value();
+<section
+  class="golden-day"
+  [class.golden-day--active]="todayGolden()"
+  aria-labelledby="golden-day-heading"
+>
+  <header class="header">
+    <h2 id="golden-day-heading">Golden day</h2>
+    @if (todayGolden()) {
+      <p class="status status--celebrate" role="status">Today is golden</p>
+    } @else if (s) {
+      <p class="status">
+        {{ pushups() }}/{{ pushupGoal() }} pushups
+        ·
+        {{ elevationDisplay() }}/{{ elevationGoal() }} m
+      </p>
+    }
+  </header>
+
+  <dl class="stats">
+    <div class="stat">
+      <dt>This month</dt>
+      <dd>
+        <span class="stat-value">{{ monthCount() }}</span>
+        <span class="stat-unit">{{ monthCount() === 1 ? 'day' : 'days' }}</span>
+      </dd>
+    </div>
+    <div class="stat">
+      <dt>Streak</dt>
+      <dd>
+        <span class="stat-value">{{ streak() }}</span>
+        <span class="stat-unit">{{ streak() === 1 ? 'day' : 'days' }}</span>
+      </dd>
+    </div>
+  </dl>
+
+  @if (confetti().length) {
+  <div class="confetti" aria-hidden="true">
+    @for (piece of confetti(); track piece.id) {
+    <span
+      class="confetti-piece"
+      [style.--left.%]="piece.left"
+      [style.--delay.ms]="piece.delay"
+      [style.--duration.ms]="piece.duration"
+      [style.--drift.px]="piece.drift"
+      [style.--rotation.deg]="piece.rotation"
+      [style.--color]="piece.color"
+      [style.--size.px]="piece.size"
+    ></span>
+    }
+  </div>
+  }
+</section>

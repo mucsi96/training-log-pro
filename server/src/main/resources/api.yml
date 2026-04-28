@@ -101,6 +101,52 @@ paths:
               schema:
                 $ref: '#/components/schemas/PushupSet'
 
+  /golden-day:
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                title: GoldenDayStats
+                type: object
+                required:
+                  - monthCount
+                  - currentStreak
+                  - todayGolden
+                  - todayPushups
+                  - todayElevationGain
+                  - pushupGoal
+                  - elevationGoal
+                  - goldenDates
+                properties:
+                  monthCount:
+                    type: integer
+                    format: int32
+                  currentStreak:
+                    type: integer
+                    format: int32
+                  todayGolden:
+                    type: boolean
+                  todayPushups:
+                    type: integer
+                    format: int32
+                  todayElevationGain:
+                    type: number
+                    format: double
+                  pushupGoal:
+                    type: integer
+                    format: int32
+                  elevationGoal:
+                    type: integer
+                    format: int32
+                  goldenDates:
+                    type: array
+                    items:
+                      type: string
+                      format: date
+
   /fitness:
     get:
       responses:
