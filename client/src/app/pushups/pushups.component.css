@@ -103,56 +103,6 @@ h2 {
   color: var(--mat-app-text-color);
 }
 
-.custom-row {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border-radius: 0.75rem;
-  background: var(--mat-sys-surface);
-}
-
-.custom-label {
-  color: var(--mat-app-text-color);
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.custom-input {
-  width: 100%;
-  background: var(--mat-sys-surface-container);
-  border: 1px solid hsl(215, 14%, 34%);
-  border-radius: 0.5rem;
-  color: var(--mat-sys-on-primary);
-  font-size: 18px;
-  font-weight: 600;
-  padding: 10px 12px;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
-
-.custom-input:focus-visible {
-  outline: none;
-  border-color: hsl(218, 93%, 61%);
-  box-shadow: hsl(218, 93%, 61%) 0 0 0 1px;
-}
-
-.custom-input::-webkit-outer-spin-button,
-.custom-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.custom-input[type='number'] {
-  -moz-appearance: textfield;
-}
-
-.custom-add-button {
-  min-height: 44px;
-  border-radius: 0.5rem;
-}
-
 .chart-wrapper {
   position: relative;
   width: 100%;
@@ -174,7 +124,6 @@ h2 {
     grid-template-areas:
       'header header'
       'ring quick'
-      'ring custom'
       'chart chart';
     column-gap: 32px;
     align-items: start;
@@ -182,6 +131,5 @@ h2 {
   .header { grid-area: header; }
   .ring-wrapper { grid-area: ring; margin: 0; }
   .quick-add { grid-area: quick; }
-  .custom-row { grid-area: custom; }
   .chart-wrapper { grid-area: chart; height: 160px; }
 }

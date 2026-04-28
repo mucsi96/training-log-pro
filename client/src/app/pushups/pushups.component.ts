@@ -1,5 +1,4 @@
 import { Component, computed, inject, resource, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { EChartsOption } from 'echarts';
@@ -15,7 +14,6 @@ const QUICK_ADD_VALUES = [-5, 5, 10] as const;
 @Component({
   standalone: true,
   imports: [
-    FormsModule,
     NgxEchartsModule,
     MatButtonModule,
     MatProgressSpinnerModule,
@@ -33,7 +31,6 @@ export class PushupsComponent {
   readonly initOpts = { renderer: 'svg' as const };
   readonly goal = DAILY_GOAL;
   readonly quickAddValues = QUICK_ADD_VALUES;
-  readonly customCount = signal(10);
   readonly busy = signal(false);
 
   readonly todaySets = resource({
@@ -124,16 +121,4 @@ export class PushupsComponent {
       : `Subtract ${-value} pushups`;
   }
 
-  async addCustom() {
-    const count = this.customCount();
-    if (!Number.isFinite(count) || count <= 0) {
-      return;
-    }
-    await this.add(Math.floor(count));
-  }
-
-  onCustomInput(value: string) {
-    const parsed = Number(value);
-    this.customCount.set(Number.isFinite(parsed) ? parsed : 0);
-  }
 }

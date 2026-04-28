@@ -50,30 +50,6 @@
     }
   </div>
 
-  <form class="custom-row" (ngSubmit)="addCustom()">
-    <label class="custom-label" for="pushups-custom-count">Custom</label>
-    <input
-      id="pushups-custom-count"
-      class="custom-input"
-      type="number"
-      inputmode="numeric"
-      min="1"
-      max="500"
-      step="1"
-      [value]="customCount()"
-      (input)="onCustomInput($any($event.target).value)"
-      aria-label="Custom pushup count"
-    />
-    <button
-      type="submit"
-      mat-flat-button
-      class="custom-add-button"
-      [disabled]="busy() || customCount() <= 0"
-    >
-      Add
-    </button>
-  </form>
-
   @if (chart) {
   <div class="chart-wrapper">
     <div

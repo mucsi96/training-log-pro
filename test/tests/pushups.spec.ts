@@ -53,23 +53,6 @@ test.describe('Pushups', () => {
     expect(rows[0].count).toBe(10);
   });
 
-  test('adds a pushup set via the custom input', async ({ page }) => {
-    await page.goto('/');
-    const section = page.getByRole('region', { name: 'Pushups' });
-
-    await section.getByLabel('Custom pushup count').fill('7');
-    await section.getByRole('button', { name: 'Add', exact: true }).click();
-
-    await expect(
-      section.getByRole('img', { name: '7 of 100 pushups today' })
-    ).toBeVisible();
-    await expect(section.getByText('93 to go')).toBeVisible();
-
-    const rows = await getPushupSetRows();
-    expect(rows).toHaveLength(1);
-    expect(rows[0].count).toBe(7);
-  });
-
   test('corrects an over-count with the -5 button', async ({ page }) => {
     await insertPushupSet(daysAgoAt(0, 9), 10);
 
