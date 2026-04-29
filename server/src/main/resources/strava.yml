@@ -278,3 +278,37 @@ paths:
                     type: string
                   embed_token:
                     type: string
+                  segment_efforts:
+                    type: array
+                    items:
+                      title: StravaSegmentEffort
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          format: int64
+                        elapsed_time:
+                          type: integer
+                        moving_time:
+                          type: integer
+                        start_date:
+                          type: string
+                          format: date-time
+                        distance:
+                          type: number
+                          format: float
+                        segment:
+                          title: StravaSegment
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              format: int64
+                            name:
+                              type: string
+                            distance:
+                              type: number
+                              format: float
+                            average_grade:
+                              type: number
+                              format: float

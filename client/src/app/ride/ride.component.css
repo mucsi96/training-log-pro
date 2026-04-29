@@ -36,3 +36,30 @@ h2 {
 .page-loading {
   margin: 150px auto;
 }
+
+.podium-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  margin: 0 0 24px;
+  border-radius: 12px;
+  background: var(--mat-sys-primary-container, #00415a);
+  color: var(--mat-sys-on-primary-container, #d6f0ff);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
+}
+
+.podium-banner mat-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  font-size: 32px;
+  color: var(--mat-sys-tertiary, #f5c518);
+}
+
+.podium-banner .podium-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+}

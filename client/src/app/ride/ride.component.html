@@ -1,8 +1,22 @@
 @let today = todayRideStats.value();
 @let period = periodRideStats.value();
+@let podium = podiumMessage.value();
 @if (todayRideStats.isLoading() || periodRideStats.isLoading()) {
 <mat-spinner class="page-loading" />
 } @else if (today && period) {
+@if (podium) {
+<aside
+  class="podium-banner"
+  data-testid="podium-banner"
+  [attr.data-period]="podium.period"
+  [attr.data-position]="podium.position"
+>
+  <mat-icon aria-hidden="true">emoji_events</mat-icon>
+  <div class="podium-text">
+    <p class="podium-title">{{ podium.message }}</p>
+  </div>
+</aside>
+}
 <section>
   <article>
     <h2>Calories</h2>

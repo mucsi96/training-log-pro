@@ -1,5 +1,14 @@
 import { Request, Response } from 'express';
 
+type PushedSegmentEffort = {
+  id: number;
+  segmentId: number;
+  segmentName: string;
+  segmentDistance: number;
+  segmentAverageGrade: number;
+  elapsedTime: number;
+};
+
 type PushedActivity = {
   id: number;
   totalElevationGain: number;
@@ -11,6 +20,7 @@ type PushedActivity = {
   weightedAverageWatts: number;
   name: string;
   sportType: string;
+  segmentEfforts: PushedSegmentEffort[];
 };
 
 const DEFAULT_SUFFER_SCORES = [82, 162];
@@ -22,6 +32,17 @@ const startDateById = new Map<number, string>();
 export function pushActivity(req: Request, res: Response) {
   const body = req.body ?? {};
   const id = nextId++;
+  const segmentEfforts: PushedSegmentEffort[] = (body.segmentEfforts ?? []).map(
+    (effort: Partial<PushedSegmentEffort>, index: number) => ({
+      id: effort.id ?? id * 1000 + index,
+      segmentId: effort.segmentId ?? index + 1,
+      segmentName: effort.segmentName ?? `Segment ${index + 1}`,
+      segmentDistance: effort.segmentDistance ?? 500,
+      segmentAverageGrade: effort.segmentAverageGrade ?? 4,
+      elapsedTime: effort.elapsedTime ?? 120,
+    })
+  );
+
   const activity: PushedActivity = {
     id,
     totalElevationGain: body.totalElevationGain ?? 516,
@@ -36,6 +57,7 @@ export function pushActivity(req: Request, res: Response) {
     weightedAverageWatts: body.weightedAverageWatts ?? 230,
     name: body.name ?? `Test activity ${id}`,
     sportType: body.sportType ?? 'MountainBikeRide',
+    segmentEfforts,
   };
   activities.push(activity);
   console.log('[pushActivity] Stored activity', activity);
@@ -242,6 +264,41 @@ export function getActivity(req: Request, res: Response) {
     embed_token: 'embed-token',
     segment_leaderboard_opt_out: false,
     leaderboard_opt_out: false,
+    segment_efforts: activity.segmentEfforts.map((effort, index) => {
+      const effortStart = new Date(startDate);
+      effortStart.setUTCMinutes(effortStart.getUTCMinutes() + index);
+      return {
+        id: effort.id,
+        resource_state: 2,
+        name: effort.segmentName,
+        elapsed_time: effort.elapsedTime,
+        moving_time: effort.elapsedTime,
+        start_date: effortStart.toISOString(),
+        start_date_local: effortStart.toISOString(),
+        distance: effort.segmentDistance,
+        segment: {
+          id: effort.segmentId,
+          resource_state: 2,
+          name: effort.segmentName,
+          activity_type: 'Ride',
+          distance: effort.segmentDistance,
+          average_grade: effort.segmentAverageGrade,
+          maximum_grade: effort.segmentAverageGrade + 2,
+          elevation_high: 200,
+          elevation_low: 100,
+          climb_category: 0,
+          city: null,
+          state: null,
+          country: null,
+          private: false,
+          hazardous: false,
+          starred: false,
+        },
+        kom_rank: null,
+        pr_rank: null,
+        achievements: [],
+      };
+    }),
   };
 
   console.log(`[getActivity] Returning activity ${id} with start_date: ${startDate}`);

@@ -294,3 +294,64 @@ databaseChangeLog:
               ) elevation_by_day USING (day)
               WHERE pushups >= 100 AND elevation >= 250
               ON CONFLICT DO NOTHING;
+
+  - changeSet:
+      id: 10-create-segment-effort-table
+      author: mucsi96
+      changes:
+        - createTable:
+            tableName: segment_effort
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: segment_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: segment_name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: segment_distance
+                  type: float4
+                  constraints:
+                    nullable: false
+              - column:
+                  name: segment_average_grade
+                  type: float4
+                  constraints:
+                    nullable: false
+              - column:
+                  name: elapsed_time
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: start_date
+                  type: timestamp(6)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ride_created_at
+                  type: timestamp(6)
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: segment_effort
+            indexName: idx_segment_effort_segment_id
+            columns:
+              - column:
+                  name: segment_id
+        - createIndex:
+            tableName: segment_effort
+            indexName: idx_segment_effort_start_date
+            columns:
+              - column:
+                  name: start_date

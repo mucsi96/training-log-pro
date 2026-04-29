@@ -19,6 +19,7 @@ export async function query(text: string, params?: any[]) {
 
 export async function cleanupDb() {
   await query('DELETE FROM training_log.weight');
+  await query('DELETE FROM training_log.segment_effort');
   await query('DELETE FROM training_log.ride');
   await query('DELETE FROM training_log.fitness');
   await query('DELETE FROM training_log.pushup_set');
@@ -130,6 +131,44 @@ export async function getRideRows() {
   return result.rows;
 }
 
+export async function insertSegmentEffort(
+  effort: {
+    id: number;
+    segmentId: number;
+    segmentName: string;
+    segmentDistance: number;
+    segmentAverageGrade: number;
+    elapsedTime: number;
+    daysAgo: number;
+  }
+) {
+  const startDate = new Date(Date.now() - effort.daysAgo * 86400000);
+  await query(
+    `INSERT INTO training_log.segment_effort (
+      id, segment_id, segment_name, segment_distance, segment_average_grade,
+      elapsed_time, start_date, ride_created_at
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $7)`,
+    [
+      effort.id,
+      effort.segmentId,
+      effort.segmentName,
+      effort.segmentDistance,
+      effort.segmentAverageGrade,
+      effort.elapsedTime,
+      startDate,
+    ]
+  );
+}
+
+export async function getSegmentEffortRows() {
+  const result = await query(
+    `SELECT id, segment_id, segment_name, segment_distance, segment_average_grade,
+            elapsed_time, start_date
+     FROM training_log.segment_effort ORDER BY id ASC`
+  );
+  return result.rows;
+}
+
 export async function getFitnessRows() {
   const result = await query(
     'SELECT created_at, pulled_at, fitness, fatigue, form FROM training_log.fitness ORDER BY created_at ASC'
@@ -180,6 +219,15 @@ export async function getOAuthClient(clientRegistrationId: string) {
   return result.rows[0];
 }
 
+export type PushStravaSegmentEffortOptions = {
+  id?: number;
+  segmentId?: number;
+  segmentName?: string;
+  segmentDistance?: number;
+  segmentAverageGrade?: number;
+  elapsedTime?: number;
+};
+
 export type PushStravaActivityOptions = {
   totalElevationGain?: number;
   sufferScore?: number | null;
@@ -190,6 +238,7 @@ export type PushStravaActivityOptions = {
   weightedAverageWatts?: number;
   name?: string;
   sportType?: string;
+  segmentEfforts?: PushStravaSegmentEffortOptions[];
 };
 
 export async function pushStravaActivity(options: PushStravaActivityOptions = {}) {

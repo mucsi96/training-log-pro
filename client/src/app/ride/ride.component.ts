@@ -1,6 +1,7 @@
 import { Component, inject, resource } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
+import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { map } from 'rxjs';
 import { RideService } from './ride.service';
@@ -8,7 +9,7 @@ import { MeasurementWithUnitPipe } from '../utils/measurement-with-unit.pipe';
 
 @Component({
   standalone: true,
-  imports: [MatProgressSpinnerModule, MeasurementWithUnitPipe],
+  imports: [MatIconModule, MatProgressSpinnerModule, MeasurementWithUnitPipe],
   selector: 'app-ride',
   templateUrl: './ride.component.html',
   styleUrl: './ride.component.css',
@@ -26,5 +27,9 @@ export class RideComponent {
   readonly periodRideStats = resource({
     params: () => this.period(),
     loader: ({ params: period }) => this.rideService.getRideStats(period),
+  });
+
+  readonly podiumMessage = resource({
+    loader: () => this.rideService.getPodiumMessage(),
   });
 }
