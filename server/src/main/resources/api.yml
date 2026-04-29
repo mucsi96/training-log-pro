@@ -61,6 +61,18 @@ paths:
                     type: integer
                     format: int64
 
+  /ride/podium:
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PodiumMessage'
+        '204':
+          description: No podium achievement today
+
   /pushups:
     get:
       parameters:
@@ -240,3 +252,26 @@ components:
           format: int32
           minimum: 1
           maximum: 100000
+    PodiumMessage:
+      type: object
+      required:
+        - segmentName
+        - period
+        - position
+        - message
+      properties:
+        segmentName:
+          type: string
+        period:
+          type: string
+          enum:
+            - WEEK
+            - MONTH
+            - ALL_TIME
+        position:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 3
+        message:
+          type: string
