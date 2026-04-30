@@ -7,6 +7,7 @@ import {
   getRideRows,
   getFitnessRows,
   insertFitnessAt,
+  insertRide,
   pushStravaActivities,
 } from '../utils';
 
@@ -114,5 +115,49 @@ test.describe('Strava', () => {
     const rows = await getFitnessRows();
     expect(rows).toHaveLength(1);
     expect(rows[0].fitness).toBeCloseTo(5.747, 1);
+  });
+});
+
+test.describe('Fitness without a ride today', () => {
+  test('decays yesterday fitness into today even before any activity', async ({ page }) => {
+    // Yesterday: rides synced and fitness computed at the end of the day.
+    // No Strava activities are pushed for today.
+    const yesterday = new Date(Date.now() - 86400000);
+    await insertRide(1, 1740, 56000, 8400, 'Yesterday Ride 1', 'Ride', 1032, 200, 82);
+    await insertRide(1, 1740, 56000, 8400, 'Yesterday Ride 2', 'Ride', 1032, 200, 162);
+    await insertFitnessAt(yesterday, yesterday, 5.747, 32.483, -26.736);
+
+    await page.goto('/');
+
+    // The fitness diagram is visible with today's decayed value.
+    const fitnessSection = page.locator('section').filter({ hasText: 'Fitness' });
+    await expect(fitnessSection.getByRole('heading', { name: 'Fitness' })).toBeVisible();
+    const chart = fitnessSection.locator('[role="img"]');
+    await expect(chart).toHaveAttribute('aria-label', /Line chart.*Fitness/);
+
+    // Today's fitness ≈ LAMBDA_FITNESS * yesterday = exp(-1/42) * 5.747 ≈ 5.612
+    const rows = await getFitnessRows();
+    expect(rows).toHaveLength(2);
+    expect(rows[0].fitness).toBeCloseTo(5.747, 1);
+    expect(rows[1].fitness).toBeCloseTo(5.612, 1);
+    expect(rows[1].fitness).toBeLessThan(rows[0].fitness);
+  });
+
+  test('persists a zero fitness row for today when there are no rides at all', async ({ page }) => {
+    // Brand-new state: no rides have been recorded, no fitness rows exist.
+    // The first sync of the day must still produce today's row so the UI can
+    // render the section.
+    await page.goto('/');
+
+    const fitnessSection = page.locator('section').filter({ hasText: 'Fitness' });
+    await expect(fitnessSection.getByRole('heading', { name: 'Fitness' })).toBeVisible();
+    const chart = fitnessSection.locator('[role="img"]');
+    await expect(chart).toHaveAttribute('aria-label', /Line chart.*Fitness/);
+
+    const rows = await getFitnessRows();
+    expect(rows).toHaveLength(1);
+    expect(rows[0].fitness).toBeCloseTo(0, 3);
+    expect(rows[0].fatigue).toBeCloseTo(0, 3);
+    expect(rows[0].form).toBeCloseTo(0, 3);
   });
 });
