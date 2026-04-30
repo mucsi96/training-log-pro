@@ -39,7 +39,7 @@ export class WithingsService {
             } else {
               sessionStorage.setItem(REDIRECT_GUARD_KEY, '1');
               window.location.href = authorizeUrl;
-              return;
+              await new Promise<never>(() => {});
             }
           } else {
             this.snackBar.open('Unable to sync with Withings', 'Close', {
