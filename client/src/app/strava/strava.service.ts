@@ -3,6 +3,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { WithingsService } from '../withings/withings.service';
 import { fetchJson } from '../utils/fetchJson';
+import { haltForNavigation } from '../utils/auth';
 
 const REDIRECT_GUARD_KEY = 'strava-authorize-redirected';
 
@@ -41,7 +42,10 @@ export class StravaService {
             } else {
               sessionStorage.setItem(REDIRECT_GUARD_KEY, '1');
               window.location.href = authorizeUrl;
-              return;
+              // Keep this promise pending so the sync flow does not continue
+              // after assigning window.location.href, preventing a competing
+              // redirect from being scheduled before the browser navigates.
+              await haltForNavigation();
             }
           } else {
             this.snackBar.open('Unable to sync with Strava', 'Close', {
