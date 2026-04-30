@@ -91,12 +91,8 @@ public class FitnessService {
 
     fitnessRepository.deleteAllInBatch();
 
-    if (loadByDay.isEmpty()) {
-      return;
-    }
-
     LocalDate today = LocalDate.now(clock.withZone(zoneId));
-    LocalDate cursor = loadByDay.keySet().iterator().next();
+    LocalDate cursor = loadByDay.isEmpty() ? today : loadByDay.keySet().iterator().next();
     LocalDate end = today.isAfter(cursor) ? today : cursor;
 
     double fitness = 0;

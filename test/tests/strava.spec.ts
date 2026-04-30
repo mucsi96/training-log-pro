@@ -143,21 +143,21 @@ test.describe('Fitness without a ride today', () => {
     expect(rows[1].fitness).toBeLessThan(rows[0].fitness);
   });
 
-  test('renders the diagram when no fitness row exists for today', async ({ page }) => {
-    // pulledAt set to late today makes the server skip the recompute, so the
-    // database only has yesterday's fitness row when the page loads. The UI
-    // must still display the diagram with the latest available measurement.
-    const yesterday = new Date(Date.now() - 86400000);
-    const lateToday = new Date();
-    lateToday.setUTCHours(23, 59, 0, 0);
-    await insertFitnessAt(yesterday, lateToday, 30, 40, -10);
-
+  test('persists a zero fitness row for today when there are no rides at all', async ({ page }) => {
+    // Brand-new state: no rides have been recorded, no fitness rows exist.
+    // The first sync of the day must still produce today's row so the UI can
+    // render the section.
     await page.goto('/');
 
     const fitnessSection = page.locator('section').filter({ hasText: 'Fitness' });
     await expect(fitnessSection.getByRole('heading', { name: 'Fitness' })).toBeVisible();
-    await expect(fitnessSection.getByText('30', { exact: true })).toBeVisible();
     const chart = fitnessSection.locator('[role="img"]');
     await expect(chart).toHaveAttribute('aria-label', /Line chart.*Fitness/);
+
+    const rows = await getFitnessRows();
+    expect(rows).toHaveLength(1);
+    expect(rows[0].fitness).toBeCloseTo(0, 3);
+    expect(rows[0].fatigue).toBeCloseTo(0, 3);
+    expect(rows[0].form).toBeCloseTo(0, 3);
   });
 });

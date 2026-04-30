@@ -38,11 +38,10 @@ export class FitnessComponent {
     loader: ({ params: period }) => this.fitnessService.getFitness(period),
   });
 
-  readonly latest = computed<FitnessMeasurement | undefined>(
-    () =>
-      this.todayFitness.value()?.measurements.at(-1) ??
-      this.periodFitness.value()?.measurements.at(-1)
-  );
+  readonly latest = computed<FitnessMeasurement | undefined>(() => {
+    const today = this.todayFitness.value();
+    return today?.measurements.at(-1);
+  });
 
   readonly pulledAt = computed<Date | undefined>(
     () => this.todayFitness.value()?.pulledAt
