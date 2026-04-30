@@ -39,8 +39,11 @@ export class FitnessComponent {
   });
 
   readonly latest = computed<FitnessMeasurement | undefined>(() => {
-    const today = this.todayFitness.value();
-    return today?.measurements.at(-1);
+    const today = this.todayFitness.value()?.measurements.at(-1);
+    if (today) {
+      return today;
+    }
+    return this.periodFitness.value()?.measurements.at(-1);
   });
 
   readonly pulledAt = computed<Date | undefined>(

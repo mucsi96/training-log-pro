@@ -80,6 +80,23 @@ test.describe('Strava', () => {
     await expect(chart).toHaveAttribute('aria-label', /Line chart.*Fitness/);
   });
 
+  test('should display fitness chart when there is no ride today', async ({ page }) => {
+    // Seed only yesterday's fitness with pulledAt=today 23:59 so the sync skips
+    // recompute and there is no fitness row for today.
+    const yesterday = new Date(Date.now() - 86400000);
+    const lateToday = new Date();
+    lateToday.setUTCHours(23, 59, 0, 0);
+    await insertFitnessAt(yesterday, lateToday, 30, 40, -10);
+
+    await page.goto('/');
+
+    const fitnessSection = page.locator('section').filter({ hasText: 'Fitness' });
+    await expect(fitnessSection.getByRole('heading', { name: 'Fitness' })).toBeVisible();
+    await expect(fitnessSection.getByText('30', { exact: true })).toBeVisible();
+    const chart = fitnessSection.locator('[role="img"]');
+    await expect(chart).toHaveAttribute('aria-label', /Line chart.*Fitness/);
+  });
+
   test('should show last activity pull timestamp', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByTestId('fitness-last-pull')).toContainText(/Last activity pull/);
