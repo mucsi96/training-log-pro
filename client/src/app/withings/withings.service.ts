@@ -2,6 +2,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { fetchJson } from '../utils/fetchJson';
+import { haltForNavigation } from '../utils/auth';
 
 const REDIRECT_GUARD_KEY = 'withings-authorize-redirected';
 
@@ -39,7 +40,10 @@ export class WithingsService {
             } else {
               sessionStorage.setItem(REDIRECT_GUARD_KEY, '1');
               window.location.href = authorizeUrl;
-              await new Promise<never>(() => {});
+              // Keep this promise pending so StravaService (which awaits
+              // this.withingsService.sync()) does not proceed to make its own
+              // API call and trigger a competing redirect.
+              await haltForNavigation();
             }
           } else {
             this.snackBar.open('Unable to sync with Withings', 'Close', {
