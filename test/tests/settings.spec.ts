@@ -87,19 +87,29 @@ test.describe('Settings', () => {
   });
 
   test('preserves previous golden days when goals are tightened', async ({ page }) => {
-    await insertGoldenDay(isoDate(2));
-    await insertGoldenDay(isoDate(1));
+    const dayOfMonth = startOfTodayUtc().getUTCDate();
+    const historical = Math.min(2, dayOfMonth - 1);
+    const insertedDays: number[] = [];
+    for (let d = historical; d >= 1; d--) {
+      await insertGoldenDay(isoDate(d));
+      insertedDays.push(d);
+    }
+    if (insertedDays.length === 0) {
+      await insertGoldenDay(isoDate(0));
+      insertedDays.push(0);
+    }
+    const expectedCount = String(insertedDays.length);
 
     await page.goto('/');
     const goldenSection = page.getByRole('region', { name: 'Golden day' });
     const month = goldenSection.getByText('This month').locator('..');
-    await expect(month.getByText('2', { exact: true })).toBeVisible();
+    await expect(month.getByText(expectedCount, { exact: true })).toBeVisible();
 
     await setGoldenDayGoal(500, 1000);
 
     await page.goto('/');
-    await expect(month.getByText('2', { exact: true })).toBeVisible();
-    expect(await getGoldenDayDates()).toEqual([isoDate(2), isoDate(1)]);
+    await expect(month.getByText(expectedCount, { exact: true })).toBeVisible();
+    expect(await getGoldenDayDates()).toEqual(insertedDays.map((d) => isoDate(d)));
   });
 
   test('reflects updated goals on the golden day card for today when not yet golden', async ({ page }) => {

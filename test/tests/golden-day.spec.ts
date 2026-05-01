@@ -45,20 +45,21 @@ test.describe('Golden day', () => {
   });
 
   test('counts golden days for the current month and shows the streak', async ({ page }) => {
-    await insertPushupSet(daysAgoAt(2, 8), 100);
-    await insertGoldenRide(2, 260);
-    await insertPushupSet(daysAgoAt(1, 9), 100);
-    await insertGoldenRide(1, 300);
-    await insertPushupSet(daysAgoAt(0, 7), 100);
-    await insertGoldenRide(0, 250);
+    const dayOfMonth = startOfTodayUtc().getUTCDate();
+    const total = Math.min(3, dayOfMonth);
+
+    for (let d = total - 1; d >= 0; d--) {
+      await insertPushupSet(daysAgoAt(d, 7 + d), 100);
+      await insertGoldenRide(d, 250 + d * 25);
+    }
 
     await page.goto('/');
 
     const section = page.getByRole('region', { name: 'Golden day' });
     const month = section.getByText('This month').locator('..');
-    await expect(month.getByText('3', { exact: true })).toBeVisible();
+    await expect(month.getByText(String(total), { exact: true })).toBeVisible();
     const streak = section.getByText('Streak').locator('..');
-    await expect(streak.getByText('3', { exact: true })).toBeVisible();
+    await expect(streak.getByText(String(total), { exact: true })).toBeVisible();
     await expect(section.getByText('Today is golden')).toBeVisible();
   });
 
