@@ -67,7 +67,7 @@ export class WeightComponent {
 
   readonly chartOptions = computed<EChartsOption | undefined>(() => {
     const measurements = this.periodMeasurements.value();
-    if (!measurements) {
+    if (!measurements || measurements.length === 0) {
       return undefined;
     }
 

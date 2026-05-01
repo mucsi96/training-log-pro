@@ -29,7 +29,6 @@ public class FitnessController {
       @RequestParam(required = false) @Positive Integer period,
       @RequestHeader("X-Timezone") ZoneId zoneId) {
     return FitnessTimeline.builder()
-        .pulledAt(fitnessService.getLastPulledAt().map(t -> t.withZoneSameInstant(zoneId).toOffsetDateTime()).orElse(null))
         .measurements(fitnessService.getFitness(Optional.ofNullable(period), zoneId).stream()
             .map(row -> FitnessMeasurement.builder()
                 .date(row.getCreatedAt().withZoneSameInstant(zoneId).toOffsetDateTime())

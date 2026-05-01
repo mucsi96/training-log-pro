@@ -40,13 +40,6 @@ h2 {
   inset: 0;
 }
 
-.last-pull {
-  grid-column: 1 / -1;
-  color: var(--mat-sys-primary);
-  font-size: 12px;
-  margin: 0;
-}
-
 .page-loading {
   margin: 150px auto;
 }
