@@ -7,6 +7,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -53,18 +54,21 @@ public class ReadingService {
   public BookSummary updateProgress(UUID bookId, int currentPage) {
     BookEntity book = bookRepository.findById(bookId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Book not found"));
-    int clampedPage = Math.max(0, Math.min(currentPage, book.getTotalPages()));
+    if (currentPage < 0 || currentPage > book.getTotalPages()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+          "currentPage must be between 0 and " + book.getTotalPages());
+    }
     ZonedDateTime timestamp = now();
     progressRepository.save(ReadingProgressEntity.builder()
         .id(UUID.randomUUID())
         .createdAt(timestamp)
         .bookId(bookId)
-        .currentPage(clampedPage)
+        .currentPage(currentPage)
         .build());
-    if (clampedPage >= book.getTotalPages() && book.getCompletedAt() == null) {
+    if (currentPage >= book.getTotalPages() && book.getCompletedAt() == null) {
       book.setCompletedAt(timestamp);
       bookRepository.save(book);
-    } else if (clampedPage < book.getTotalPages() && book.getCompletedAt() != null) {
+    } else if (currentPage < book.getTotalPages() && book.getCompletedAt() != null) {
       book.setCompletedAt(null);
       bookRepository.save(book);
     }
@@ -75,6 +79,9 @@ public class ReadingService {
 
   @Transactional
   public void deleteBook(UUID bookId) {
+    if (!bookRepository.existsById(bookId)) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Book not found");
+    }
     progressRepository.deleteByBookId(bookId);
     bookRepository.deleteById(bookId);
   }
@@ -102,10 +109,11 @@ public class ReadingService {
         .build();
   }
 
+  @Transactional(readOnly = true)
   public Map<LocalDate, Integer> getPagesReadByDay(ZoneId zoneId) {
     List<ReadingProgressEntity> all = progressRepository
         .findAll(Sort.by(Sort.Direction.ASC, "createdAt"));
-    Map<UUID, Integer> lastSeen = new java.util.HashMap<>();
+    Map<UUID, Integer> lastSeen = new HashMap<>();
     Map<LocalDate, Integer> pagesByDay = new TreeMap<>();
     for (ReadingProgressEntity entry : all) {
       int previous = lastSeen.getOrDefault(entry.getBookId(), 0);

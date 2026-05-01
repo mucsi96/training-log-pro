@@ -53,7 +53,7 @@ export class GoldenDayComponent {
   readonly elevationGoal = computed(() => this.stats.value()?.elevationGoal ?? 250);
   readonly elevationDisplay = computed(() => Math.round(this.elevation()));
   readonly readingPages = computed(() => this.stats.value()?.todayReadingPages ?? 0);
-  readonly readingGoal = computed(() => this.stats.value()?.readingPagesGoal ?? 30);
+  readonly readingGoal = computed(() => this.stats.value()?.readingPagesGoal ?? 0);
 
   constructor() {
     effect(() => {
