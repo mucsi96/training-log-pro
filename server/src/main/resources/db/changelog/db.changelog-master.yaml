@@ -355,3 +355,88 @@ databaseChangeLog:
             columns:
               - column:
                   name: start_date
+
+  - changeSet:
+      id: 11-create-book-table
+      author: mucsi96
+      changes:
+        - createTable:
+            tableName: book
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: title
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: author
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_pages
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp(6)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: completed_at
+                  type: timestamp(6)
+                  constraints:
+                    nullable: true
+
+  - changeSet:
+      id: 12-create-reading-progress-table
+      author: mucsi96
+      changes:
+        - createTable:
+            tableName: reading_progress
+            columns:
+              - column:
+                  name: created_at
+                  type: timestamp(6)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: book_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_reading_progress_book
+                    references: training_log.book(id)
+              - column:
+                  name: current_page
+                  type: integer
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: reading_progress
+            indexName: idx_reading_progress_book_id
+            columns:
+              - column:
+                  name: book_id
+
+  - changeSet:
+      id: 13-add-reading-goal-to-golden-day-goal
+      author: mucsi96
+      changes:
+        - addColumn:
+            tableName: golden_day_goal
+            columns:
+              - column:
+                  name: reading_pages_goal
+                  type: integer
+                  defaultValueNumeric: 30
+                  constraints:
+                    nullable: false

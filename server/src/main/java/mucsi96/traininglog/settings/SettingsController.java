@@ -29,7 +29,7 @@ public class SettingsController {
   @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
   GoldenDayGoal updateGoldenDayGoal(@Valid @RequestBody GoldenDayGoal request) {
     GoldenDayGoalEntity saved = goldenDayGoalService.update(
-        request.getPushupGoal(), request.getElevationGoal());
+        request.getPushupGoal(), request.getElevationGoal(), request.getReadingPagesGoal());
     return toResponse(saved);
   }
 
@@ -37,6 +37,7 @@ public class SettingsController {
     return GoldenDayGoal.builder()
         .pushupGoal(entity.getPushupGoal())
         .elevationGoal(entity.getElevationGoal())
+        .readingPagesGoal(entity.getReadingPagesGoal())
         .build();
   }
 }

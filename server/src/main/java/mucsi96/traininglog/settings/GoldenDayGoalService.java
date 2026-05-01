@@ -18,10 +18,11 @@ public class GoldenDayGoalService {
   }
 
   @Transactional
-  public GoldenDayGoalEntity update(int pushupGoal, int elevationGoal) {
+  public GoldenDayGoalEntity update(int pushupGoal, int elevationGoal, int readingPagesGoal) {
     GoldenDayGoalEntity entity = getCurrent();
     entity.setPushupGoal(pushupGoal);
     entity.setElevationGoal(elevationGoal);
+    entity.setReadingPagesGoal(readingPagesGoal);
     return repository.save(entity);
   }
 }

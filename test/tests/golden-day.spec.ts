@@ -1,5 +1,13 @@
+import { randomUUID } from 'crypto';
 import { test, expect } from '../fixtures';
-import { cleanupDb, insertPushupSet, insertRide, populateOAuthClients } from '../utils';
+import {
+  cleanupDb,
+  insertBook,
+  insertPushupSet,
+  insertReadingProgress,
+  insertRide,
+  populateOAuthClients,
+} from '../utils';
 
 const startOfTodayUtc = () => {
   const now = new Date();
@@ -24,6 +32,15 @@ const insertGoldenRide = (daysAgo: number, totalElevationGain: number) =>
     totalElevationGain,
     180
   );
+
+const insertGoldenReading = async (daysAgo: number, pages: number) => {
+  const bookId = randomUUID();
+  const created = daysAgoAt(daysAgo, 6);
+  const finished = daysAgoAt(daysAgo, 20);
+  await insertBook(bookId, `Book d-${daysAgo}`, 'Author', pages + 100, created);
+  await insertReadingProgress(bookId, 0, created);
+  await insertReadingProgress(bookId, pages, finished);
+};
 
 test.describe('Golden day', () => {
   test.beforeEach(async () => {
@@ -51,6 +68,7 @@ test.describe('Golden day', () => {
     for (let d = total - 1; d >= 0; d--) {
       await insertPushupSet(daysAgoAt(d, 7 + d), 100);
       await insertGoldenRide(d, 250 + d * 25);
+      await insertGoldenReading(d, 30);
     }
 
     await page.goto('/');
@@ -79,6 +97,7 @@ test.describe('Golden day', () => {
   test('lights up when today becomes golden after adding pushups', async ({ page }) => {
     await insertPushupSet(daysAgoAt(0, 8), 95);
     await insertGoldenRide(0, 260);
+    await insertGoldenReading(0, 30);
 
     await page.goto('/');
 

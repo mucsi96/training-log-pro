@@ -36,6 +36,7 @@ export class GoldenDayComponent {
     params: () => ({
       version: this.service.version(),
       pushups: this.service.pushupsService.version(),
+      reading: this.service.readingService.version(),
     }),
     loader: () => this.service.getStats(),
   });
@@ -51,6 +52,8 @@ export class GoldenDayComponent {
   readonly pushupGoal = computed(() => this.stats.value()?.pushupGoal ?? 100);
   readonly elevationGoal = computed(() => this.stats.value()?.elevationGoal ?? 250);
   readonly elevationDisplay = computed(() => Math.round(this.elevation()));
+  readonly readingPages = computed(() => this.stats.value()?.todayReadingPages ?? 0);
+  readonly readingGoal = computed(() => this.stats.value()?.readingPagesGoal ?? 30);
 
   constructor() {
     effect(() => {

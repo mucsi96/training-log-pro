@@ -129,8 +129,10 @@ paths:
                   - todayGolden
                   - todayPushups
                   - todayElevationGain
+                  - todayReadingPages
                   - pushupGoal
                   - elevationGoal
+                  - readingPagesGoal
                   - goldenDates
                 properties:
                   monthCount:
@@ -147,10 +149,16 @@ paths:
                   todayElevationGain:
                     type: number
                     format: double
+                  todayReadingPages:
+                    type: integer
+                    format: int32
                   pushupGoal:
                     type: integer
                     format: int32
                   elevationGoal:
+                    type: integer
+                    format: int32
+                  readingPagesGoal:
                     type: integer
                     format: int32
                   goldenDates:
@@ -220,6 +228,116 @@ paths:
                           type: number
                           format: float
 
+  /reading/books:
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Book'
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - author
+                - totalPages
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                author:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                totalPages:
+                  type: integer
+                  minimum: 1
+                  maximum: 100000
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+
+  /reading/books/{id}/progress:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - currentPage
+              properties:
+                currentPage:
+                  type: integer
+                  minimum: 0
+                  maximum: 100000
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+
+  /reading/books/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      responses:
+        '204':
+          description: No Content
+
+  /reading/stats:
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                title: ReadingStats
+                type: object
+                required:
+                  - todayPages
+                  - dailyPagesGoal
+                  - goalReached
+                properties:
+                  todayPages:
+                    type: integer
+                    format: int32
+                  dailyPagesGoal:
+                    type: integer
+                    format: int32
+                  goalReached:
+                    type: boolean
+
 components:
   schemas:
     PushupSet:
@@ -238,6 +356,7 @@ components:
       required:
         - pushupGoal
         - elevationGoal
+        - readingPagesGoal
       properties:
         pushupGoal:
           type: integer
@@ -249,6 +368,49 @@ components:
           format: int32
           minimum: 1
           maximum: 100000
+        readingPagesGoal:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 10000
+    Book:
+      type: object
+      required:
+        - id
+        - title
+        - author
+        - totalPages
+        - currentPage
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        author:
+          type: string
+        totalPages:
+          type: integer
+          format: int32
+        currentPage:
+          type: integer
+          format: int32
+        createdAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        averagePagesPerDay:
+          type: number
+          format: double
+        estimatedDaysRemaining:
+          type: integer
+          format: int32
     PodiumMessage:
       type: object
       required:
