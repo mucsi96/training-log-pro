@@ -13,8 +13,10 @@
         {{ pushups() }}/{{ pushupGoal() }} pushups
         ·
         {{ elevationDisplay() }}/{{ elevationGoal() }} m
+        @if (readingGoal() > 0) {
         ·
         {{ readingPages() }}/{{ readingGoal() }} pages
+        }
       </p>
     }
   </header>

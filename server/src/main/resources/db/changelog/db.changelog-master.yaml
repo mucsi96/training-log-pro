@@ -403,10 +403,15 @@ databaseChangeLog:
             tableName: reading_progress
             columns:
               - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
                   name: created_at
                   type: timestamp(6)
                   constraints:
-                    primaryKey: true
                     nullable: false
               - column:
                   name: book_id
@@ -426,6 +431,12 @@ databaseChangeLog:
             columns:
               - column:
                   name: book_id
+        - createIndex:
+            tableName: reading_progress
+            indexName: idx_reading_progress_created_at
+            columns:
+              - column:
+                  name: created_at
 
   - changeSet:
       id: 13-add-reading-goal-to-golden-day-goal
@@ -437,6 +448,6 @@ databaseChangeLog:
               - column:
                   name: reading_pages_goal
                   type: integer
-                  defaultValueNumeric: 30
+                  defaultValueNumeric: 0
                   constraints:
                     nullable: false

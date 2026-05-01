@@ -15,8 +15,10 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import lombok.Builder;
 import lombok.Data;
@@ -50,10 +52,11 @@ public class ReadingService {
   @Transactional
   public BookSummary updateProgress(UUID bookId, int currentPage) {
     BookEntity book = bookRepository.findById(bookId)
-        .orElseThrow(() -> new IllegalArgumentException("Book not found"));
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Book not found"));
     int clampedPage = Math.max(0, Math.min(currentPage, book.getTotalPages()));
     ZonedDateTime timestamp = now();
     progressRepository.save(ReadingProgressEntity.builder()
+        .id(UUID.randomUUID())
         .createdAt(timestamp)
         .bookId(bookId)
         .currentPage(clampedPage)
@@ -91,7 +94,7 @@ public class ReadingService {
   public ReadingStats getStats(ZoneId zoneId) {
     int dailyGoal = goldenDayGoalService.getCurrent().getReadingPagesGoal();
     LocalDate today = LocalDate.now(clock.withZone(zoneId));
-    int todayPages = computePagesReadOn(today, zoneId);
+    int todayPages = getPagesReadByDay(zoneId).getOrDefault(today, 0);
     return ReadingStats.builder()
         .todayPages(todayPages)
         .dailyPagesGoal(dailyGoal)
@@ -114,10 +117,6 @@ public class ReadingService {
       lastSeen.put(entry.getBookId(), entry.getCurrentPage());
     }
     return pagesByDay;
-  }
-
-  private int computePagesReadOn(LocalDate day, ZoneId zoneId) {
-    return getPagesReadByDay(zoneId).getOrDefault(day, 0);
   }
 
   private ZonedDateTime now() {

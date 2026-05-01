@@ -29,12 +29,20 @@ test.describe('Reading', () => {
   });
 
   test('shows empty state when no books exist', async ({ page }) => {
+    await setGoldenDayGoal(100, 250, 30);
     await page.goto('/');
 
     const section = page.getByRole('region', { name: 'Reading' });
     await expect(section).toBeVisible();
     await expect(section.getByText('No books yet. Add your first one to get started.')).toBeVisible();
     await expect(section.getByRole('img', { name: '0 of 30 pages today' })).toBeVisible();
+  });
+
+  test('hides daily goal ring when reading goal is 0', async ({ page }) => {
+    await page.goto('/');
+    const section = page.getByRole('region', { name: 'Reading' });
+    await expect(section).toBeVisible();
+    await expect(section.getByRole('img', { name: /pages today/ })).toBeHidden();
   });
 
   test('adds a new book through the form', async ({ page }) => {
@@ -77,6 +85,7 @@ test.describe('Reading', () => {
   });
 
   test('aggregates pages read across books toward the daily goal', async ({ page }) => {
+    await setGoldenDayGoal(100, 250, 30);
     const bookA = randomUUID();
     const bookB = randomUUID();
     await insertBook(bookA, 'Book A', 'Author A', 200, daysAgoAt(1, 8));
@@ -93,6 +102,7 @@ test.describe('Reading', () => {
   });
 
   test('shows daily goal reached when total pages match the goal', async ({ page }) => {
+    await setGoldenDayGoal(100, 250, 30);
     const bookId = randomUUID();
     await insertBook(bookId, 'Book', 'Author', 200, daysAgoAt(1, 8));
     await insertReadingProgress(bookId, 0, daysAgoAt(1, 8));

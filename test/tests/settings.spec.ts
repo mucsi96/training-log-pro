@@ -1,12 +1,9 @@
-import { randomUUID } from 'crypto';
 import { test, expect } from '../fixtures';
 import {
   getGoldenDayDates,
   getGoldenDayGoal,
-  insertBook,
   insertGoldenDay,
   insertPushupSet,
-  insertReadingProgress,
   insertRide,
   setGoldenDayGoal,
 } from '../utils';
@@ -41,15 +38,6 @@ const insertGoldenRide = (daysAgo: number, totalElevationGain: number) =>
     180
   );
 
-const insertGoldenReading = async (daysAgo: number, pages: number) => {
-  const bookId = randomUUID();
-  const created = daysAgoAt(daysAgo, 6);
-  const finished = daysAgoAt(daysAgo, 20);
-  await insertBook(bookId, `Book d-${daysAgo}`, 'Author', pages + 100, created);
-  await insertReadingProgress(bookId, 0, created);
-  await insertReadingProgress(bookId, pages, finished);
-};
-
 test.describe('Settings', () => {
   test('opens settings from the profile menu and shows current goals', async ({ page }) => {
     await page.goto('/');
@@ -61,7 +49,7 @@ test.describe('Settings', () => {
     await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
     await expect(page.getByLabel('Daily pushup goal')).toHaveValue('100');
     await expect(page.getByLabel('Daily ride elevation goal')).toHaveValue('250');
-    await expect(page.getByLabel('Daily reading goal')).toHaveValue('30');
+    await expect(page.getByLabel('Daily reading goal')).toHaveValue('0');
   });
 
   test('saves new golden day goals', async ({ page }) => {
@@ -83,7 +71,6 @@ test.describe('Settings', () => {
   test('keeps today golden after raising goals', async ({ page }) => {
     await insertPushupSet(daysAgoAt(0, 8), 100);
     await insertGoldenRide(0, 260);
-    await insertGoldenReading(0, 30);
 
     await page.goto('/');
     const goldenSection = page.getByRole('region', { name: 'Golden day' });
@@ -94,7 +81,6 @@ test.describe('Settings', () => {
     await page.goto('/settings');
     await page.getByLabel('Daily pushup goal').fill('200');
     await page.getByLabel('Daily ride elevation goal').fill('500');
-    await page.getByLabel('Daily reading goal').fill('100');
     await page.getByRole('button', { name: 'Save' }).click();
     await expect(page.getByText('Settings saved')).toBeVisible();
 
@@ -122,7 +108,7 @@ test.describe('Settings', () => {
     const month = goldenSection.getByText('This month').locator('..');
     await expect(month.getByText(expectedCount, { exact: true })).toBeVisible();
 
-    await setGoldenDayGoal(500, 1000, 200);
+    await setGoldenDayGoal(500, 1000);
 
     await page.goto('/');
     await expect(month.getByText(expectedCount, { exact: true })).toBeVisible();
@@ -147,13 +133,12 @@ test.describe('Settings', () => {
   test('marks today golden under lower goals once updated', async ({ page }) => {
     await insertPushupSet(daysAgoAt(0, 8), 60);
     await insertGoldenRide(0, 120);
-    await insertGoldenReading(0, 25);
 
     await page.goto('/');
     const section = page.getByRole('region', { name: 'Golden day' });
     await expect(section.getByText('Today is golden')).toBeHidden();
 
-    await setGoldenDayGoal(50, 100, 20);
+    await setGoldenDayGoal(50, 100);
 
     await page.goto('/');
     await expect(section.getByText('Today is golden')).toBeVisible();

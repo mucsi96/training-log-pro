@@ -1,16 +1,19 @@
-@if (books.isLoading() || goldenDayGoal.isLoading() || stats.isLoading()) {
+@if (books.isLoading() || stats.isLoading()) {
 <mat-spinner class="page-loading" />
 } @else {
 <section class="reading" aria-labelledby="reading-heading">
   <header class="header">
     <h2 id="reading-heading">Reading</h2>
+    @if (dailyGoal() > 0) {
     <p class="subtitle">
       @if (goalReached()) { Daily goal reached } @else {
       {{ remaining() }} pages to go
       }
     </p>
+    }
   </header>
 
+  @if (dailyGoal() > 0) {
   <div
     class="ring-wrapper"
     role="img"
@@ -32,6 +35,7 @@
       <span class="ring-goal">/ {{ dailyGoal() }}</span>
     </div>
   </div>
+  }
 
   <div class="books">
     @if (inProgressBooks().length === 0 && completedBooks().length === 0 &&

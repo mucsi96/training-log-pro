@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { Pool } from 'pg';
 
 const pool = new Pool({
@@ -29,7 +30,7 @@ export async function cleanupDb() {
   await query('DELETE FROM training_log.golden_day');
   await query(
     `UPDATE training_log.golden_day_goal SET pushup_goal = $1, elevation_goal = $2, reading_pages_goal = $3 WHERE id = 1`,
-    [100, 250, 30]
+    [100, 250, 0]
   );
 }
 
@@ -43,7 +44,7 @@ export async function getGoldenDayGoal() {
 export async function setGoldenDayGoal(
   pushupGoal: number,
   elevationGoal: number,
-  readingPagesGoal: number = 30
+  readingPagesGoal: number = 0
 ) {
   await query(
     `UPDATE training_log.golden_day_goal SET pushup_goal = $1, elevation_goal = $2, reading_pages_goal = $3 WHERE id = 1`,
@@ -230,8 +231,8 @@ export async function insertReadingProgress(
   createdAt: Date
 ) {
   await query(
-    'INSERT INTO training_log.reading_progress (created_at, book_id, current_page) VALUES ($1, $2, $3)',
-    [createdAt, bookId, currentPage]
+    'INSERT INTO training_log.reading_progress (id, created_at, book_id, current_page) VALUES ($1, $2, $3, $4)',
+    [randomUUID(), createdAt, bookId, currentPage]
   );
 }
 
@@ -244,7 +245,7 @@ export async function getBookRows() {
 
 export async function getReadingProgressRows() {
   const result = await query(
-    'SELECT created_at, book_id, current_page FROM training_log.reading_progress ORDER BY created_at ASC'
+    'SELECT id, created_at, book_id, current_page FROM training_log.reading_progress ORDER BY created_at ASC'
   );
   return result.rows;
 }

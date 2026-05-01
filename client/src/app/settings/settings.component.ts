@@ -31,7 +31,7 @@ export class SettingsComponent {
   readonly model = signal<GoldenDayGoal>({
     pushupGoal: 100,
     elevationGoal: 250,
-    readingPagesGoal: 30,
+    readingPagesGoal: 0,
   });
 
   readonly goalForm = form(this.model, (path) => {
@@ -42,7 +42,7 @@ export class SettingsComponent {
     min(path.elevationGoal, 1);
     max(path.elevationGoal, 100000);
     required(path.readingPagesGoal);
-    min(path.readingPagesGoal, 1);
+    min(path.readingPagesGoal, 0);
     max(path.readingPagesGoal, 10000);
   });
 

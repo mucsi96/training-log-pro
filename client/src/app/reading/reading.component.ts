@@ -6,7 +6,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Book, ReadingService } from './reading.service';
-import { SettingsService } from '../settings/settings.service';
 
 type NewBookDraft = {
   title: string;
@@ -30,17 +29,11 @@ type NewBookDraft = {
 })
 export class ReadingComponent {
   private readonly readingService = inject(ReadingService);
-  private readonly settingsService = inject(SettingsService);
 
   readonly busy = signal(false);
   readonly addingBook = signal(false);
   readonly draft = signal<NewBookDraft>({ title: '', author: '', totalPages: null });
   readonly progressInputs = signal<Record<string, number>>({});
-
-  readonly goldenDayGoal = resource({
-    params: () => this.settingsService.version(),
-    loader: () => this.settingsService.getGoldenDayGoal(),
-  });
 
   readonly books = resource({
     params: () => this.readingService.version(),
@@ -48,14 +41,11 @@ export class ReadingComponent {
   });
 
   readonly stats = resource({
-    params: () => ({
-      books: this.readingService.version(),
-      settings: this.settingsService.version(),
-    }),
+    params: () => this.readingService.version(),
     loader: () => this.readingService.getStats(),
   });
 
-  readonly dailyGoal = computed(() => this.goldenDayGoal.value()?.readingPagesGoal ?? 0);
+  readonly dailyGoal = computed(() => this.stats.value()?.dailyPagesGoal ?? 0);
   readonly todayPages = computed(() => this.stats.value()?.todayPages ?? 0);
   readonly remaining = computed(() => Math.max(0, this.dailyGoal() - this.todayPages()));
   readonly goalReached = computed(
@@ -159,9 +149,6 @@ export class ReadingComponent {
   }
 
   estimatedFinishLabel(book: Book): string | null {
-    if (book.completedAt) {
-      return 'Finished';
-    }
     if (book.estimatedDaysRemaining === undefined || book.estimatedDaysRemaining === null) {
       return null;
     }

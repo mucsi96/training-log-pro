@@ -371,7 +371,7 @@ components:
         readingPagesGoal:
           type: integer
           format: int32
-          minimum: 1
+          minimum: 0
           maximum: 10000
     Book:
       type: object

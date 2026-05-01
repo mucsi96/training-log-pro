@@ -20,7 +20,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ReadingProgressEntity {
   @Id
-  @Column(name = "created_at")
+  private UUID id;
+
+  @Column(name = "created_at", nullable = false)
   private ZonedDateTime createdAt;
 
   @Column(name = "book_id", nullable = false)

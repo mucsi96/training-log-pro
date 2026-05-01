@@ -3,7 +3,7 @@ package mucsi96.traininglog.goldenday;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -37,25 +37,25 @@ public class GoldenDayService {
   private final Clock clock;
 
   @Transactional
-  public GoldenDayStats getStats() {
-    LocalDate today = LocalDate.now(clock.withZone(ZoneOffset.UTC));
+  public GoldenDayStats getStats(ZoneId zoneId) {
+    LocalDate today = LocalDate.now(clock.withZone(zoneId));
     GoldenDayGoalEntity goal = goldenDayGoalService.getCurrent();
 
     Map<LocalDate, Integer> pushupsByDay = pushupSetRepository
         .findAll(Sort.by(Sort.Direction.ASC, "createdAt")).stream()
         .collect(Collectors.groupingBy(
-            (PushupSet set) -> set.getCreatedAt().withZoneSameInstant(ZoneOffset.UTC).toLocalDate(),
+            (PushupSet set) -> set.getCreatedAt().withZoneSameInstant(zoneId).toLocalDate(),
             TreeMap::new,
             Collectors.summingInt(PushupSet::getCount)));
 
     Map<LocalDate, Double> elevationByDay = rideRepository
         .findAll(Sort.by(Sort.Direction.ASC, "createdAt")).stream()
         .collect(Collectors.groupingBy(
-            (Ride ride) -> ride.getCreatedAt().withZoneSameInstant(ZoneOffset.UTC).toLocalDate(),
+            (Ride ride) -> ride.getCreatedAt().withZoneSameInstant(zoneId).toLocalDate(),
             TreeMap::new,
             Collectors.summingDouble(ride -> (double) ride.getTotalElevationGain())));
 
-    Map<LocalDate, Integer> readingPagesByDay = readingService.getPagesReadByDay(ZoneOffset.UTC);
+    Map<LocalDate, Integer> readingPagesByDay = readingService.getPagesReadByDay(zoneId);
 
     Set<LocalDate> persisted = goldenDayRepository.findAll().stream()
         .map(GoldenDayEntity::getDate)
@@ -73,7 +73,7 @@ public class GoldenDayService {
       int readingPages = readingPagesByDay.getOrDefault(day, 0);
       if (pushups >= goal.getPushupGoal()
           && elevation >= goal.getElevationGoal()
-          && readingPages >= goal.getReadingPagesGoal()) {
+          && (goal.getReadingPagesGoal() == 0 || readingPages >= goal.getReadingPagesGoal())) {
         goldenDayRepository.save(GoldenDayEntity.builder().date(day).build());
         persisted.add(day);
       }
