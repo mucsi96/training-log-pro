@@ -81,11 +81,6 @@ test.describe('Strava', () => {
     await expect(chart).toHaveAttribute('aria-label', /Line chart.*Fitness/);
   });
 
-  test('should show last activity pull timestamp', async ({ page }) => {
-    await page.goto('/');
-    await expect(page.getByTestId('fitness-last-pull')).toContainText(/Last activity pull/);
-  });
-
   test('should skip recompute when already pulled today after activities', async ({ page }) => {
     // Pre-seed fitness as if it was pulled at 23:59 today, so the sync sees no
     // newer activities and skips the recompute. The seeded values must remain.

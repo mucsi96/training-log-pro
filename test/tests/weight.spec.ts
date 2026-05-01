@@ -101,3 +101,24 @@ test.describe('Weight', () => {
     expect(label).toContain('87.2.');
   });
 });
+
+test.describe('Weight without a measurement today', () => {
+  test.beforeEach(async () => {
+    await cleanupDb();
+    await populateOAuthClients();
+    await insertWeight(14, 89.4, 34.5, 30.8);
+    await insertWeight(6, 88.3, 34.2, 30.2);
+    await insertWeight(5, 87.7, 33.2, 29.1);
+    await insertWeight(2, 87.5, 32.8, 29.0);
+  });
+
+  test('should display weight chart even without today\'s measurement', async ({ page }) => {
+    await page.goto('/');
+    const chart = page.locator('section:has-text("Weight") [role="img"]').first();
+    await expect(chart).toHaveAttribute('aria-label', /This is a chart with type Line chart/);
+    const label = await chart.getAttribute('aria-label');
+    expect(label).toContain('88.3,');
+    expect(label).toContain('87.7,');
+    expect(label).toContain('87.5');
+  });
+});

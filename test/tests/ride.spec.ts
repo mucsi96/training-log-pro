@@ -62,3 +62,26 @@ test.describe('Ride', () => {
     await expect(page.getByText('7 h 28 min')).toBeVisible();
   });
 });
+
+test.describe('Ride without activity in selected timerange', () => {
+  test.beforeEach(async () => {
+    await cleanupDb();
+    await populateOAuthClients();
+    await pushStravaActivities(0);
+    await insertRide(400, 646, 11747.7, 3074, 'Old Ride', 'MountainBikeRide', 408, 210);
+  });
+
+  test('should hide ride stats when no activity in the selected week', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: 'Calories' })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Elevation gain' })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Distance' })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Time' })).toHaveCount(0);
+  });
+
+  test('should display ride stats when activity exists for all time', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('link', { name: 'All time' }).click();
+    await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
+  });
+});

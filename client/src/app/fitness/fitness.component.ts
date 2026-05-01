@@ -7,7 +7,6 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { map } from 'rxjs';
 import { FitnessMeasurement, FitnessService } from './fitness.service';
 import { MeasurementWithUnitPipe } from '../utils/measurement-with-unit.pipe';
-import { RelativeTimePipe } from '../utils/relative-time.pipe';
 
 @Component({
   standalone: true,
@@ -15,7 +14,6 @@ import { RelativeTimePipe } from '../utils/relative-time.pipe';
     NgxEchartsModule,
     MatProgressSpinnerModule,
     MeasurementWithUnitPipe,
-    RelativeTimePipe,
   ],
   selector: 'app-fitness',
   templateUrl: './fitness.component.html',
@@ -42,10 +40,6 @@ export class FitnessComponent {
     const today = this.todayFitness.value();
     return today?.measurements.at(-1);
   });
-
-  readonly pulledAt = computed<Date | undefined>(
-    () => this.todayFitness.value()?.pulledAt
-  );
 
   readonly chartOptions = computed<EChartsOption | undefined>(() => {
     const timeline = this.periodFitness.value();

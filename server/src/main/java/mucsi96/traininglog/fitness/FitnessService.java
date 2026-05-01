@@ -56,10 +56,6 @@ public class FitnessService {
     }).orElseGet(() -> fitnessRepository.findByCreatedAtBefore(endTime, Sort.by(Sort.Direction.ASC, "createdAt")));
   }
 
-  public Optional<ZonedDateTime> getLastPulledAt() {
-    return fitnessRepository.findFirstByOrderByPulledAtDesc().map(Fitness::getPulledAt);
-  }
-
   private boolean shouldRecompute(Optional<Fitness> latest, List<Ride> rides, ZoneId zoneId) {
     if (latest.isEmpty()) {
       log.info("No fitness computed yet; triggering first recompute");

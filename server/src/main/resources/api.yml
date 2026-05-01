@@ -196,9 +196,6 @@ paths:
                 required:
                   - measurements
                 properties:
-                  pulledAt:
-                    type: string
-                    format: date-time
                   measurements:
                     type: array
                     items:

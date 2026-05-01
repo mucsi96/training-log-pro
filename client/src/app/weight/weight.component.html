@@ -3,7 +3,7 @@
 @let chart = chartOptions();
 @if (todayWeight.isLoading() || periodMeasurements.isLoading()) {
 <mat-spinner class="page-loading" />
-} @else if (today && chart) {
+} @else if (chart) {
 <section>
   <div class="chart-wrapper">
     <div
@@ -14,6 +14,7 @@
       [initOpts]="initOpts"
     ></div>
   </div>
+  @if (today) {
   <article>
     <h2>Weight</h2>
     <p class="value">
@@ -41,5 +42,6 @@
       {{ diffVal?.fatRatio | percentageDiff }}
     </p>
   </article>
+  }
 </section>
 }

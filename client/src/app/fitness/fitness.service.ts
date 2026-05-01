@@ -12,12 +12,10 @@ export type FitnessMeasurement = {
 };
 
 export type FitnessTimeline = {
-  pulledAt?: Date;
   measurements: FitnessMeasurement[];
 };
 
 type FitnessTimelineResponse = {
-  pulledAt?: string;
   measurements: { date: string; fitness: number; fatigue: number; form: number }[];
 };
 
@@ -39,7 +37,6 @@ export class FitnessService {
     try {
       const response = await fetchJson<FitnessTimelineResponse>(this.http, url);
       const result: FitnessTimeline = {
-        pulledAt: response.pulledAt ? new Date(response.pulledAt) : undefined,
         measurements: response.measurements.map((m) => ({
           ...m,
           date: new Date(m.date),
