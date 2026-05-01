@@ -3,7 +3,7 @@ package mucsi96.traininglog.goldenday;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import mucsi96.traininglog.api.GoldenDayStats;
 import mucsi96.traininglog.pushups.PushupSet;
 import mucsi96.traininglog.pushups.PushupSetRepository;
+import mucsi96.traininglog.reading.ReadingService;
 import mucsi96.traininglog.rides.Ride;
 import mucsi96.traininglog.rides.RideRepository;
 import mucsi96.traininglog.settings.GoldenDayGoalEntity;
@@ -32,32 +33,36 @@ public class GoldenDayService {
   private final RideRepository rideRepository;
   private final GoldenDayRepository goldenDayRepository;
   private final GoldenDayGoalService goldenDayGoalService;
+  private final ReadingService readingService;
   private final Clock clock;
 
   @Transactional
-  public GoldenDayStats getStats() {
-    LocalDate today = LocalDate.now(clock.withZone(ZoneOffset.UTC));
+  public GoldenDayStats getStats(ZoneId zoneId) {
+    LocalDate today = LocalDate.now(clock.withZone(zoneId));
     GoldenDayGoalEntity goal = goldenDayGoalService.getCurrent();
 
     Map<LocalDate, Integer> pushupsByDay = pushupSetRepository
         .findAll(Sort.by(Sort.Direction.ASC, "createdAt")).stream()
         .collect(Collectors.groupingBy(
-            (PushupSet set) -> set.getCreatedAt().withZoneSameInstant(ZoneOffset.UTC).toLocalDate(),
+            (PushupSet set) -> set.getCreatedAt().withZoneSameInstant(zoneId).toLocalDate(),
             TreeMap::new,
             Collectors.summingInt(PushupSet::getCount)));
 
     Map<LocalDate, Double> elevationByDay = rideRepository
         .findAll(Sort.by(Sort.Direction.ASC, "createdAt")).stream()
         .collect(Collectors.groupingBy(
-            (Ride ride) -> ride.getCreatedAt().withZoneSameInstant(ZoneOffset.UTC).toLocalDate(),
+            (Ride ride) -> ride.getCreatedAt().withZoneSameInstant(zoneId).toLocalDate(),
             TreeMap::new,
             Collectors.summingDouble(ride -> (double) ride.getTotalElevationGain())));
+
+    Map<LocalDate, Integer> readingPagesByDay = readingService.getPagesReadByDay(zoneId);
 
     Set<LocalDate> persisted = goldenDayRepository.findAll().stream()
         .map(GoldenDayEntity::getDate)
         .collect(Collectors.toCollection(HashSet::new));
 
     Set<LocalDate> candidates = new TreeSet<>(pushupsByDay.keySet());
+    candidates.addAll(readingPagesByDay.keySet());
     candidates.add(today);
     for (LocalDate day : candidates) {
       if (persisted.contains(day)) {
@@ -65,7 +70,10 @@ public class GoldenDayService {
       }
       int pushups = pushupsByDay.getOrDefault(day, 0);
       double elevation = elevationByDay.getOrDefault(day, 0d);
-      if (pushups >= goal.getPushupGoal() && elevation >= goal.getElevationGoal()) {
+      int readingPages = readingPagesByDay.getOrDefault(day, 0);
+      if (pushups >= goal.getPushupGoal()
+          && elevation >= goal.getElevationGoal()
+          && (goal.getReadingPagesGoal() == 0 || readingPages >= goal.getReadingPagesGoal())) {
         goldenDayRepository.save(GoldenDayEntity.builder().date(day).build());
         persisted.add(day);
       }
@@ -83,8 +91,10 @@ public class GoldenDayService {
         .todayGolden(goldenDates.contains(today))
         .todayPushups(pushupsByDay.getOrDefault(today, 0))
         .todayElevationGain(elevationByDay.getOrDefault(today, 0d))
+        .todayReadingPages(readingPagesByDay.getOrDefault(today, 0))
         .pushupGoal(goal.getPushupGoal())
         .elevationGoal(goal.getElevationGoal())
+        .readingPagesGoal(goal.getReadingPagesGoal())
         .goldenDates(goldenDates.stream().sorted().toList())
         .build();
   }

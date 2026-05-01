@@ -49,6 +49,7 @@ test.describe('Settings', () => {
     await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
     await expect(page.getByLabel('Daily pushup goal')).toHaveValue('100');
     await expect(page.getByLabel('Daily ride elevation goal')).toHaveValue('250');
+    await expect(page.getByLabel('Daily reading goal')).toHaveValue('0');
   });
 
   test('saves new golden day goals', async ({ page }) => {
@@ -56,6 +57,7 @@ test.describe('Settings', () => {
 
     await page.getByLabel('Daily pushup goal').fill('80');
     await page.getByLabel('Daily ride elevation goal').fill('200');
+    await page.getByLabel('Daily reading goal').fill('20');
     await page.getByRole('button', { name: 'Save' }).click();
 
     await expect(page.getByText('Settings saved')).toBeVisible();
@@ -63,6 +65,7 @@ test.describe('Settings', () => {
     const goal = await getGoldenDayGoal();
     expect(goal.pushup_goal).toBe(80);
     expect(goal.elevation_goal).toBe(200);
+    expect(goal.reading_pages_goal).toBe(20);
   });
 
   test('keeps today golden after raising goals', async ({ page }) => {
@@ -116,6 +119,7 @@ test.describe('Settings', () => {
     await page.goto('/settings');
     await page.getByLabel('Daily pushup goal').fill('80');
     await page.getByLabel('Daily ride elevation goal').fill('150');
+    await page.getByLabel('Daily reading goal').fill('20');
     await page.getByRole('button', { name: 'Save' }).click();
     await expect(page.getByText('Settings saved')).toBeVisible();
 
@@ -123,6 +127,7 @@ test.describe('Settings', () => {
     const section = page.getByRole('region', { name: 'Golden day' });
     await expect(section.getByText('0/80 pushups')).toBeVisible();
     await expect(section.getByText('0/150 m')).toBeVisible();
+    await expect(section.getByText('0/20 pages')).toBeVisible();
   });
 
   test('marks today golden under lower goals once updated', async ({ page }) => {

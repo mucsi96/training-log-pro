@@ -7,6 +7,7 @@ import { GoldenDayService } from '../golden-day/golden-day.service';
 export type GoldenDayGoal = {
   pushupGoal: number;
   elevationGoal: number;
+  readingPagesGoal: number;
 };
 
 @Injectable({ providedIn: 'root' })

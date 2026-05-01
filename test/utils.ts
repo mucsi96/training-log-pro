@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { Pool } from 'pg';
 
 const pool = new Pool({
@@ -23,25 +24,31 @@ export async function cleanupDb() {
   await query('DELETE FROM training_log.ride');
   await query('DELETE FROM training_log.fitness');
   await query('DELETE FROM training_log.pushup_set');
+  await query('DELETE FROM training_log.reading_progress');
+  await query('DELETE FROM training_log.book');
   await query('DELETE FROM training_log.oauth2_authorized_client');
   await query('DELETE FROM training_log.golden_day');
   await query(
-    `UPDATE training_log.golden_day_goal SET pushup_goal = $1, elevation_goal = $2 WHERE id = 1`,
-    [100, 250]
+    `UPDATE training_log.golden_day_goal SET pushup_goal = $1, elevation_goal = $2, reading_pages_goal = $3 WHERE id = 1`,
+    [100, 250, 0]
   );
 }
 
 export async function getGoldenDayGoal() {
   const result = await query(
-    'SELECT pushup_goal, elevation_goal FROM training_log.golden_day_goal WHERE id = 1'
+    'SELECT pushup_goal, elevation_goal, reading_pages_goal FROM training_log.golden_day_goal WHERE id = 1'
   );
   return result.rows[0];
 }
 
-export async function setGoldenDayGoal(pushupGoal: number, elevationGoal: number) {
+export async function setGoldenDayGoal(
+  pushupGoal: number,
+  elevationGoal: number,
+  readingPagesGoal: number = 0
+) {
   await query(
-    `UPDATE training_log.golden_day_goal SET pushup_goal = $1, elevation_goal = $2 WHERE id = 1`,
-    [pushupGoal, elevationGoal]
+    `UPDATE training_log.golden_day_goal SET pushup_goal = $1, elevation_goal = $2, reading_pages_goal = $3 WHERE id = 1`,
+    [pushupGoal, elevationGoal, readingPagesGoal]
   );
 }
 
@@ -200,6 +207,45 @@ export async function insertPushupSet(date: Date, count: number) {
 export async function getPushupSetRows() {
   const result = await query(
     'SELECT created_at, count FROM training_log.pushup_set ORDER BY created_at ASC'
+  );
+  return result.rows;
+}
+
+export async function insertBook(
+  id: string,
+  title: string,
+  author: string,
+  totalPages: number,
+  createdAt: Date = new Date(),
+  completedAt: Date | null = null
+) {
+  await query(
+    'INSERT INTO training_log.book (id, title, author, total_pages, created_at, completed_at) VALUES ($1, $2, $3, $4, $5, $6)',
+    [id, title, author, totalPages, createdAt, completedAt]
+  );
+}
+
+export async function insertReadingProgress(
+  bookId: string,
+  currentPage: number,
+  createdAt: Date
+) {
+  await query(
+    'INSERT INTO training_log.reading_progress (id, created_at, book_id, current_page) VALUES ($1, $2, $3, $4)',
+    [randomUUID(), createdAt, bookId, currentPage]
+  );
+}
+
+export async function getBookRows() {
+  const result = await query(
+    'SELECT id, title, author, total_pages, completed_at FROM training_log.book ORDER BY created_at ASC'
+  );
+  return result.rows;
+}
+
+export async function getReadingProgressRows() {
+  const result = await query(
+    'SELECT id, created_at, book_id, current_page FROM training_log.reading_progress ORDER BY created_at ASC'
   );
   return result.rows;
 }

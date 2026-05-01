@@ -29,6 +29,9 @@ public class GoldenDayGoalEntity {
   @Column(name = "elevation_goal", nullable = false)
   private int elevationGoal;
 
+  @Column(name = "reading_pages_goal", nullable = false)
+  private int readingPagesGoal;
+
   @Column(name = "updated_at", nullable = false, insertable = false)
   private ZonedDateTime updatedAt;
 }

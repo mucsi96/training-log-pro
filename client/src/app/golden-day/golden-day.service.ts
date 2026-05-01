@@ -3,6 +3,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { StravaService } from '../strava/strava.service';
 import { PushupsService } from '../pushups/pushups.service';
+import { ReadingService } from '../reading/reading.service';
 import { fetchJson } from '../utils/fetchJson';
 
 export type GoldenDayStats = {
@@ -11,8 +12,10 @@ export type GoldenDayStats = {
   todayGolden: boolean;
   todayPushups: number;
   todayElevationGain: number;
+  todayReadingPages: number;
   pushupGoal: number;
   elevationGoal: number;
+  readingPagesGoal: number;
   goldenDates: string[];
 };
 
@@ -22,6 +25,7 @@ export class GoldenDayService {
   private readonly snackBar = inject(MatSnackBar);
   private readonly stravaService = inject(StravaService);
   readonly pushupsService = inject(PushupsService);
+  readonly readingService = inject(ReadingService);
 
   readonly version = signal(0);
 

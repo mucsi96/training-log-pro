@@ -28,7 +28,11 @@ export class SettingsComponent {
     loader: () => this.settingsService.getGoldenDayGoal(),
   });
 
-  readonly model = signal<GoldenDayGoal>({ pushupGoal: 100, elevationGoal: 250 });
+  readonly model = signal<GoldenDayGoal>({
+    pushupGoal: 100,
+    elevationGoal: 250,
+    readingPagesGoal: 0,
+  });
 
   readonly goalForm = form(this.model, (path) => {
     required(path.pushupGoal);
@@ -37,6 +41,9 @@ export class SettingsComponent {
     required(path.elevationGoal);
     min(path.elevationGoal, 1);
     max(path.elevationGoal, 100000);
+    required(path.readingPagesGoal);
+    min(path.readingPagesGoal, 0);
+    max(path.readingPagesGoal, 10000);
   });
 
   readonly saving = signal(false);
