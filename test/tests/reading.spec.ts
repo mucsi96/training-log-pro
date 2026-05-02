@@ -136,18 +136,16 @@ test.describe('Reading', () => {
     await expect(section.getByText('30 pages to go')).toBeVisible();
   });
 
-  test('chart includes daily page totals across the period', async ({ page }) => {
+  test('shows a per-book ring for current pages out of total pages', async ({ page }) => {
     const bookId = randomUUID();
-    await insertBook(bookId, 'Book', 'Author', 400, daysAgoAt(2, 8));
-    await insertReadingProgress(bookId, 0, daysAgoAt(2, 8));
-    await insertReadingProgress(bookId, 70, daysAgoAt(2, 18));
-    await insertReadingProgress(bookId, 95, daysAgoAt(0, 9));
+    await insertBook(bookId, 'Atomic Habits', 'James Clear', 320, daysAgoAt(3, 8));
+    await insertReadingProgress(bookId, 0, daysAgoAt(3, 8));
+    await insertReadingProgress(bookId, 80, daysAgoAt(0, 9));
 
     await page.goto('/');
     const section = page.getByRole('region', { name: 'Reading' });
-    const chart = section.getByRole('img', { name: /chart/i });
-    const label = await chart.getAttribute('aria-label');
-    expect(label).toContain('70');
-    expect(label).toContain('25');
+    await expect(
+      section.getByRole('img', { name: '80 of 320 pages read' })
+    ).toBeVisible();
   });
 });

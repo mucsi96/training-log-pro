@@ -338,35 +338,6 @@ paths:
                   goalReached:
                     type: boolean
 
-  /reading/progress:
-    get:
-      parameters:
-        - in: query
-          name: period
-          required: false
-          schema:
-            type: integer
-            minimum: 1
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  required:
-                    - date
-                    - pages
-                  properties:
-                    date:
-                      type: string
-                      format: date
-                    pages:
-                      type: integer
-                      format: int32
-
 components:
   schemas:
     PushupSet:

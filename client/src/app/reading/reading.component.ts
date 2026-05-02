@@ -1,16 +1,13 @@
 import { Component, computed, inject, resource, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { ActivatedRoute } from '@angular/router';
-import { EChartsOption } from 'echarts';
-import { NgxEchartsModule } from 'ngx-echarts';
-import { map } from 'rxjs';
 import { Book, ReadingService } from './reading.service';
+
+const RING_CIRCUMFERENCE = 326.7;
 
 @Component({
   standalone: true,
@@ -21,7 +18,6 @@ import { Book, ReadingService } from './reading.service';
     MatIconModule,
     MatInputModule,
     MatProgressSpinnerModule,
-    NgxEchartsModule,
   ],
   selector: 'app-reading',
   templateUrl: './reading.component.html',
@@ -29,11 +25,8 @@ import { Book, ReadingService } from './reading.service';
 })
 export class ReadingComponent {
   private readonly readingService = inject(ReadingService);
-  private readonly period = toSignal(
-    inject(ActivatedRoute).data.pipe(map((data) => (data['period'] as number) ?? 0))
-  );
 
-  readonly initOpts = { renderer: 'svg' as const };
+  readonly ringCircumference = RING_CIRCUMFERENCE;
   readonly busy = signal(false);
   readonly progressInputs = signal<Record<string, number>>({});
 
@@ -45,11 +38,6 @@ export class ReadingComponent {
   readonly stats = resource({
     params: () => this.readingService.version(),
     loader: () => this.readingService.getStats(),
-  });
-
-  readonly dailyProgress = resource({
-    params: () => ({ period: this.period(), version: this.readingService.version() }),
-    loader: ({ params }) => this.readingService.getDailyProgress(params.period),
   });
 
   readonly dailyGoal = computed(() => this.stats.value()?.dailyPagesGoal ?? 0);
@@ -69,41 +57,6 @@ export class ReadingComponent {
   readonly completedBooks = computed(
     () => this.books.value()?.filter((book) => book.completedAt) ?? []
   );
-
-  readonly chartOptions = computed<EChartsOption | undefined>(() => {
-    const entries = this.dailyProgress.value();
-    if (!entries) {
-      return undefined;
-    }
-
-    const data = entries
-      .slice()
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .map((entry) => [new Date(entry.date), entry.pages]);
-
-    return {
-      aria: { enabled: true },
-      animation: false,
-      grid: { top: 10, right: 10, bottom: 10, left: 10 },
-      xAxis: { type: 'time', show: false },
-      yAxis: { type: 'value', show: false, min: 0 },
-      series: [
-        {
-          name: 'Pages',
-          type: 'bar',
-          data,
-          itemStyle: { color: 'hsl(220, 89%, 53%)' },
-          markLine: {
-            silent: true,
-            symbol: 'none',
-            label: { show: false },
-            lineStyle: { color: 'hsl(218, 11%, 65%)', type: 'dashed' },
-            data: [{ yAxis: this.dailyGoal() }],
-          },
-        },
-      ],
-    };
-  });
 
   pageInputValue(book: Book): number {
     return this.progressInputs()[book.id] ?? book.currentPage;
@@ -134,6 +87,10 @@ export class ReadingComponent {
     return book.totalPages > 0
       ? Math.min(100, (book.currentPage / book.totalPages) * 100)
       : 0;
+  }
+
+  bookRingDashOffset(book: Book): number {
+    return RING_CIRCUMFERENCE - (RING_CIRCUMFERENCE * this.bookProgressPercent(book)) / 100;
   }
 
   ariaForBook(book: Book): string {
