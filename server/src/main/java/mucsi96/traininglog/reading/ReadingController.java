@@ -22,7 +22,6 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import mucsi96.traininglog.api.Book;
 import mucsi96.traininglog.api.ReadingStats;
@@ -47,7 +46,7 @@ public class ReadingController {
   @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
   Book addBook(@Valid @RequestBody AddBookRequest request, @RequestHeader("X-Timezone") ZoneId zoneId) {
     BookSummary saved = readingService.addBook(
-        request.getTitle().trim(), request.getAuthor().trim(), request.getTotalPages());
+        request.title().trim(), request.author().trim(), request.totalPages());
     return toResponse(saved, zoneId);
   }
 
@@ -57,7 +56,7 @@ public class ReadingController {
       @PathVariable UUID id,
       @Valid @RequestBody UpdateBookProgressRequest request,
       @RequestHeader("X-Timezone") ZoneId zoneId) {
-    BookSummary updated = readingService.updateProgress(id, request.getCurrentPage());
+    BookSummary updated = readingService.updateProgress(id, request.currentPage());
     return toResponse(updated, zoneId);
   }
 
@@ -98,25 +97,11 @@ public class ReadingController {
         .build();
   }
 
-  @Data
-  public static class AddBookRequest {
-    @NotBlank
-    @Size(max = 255)
-    private String title;
-    @NotBlank
-    @Size(max = 255)
-    private String author;
-    @NotNull
-    @Min(1)
-    @Max(100000)
-    private Integer totalPages;
-  }
+  public record AddBookRequest(
+      @NotBlank @Size(max = 255) String title,
+      @NotBlank @Size(max = 255) String author,
+      @NotNull @Min(1) @Max(100000) Integer totalPages) {}
 
-  @Data
-  public static class UpdateBookProgressRequest {
-    @NotNull
-    @Min(0)
-    @Max(100000)
-    private Integer currentPage;
-  }
+  public record UpdateBookProgressRequest(
+      @NotNull @Min(0) @Max(100000) Integer currentPage) {}
 }
