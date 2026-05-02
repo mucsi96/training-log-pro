@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { ReadingLibraryComponent } from '../reading/reading-library.component';
 import { GoldenDayGoal, SettingsService } from './settings.service';
 
 @Component({
@@ -16,6 +17,7 @@ import { GoldenDayGoal, SettingsService } from './settings.service';
     MatFormFieldModule,
     MatInputModule,
     MatProgressSpinnerModule,
+    ReadingLibraryComponent,
   ],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css',

@@ -1,0 +1,132 @@
+@if (books.isLoading()) {
+<mat-spinner class="page-loading" />
+} @else {
+<section class="library" aria-labelledby="reading-library-heading">
+  <h2 id="reading-library-heading">Books</h2>
+
+  <div class="books">
+    @if (inProgressBooks().length === 0 && completedBooks().length === 0 &&
+    !addingBook()) {
+    <p class="empty">No books yet. Add your first one to get started.</p>
+    } @for (book of inProgressBooks(); track book.id) {
+    <article class="book" [attr.aria-label]="ariaForBook(book)">
+      <header class="book-header">
+        <div class="book-meta">
+          <h3 class="book-title">{{ book.title }}</h3>
+          <p class="book-author">{{ book.author }}</p>
+        </div>
+        <button
+          mat-icon-button
+          type="button"
+          [attr.aria-label]="'Remove ' + book.title"
+          [disabled]="busy()"
+          (click)="deleteBook(book)"
+        >
+          <mat-icon>delete_outline</mat-icon>
+        </button>
+      </header>
+      <p class="book-stats">
+        {{ book.currentPage }} / {{ book.totalPages }} pages
+        @if (averageLabel(book); as label) {
+        <span>· {{ label }}</span>
+        }
+      </p>
+    </article>
+    } @for (book of completedBooks(); track book.id) {
+    <article
+      class="book book--completed"
+      [attr.aria-label]="ariaForBook(book) + ', finished'"
+    >
+      <header class="book-header">
+        <div class="book-meta">
+          <h3 class="book-title">{{ book.title }}</h3>
+          <p class="book-author">{{ book.author }}</p>
+        </div>
+        <button
+          mat-icon-button
+          type="button"
+          [attr.aria-label]="'Remove ' + book.title"
+          [disabled]="busy()"
+          (click)="deleteBook(book)"
+        >
+          <mat-icon>delete_outline</mat-icon>
+        </button>
+      </header>
+      <p class="book-stats">
+        Finished · {{ book.totalPages }} pages
+        @if (averageLabel(book); as label) {
+        <span>· {{ label }}</span>
+        }
+      </p>
+    </article>
+    } @if (addingBook()) {
+    <form
+      class="add-book"
+      aria-labelledby="add-book-heading"
+      (submit)="submitBook(); $event.preventDefault()"
+    >
+      <h3 id="add-book-heading">Add a book</h3>
+      <mat-form-field appearance="outline">
+        <mat-label>Title</mat-label>
+        <input
+          matInput
+          name="title"
+          [ngModel]="draft().title"
+          (ngModelChange)="updateDraft('title', $event)"
+          required
+        />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Author</mat-label>
+        <input
+          matInput
+          name="author"
+          [ngModel]="draft().author"
+          (ngModelChange)="updateDraft('author', $event)"
+          required
+        />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Total pages</mat-label>
+        <input
+          matInput
+          name="totalPages"
+          type="number"
+          min="1"
+          [ngModel]="draft().totalPages"
+          (ngModelChange)="updateDraft('totalPages', $event)"
+          required
+        />
+      </mat-form-field>
+      <div class="actions">
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="busy()"
+          (click)="cancelAddingBook()"
+        >
+          Cancel
+        </button>
+        <button
+          mat-flat-button
+          color="primary"
+          type="submit"
+          [disabled]="!canSubmit()"
+        >
+          Add book
+        </button>
+      </div>
+    </form>
+    } @else {
+    <button
+      mat-stroked-button
+      type="button"
+      class="add-button"
+      (click)="startAddingBook()"
+    >
+      Add book
+    </button>
+    }
+  </div>
+</section>
+}

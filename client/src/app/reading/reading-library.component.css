@@ -1,0 +1,99 @@
+section {
+  display: grid;
+  gap: 16px;
+}
+
+h2 {
+  margin: 0;
+  color: var(--mat-sys-on-primary);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.books {
+  display: grid;
+  gap: 16px;
+}
+
+.empty {
+  color: var(--mat-app-text-color);
+  text-align: center;
+  font-size: 14px;
+}
+
+.book {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 0.75rem;
+  background: var(--mat-sys-surface-container);
+}
+
+.book--completed {
+  opacity: 0.7;
+}
+
+.book-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.book-meta {
+  display: grid;
+  gap: 2px;
+}
+
+.book-title {
+  color: var(--mat-sys-on-primary);
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.book-author {
+  color: var(--mat-app-text-color);
+  font-size: 13px;
+  margin: 0;
+}
+
+.book-stats {
+  color: var(--mat-app-text-color);
+  font-size: 13px;
+  margin: 0;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.add-book {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 0.75rem;
+  background: var(--mat-sys-surface-container);
+}
+
+.add-book h3 {
+  color: var(--mat-sys-on-primary);
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.add-button {
+  justify-self: stretch;
+}
+
+.page-loading {
+  margin: 60px auto;
+}
