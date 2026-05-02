@@ -98,10 +98,6 @@ h2 {
   justify-items: center;
 }
 
-.book--completed {
-  opacity: 0.7;
-}
-
 .book-header {
   display: grid;
   gap: 2px;

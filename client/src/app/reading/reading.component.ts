@@ -54,9 +54,6 @@ export class ReadingComponent {
   readonly inProgressBooks = computed(
     () => this.books.value()?.filter((book) => !book.completedAt) ?? []
   );
-  readonly completedBooks = computed(
-    () => this.books.value()?.filter((book) => book.completedAt) ?? []
-  );
 
   pageInputValue(book: Book): number {
     return this.progressInputs()[book.id] ?? book.currentPage;

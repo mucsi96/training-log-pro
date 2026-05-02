@@ -34,7 +34,9 @@ test.describe('Reading', () => {
 
     const section = page.getByRole('region', { name: 'Reading' });
     await expect(section).toBeVisible();
-    await expect(section.getByText('No books yet. Add one in settings to get started.')).toBeVisible();
+    await expect(
+      section.getByText('No books in progress. Add one in settings to get started.')
+    ).toBeVisible();
     await expect(section.getByRole('img', { name: '0 of 30 pages today' })).toBeVisible();
   });
 
@@ -106,7 +108,7 @@ test.describe('Reading', () => {
     await expect(section.getByText(/pages\/day avg/)).toBeVisible();
   });
 
-  test('marks a book as finished when current page reaches total pages', async ({ page }) => {
+  test('hides a book from the dashboard once it is finished', async ({ page }) => {
     const bookId = randomUUID();
     await insertBook(bookId, 'Almost Done', 'Author', 100, daysAgoAt(2, 8));
 
@@ -115,9 +117,7 @@ test.describe('Reading', () => {
     await section.getByLabel('Current page for Almost Done').fill('100');
     await section.getByRole('button', { name: 'Save' }).click();
 
-    await expect(
-      section.getByRole('article', { name: /Almost Done, 100 of 100 pages, finished/ })
-    ).toBeVisible();
+    await expect(section.getByRole('heading', { name: 'Almost Done' })).toBeHidden();
 
     const books = await getBookRows();
     expect(books[0].completed_at).not.toBeNull();

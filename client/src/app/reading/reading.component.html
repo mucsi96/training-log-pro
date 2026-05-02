@@ -38,8 +38,8 @@
   }
 
   <div class="books">
-    @if (inProgressBooks().length === 0 && completedBooks().length === 0) {
-    <p class="empty">No books yet. Add one in settings to get started.</p>
+    @if (inProgressBooks().length === 0) {
+    <p class="empty">No books in progress. Add one in settings to get started.</p>
     } @for (book of inProgressBooks(); track book.id) {
     <article
       class="book"
@@ -100,22 +100,6 @@
         @if (estimatedFinishLabel(book); as label) {
         <span>{{ label }}</span>
         } @if (averageLabel(book); as label) {
-        <span>· {{ label }}</span>
-        }
-      </p>
-    </article>
-    } @for (book of completedBooks(); track book.id) {
-    <article
-      class="book book--completed"
-      [attr.aria-label]="ariaForBook(book) + ', finished'"
-    >
-      <header class="book-header">
-        <h3 class="book-title">{{ book.title }}</h3>
-        <p class="book-author">{{ book.author }}</p>
-      </header>
-      <p class="book-stats">
-        Finished · {{ book.totalPages }} pages
-        @if (averageLabel(book); as label) {
         <span>· {{ label }}</span>
         }
       </p>

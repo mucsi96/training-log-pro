@@ -189,4 +189,22 @@ test.describe('Settings', () => {
     expect(await getBookRows()).toHaveLength(0);
     expect(await getReadingProgressRows()).toHaveLength(0);
   });
+
+  test('keeps finished books listed in settings', async ({ page }) => {
+    const bookId = randomUUID();
+    await insertBook(
+      bookId,
+      'Finished Read',
+      'Author',
+      120,
+      daysAgoAt(5, 8),
+      daysAgoAt(0, 9)
+    );
+
+    await page.goto('/settings');
+    const booksSection = page.getByRole('region', { name: 'Books' });
+    await expect(
+      booksSection.getByRole('heading', { name: 'Finished Read' })
+    ).toBeVisible();
+  });
 });
