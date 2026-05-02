@@ -1,3 +1,4 @@
+@let chart = chartOptions();
 @if (books.isLoading() || stats.isLoading()) {
 <mat-spinner class="page-loading" />
 } @else {
@@ -38,9 +39,8 @@
   }
 
   <div class="books">
-    @if (inProgressBooks().length === 0 && completedBooks().length === 0 &&
-    !addingBook()) {
-    <p class="empty">No books yet. Add your first one to get started.</p>
+    @if (inProgressBooks().length === 0 && completedBooks().length === 0) {
+    <p class="empty">No books yet. Add one in settings to get started.</p>
     } @for (book of inProgressBooks(); track book.id) {
     <article
       class="book"
@@ -51,15 +51,6 @@
           <h3 class="book-title">{{ book.title }}</h3>
           <p class="book-author">{{ book.author }}</p>
         </div>
-        <button
-          mat-icon-button
-          type="button"
-          [attr.aria-label]="'Remove ' + book.title"
-          [disabled]="busy()"
-          (click)="deleteBook(book)"
-        >
-          <mat-icon>delete_outline</mat-icon>
-        </button>
       </header>
 
       <div class="book-progress-bar" aria-hidden="true">
@@ -112,15 +103,6 @@
           <h3 class="book-title">{{ book.title }}</h3>
           <p class="book-author">{{ book.author }}</p>
         </div>
-        <button
-          mat-icon-button
-          type="button"
-          [attr.aria-label]="'Remove ' + book.title"
-          [disabled]="busy()"
-          (click)="deleteBook(book)"
-        >
-          <mat-icon>delete_outline</mat-icon>
-        </button>
       </header>
       <p class="book-stats">
         Finished · {{ book.totalPages }} pages
@@ -129,74 +111,19 @@
         }
       </p>
     </article>
-    } @if (addingBook()) {
-    <form
-      class="add-book"
-      aria-labelledby="add-book-heading"
-      (submit)="submitBook(); $event.preventDefault()"
-    >
-      <h3 id="add-book-heading">Add a book</h3>
-      <mat-form-field appearance="outline">
-        <mat-label>Title</mat-label>
-        <input
-          matInput
-          name="title"
-          [ngModel]="draft().title"
-          (ngModelChange)="updateDraft('title', $event)"
-          required
-        />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Author</mat-label>
-        <input
-          matInput
-          name="author"
-          [ngModel]="draft().author"
-          (ngModelChange)="updateDraft('author', $event)"
-          required
-        />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Total pages</mat-label>
-        <input
-          matInput
-          name="totalPages"
-          type="number"
-          min="1"
-          [ngModel]="draft().totalPages"
-          (ngModelChange)="updateDraft('totalPages', $event)"
-          required
-        />
-      </mat-form-field>
-      <div class="actions">
-        <button
-          mat-stroked-button
-          type="button"
-          [disabled]="busy()"
-          (click)="cancelAddingBook()"
-        >
-          Cancel
-        </button>
-        <button
-          mat-flat-button
-          color="primary"
-          type="submit"
-          [disabled]="!canSubmit()"
-        >
-          Add book
-        </button>
-      </div>
-    </form>
-    } @else {
-    <button
-      mat-stroked-button
-      type="button"
-      class="add-button"
-      (click)="startAddingBook()"
-    >
-      Add book
-    </button>
     }
   </div>
+
+  @if (chart) {
+  <div class="chart-wrapper">
+    <div
+      role="img"
+      class="chart"
+      echarts
+      [options]="chart"
+      [initOpts]="initOpts"
+    ></div>
+  </div>
+  }
 </section>
 }

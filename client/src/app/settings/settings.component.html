@@ -59,4 +59,102 @@
       </div>
     </form>
   }
+
+  <section class="form" aria-labelledby="books-heading">
+    <h2 id="books-heading">Books</h2>
+    @if (books.isLoading()) {
+      <mat-spinner class="page-loading" />
+    } @else {
+      <div class="books">
+        @if ((books.value() ?? []).length === 0 && !addingBook()) {
+          <p class="empty">No books yet. Add your first one to get started.</p>
+        }
+        @for (book of books.value() ?? []; track book.id) {
+          <article class="book" [attr.aria-label]="book.title + ' by ' + book.author">
+            <div class="book-meta">
+              <h3 class="book-title">{{ book.title }}</h3>
+              <p class="book-author">{{ book.author }} · {{ book.totalPages }} pages</p>
+            </div>
+            <button
+              mat-icon-button
+              type="button"
+              [attr.aria-label]="'Remove ' + book.title"
+              [disabled]="bookBusy()"
+              (click)="deleteBook(book)"
+            >
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          </article>
+        }
+        @if (addingBook()) {
+          <form
+            class="add-book"
+            aria-labelledby="add-book-heading"
+            (submit)="submitBook(); $event.preventDefault()"
+          >
+            <h3 id="add-book-heading">Add a book</h3>
+            <mat-form-field appearance="outline">
+              <mat-label>Title</mat-label>
+              <input
+                matInput
+                name="title"
+                [ngModel]="draft().title"
+                (ngModelChange)="updateDraft('title', $event)"
+                required
+              />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Author</mat-label>
+              <input
+                matInput
+                name="author"
+                [ngModel]="draft().author"
+                (ngModelChange)="updateDraft('author', $event)"
+                required
+              />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Total pages</mat-label>
+              <input
+                matInput
+                name="totalPages"
+                type="number"
+                min="1"
+                [ngModel]="draft().totalPages"
+                (ngModelChange)="updateDraft('totalPages', $event)"
+                required
+              />
+            </mat-form-field>
+            <div class="actions">
+              <button
+                mat-stroked-button
+                type="button"
+                [disabled]="bookBusy()"
+                (click)="cancelAddingBook()"
+              >
+                Cancel
+              </button>
+              <button
+                mat-flat-button
+                color="primary"
+                type="submit"
+                [disabled]="!canSubmitBook()"
+              >
+                Add book
+              </button>
+            </div>
+          </form>
+        } @else {
+          <button
+            mat-stroked-button
+            type="button"
+            class="add-button"
+            (click)="startAddingBook()"
+          >
+            Add book
+          </button>
+        }
+      </div>
+    }
+  </section>
 </section>

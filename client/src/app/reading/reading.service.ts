@@ -35,6 +35,11 @@ export type ReadingStats = {
   goalReached: boolean;
 };
 
+export type DailyReadingPages = {
+  date: string;
+  pages: number;
+};
+
 const toBook = (dto: BookDto): Book => ({
   ...dto,
   createdAt: new Date(dto.createdAt),
@@ -63,6 +68,18 @@ export class ReadingService {
       return await fetchJson<ReadingStats>(this.http, '/api/reading/stats');
     } catch (e) {
       this.showError('Unable to fetch reading stats');
+      throw e;
+    }
+  }
+
+  async getDailyProgress(period = 0): Promise<DailyReadingPages[]> {
+    const url = period
+      ? `/api/reading/progress?period=${period}`
+      : '/api/reading/progress';
+    try {
+      return await fetchJson<DailyReadingPages[]>(this.http, url);
+    } catch (e) {
+      this.showError('Unable to fetch reading progress');
       throw e;
     }
   }

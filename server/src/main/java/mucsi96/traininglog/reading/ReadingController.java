@@ -1,7 +1,9 @@
 package mucsi96.traininglog.reading;
 
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.http.MediaType;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
@@ -21,7 +24,9 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import mucsi96.traininglog.api.Book;
@@ -66,6 +71,24 @@ public class ReadingController {
   ResponseEntity<Void> deleteBook(@PathVariable UUID id) {
     readingService.deleteBook(id);
     return ResponseEntity.noContent().build();
+  }
+
+  @GetMapping("/progress")
+  @PreAuthorize("hasAuthority('APPROLE_WorkoutReader') and hasAuthority('SCOPE_readWorkouts')")
+  List<DailyReadingResponse> dailyProgress(
+      @RequestParam(required = false) @Positive Integer period,
+      @RequestHeader("X-Timezone") ZoneId zoneId) {
+    Map<LocalDate, Integer> totals = readingService.getPagesReadByDay(zoneId);
+    LocalDate cutoff = period == null
+        ? null
+        : LocalDate.now(zoneId).minusDays(period - 1L);
+    return totals.entrySet().stream()
+        .filter(entry -> cutoff == null || !entry.getKey().isBefore(cutoff))
+        .map(entry -> DailyReadingResponse.builder()
+            .date(entry.getKey().toString())
+            .pages(entry.getValue())
+            .build())
+        .toList();
   }
 
   @GetMapping("/stats")
@@ -118,5 +141,12 @@ public class ReadingController {
     @Min(0)
     @Max(100000)
     private Integer currentPage;
+  }
+
+  @Data
+  @Builder
+  public static class DailyReadingResponse {
+    private String date;
+    private int pages;
   }
 }

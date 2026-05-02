@@ -159,31 +159,23 @@ h2 {
   flex-wrap: wrap;
 }
 
-.add-book {
-  display: grid;
-  gap: 12px;
-  padding: 16px;
-  border-radius: 0.75rem;
-  background: var(--mat-sys-surface-container);
+.chart-wrapper {
+  position: relative;
+  width: 100%;
+  height: 120px;
 }
 
-.add-book h3 {
-  color: var(--mat-sys-on-primary);
-  font-size: 16px;
-  font-weight: 600;
-  margin: 0;
-}
-
-.actions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.add-button {
-  justify-self: stretch;
+.chart {
+  position: absolute;
+  inset: 0;
 }
 
 .page-loading {
   margin: 150px auto;
+}
+
+@media screen and (width > 740px) {
+  .chart-wrapper {
+    height: 160px;
+  }
 }

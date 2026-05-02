@@ -34,7 +34,7 @@ test.describe('Reading', () => {
 
     const section = page.getByRole('region', { name: 'Reading' });
     await expect(section).toBeVisible();
-    await expect(section.getByText('No books yet. Add your first one to get started.')).toBeVisible();
+    await expect(section.getByText('No books yet. Add one in settings to get started.')).toBeVisible();
     await expect(section.getByRole('img', { name: '0 of 30 pages today' })).toBeVisible();
   });
 
@@ -43,26 +43,6 @@ test.describe('Reading', () => {
     const section = page.getByRole('region', { name: 'Reading' });
     await expect(section).toBeVisible();
     await expect(section.getByRole('img', { name: /pages today/ })).toBeHidden();
-  });
-
-  test('adds a new book through the form', async ({ page }) => {
-    await page.goto('/');
-    const section = page.getByRole('region', { name: 'Reading' });
-
-    await section.getByRole('button', { name: 'Add book' }).click();
-    await section.getByLabel('Title').fill('The Pragmatic Programmer');
-    await section.getByLabel('Author').fill('David Thomas');
-    await section.getByLabel('Total pages').fill('320');
-    await section.getByRole('button', { name: 'Add book' }).click();
-
-    await expect(section.getByRole('heading', { name: 'The Pragmatic Programmer' })).toBeVisible();
-    await expect(section.getByText('David Thomas')).toBeVisible();
-
-    const books = await getBookRows();
-    expect(books).toHaveLength(1);
-    expect(books[0].title).toBe('The Pragmatic Programmer');
-    expect(books[0].author).toBe('David Thomas');
-    expect(books[0].total_pages).toBe(320);
   });
 
   test('updates reading progress for a book', async ({ page }) => {
@@ -143,23 +123,6 @@ test.describe('Reading', () => {
     expect(books[0].completed_at).not.toBeNull();
   });
 
-  test('removes a book and its progress entries', async ({ page }) => {
-    const bookId = randomUUID();
-    await insertBook(bookId, 'Removable', 'Author', 100, daysAgoAt(1, 8));
-    await insertReadingProgress(bookId, 25, daysAgoAt(0, 12));
-
-    await page.goto('/');
-    const section = page.getByRole('region', { name: 'Reading' });
-    await section.getByRole('button', { name: 'Remove Removable' }).click();
-
-    await expect(
-      section.getByRole('heading', { name: 'Removable' })
-    ).toBeHidden();
-
-    expect(await getBookRows()).toHaveLength(0);
-    expect(await getReadingProgressRows()).toHaveLength(0);
-  });
-
   test('reflects the configured daily reading goal', async ({ page }) => {
     await setGoldenDayGoal(100, 250, 50);
     const bookId = randomUUID();
@@ -171,5 +134,20 @@ test.describe('Reading', () => {
     const section = page.getByRole('region', { name: 'Reading' });
     await expect(section.getByRole('img', { name: '20 of 50 pages today' })).toBeVisible();
     await expect(section.getByText('30 pages to go')).toBeVisible();
+  });
+
+  test('chart includes daily page totals across the period', async ({ page }) => {
+    const bookId = randomUUID();
+    await insertBook(bookId, 'Book', 'Author', 400, daysAgoAt(2, 8));
+    await insertReadingProgress(bookId, 0, daysAgoAt(2, 8));
+    await insertReadingProgress(bookId, 70, daysAgoAt(2, 18));
+    await insertReadingProgress(bookId, 95, daysAgoAt(0, 9));
+
+    await page.goto('/');
+    const section = page.getByRole('region', { name: 'Reading' });
+    const chart = section.getByRole('img', { name: /chart/i });
+    const label = await chart.getAttribute('aria-label');
+    expect(label).toContain('70');
+    expect(label).toContain('25');
   });
 });

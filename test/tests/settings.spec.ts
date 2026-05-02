@@ -1,9 +1,14 @@
+import { randomUUID } from 'crypto';
 import { test, expect } from '../fixtures';
 import {
+  getBookRows,
   getGoldenDayDates,
   getGoldenDayGoal,
+  getReadingProgressRows,
+  insertBook,
   insertGoldenDay,
   insertPushupSet,
+  insertReadingProgress,
   insertRide,
   setGoldenDayGoal,
 } from '../utils';
@@ -143,5 +148,45 @@ test.describe('Settings', () => {
     await page.goto('/');
     await expect(section.getByText('Today is golden')).toBeVisible();
     expect(await getGoldenDayDates()).toContain(isoDate(0));
+  });
+
+  test('adds a new book through the settings form', async ({ page }) => {
+    await page.goto('/settings');
+
+    const booksSection = page.getByRole('region', { name: 'Books' });
+    await booksSection.getByRole('button', { name: 'Add book' }).click();
+    await booksSection.getByLabel('Title').fill('The Pragmatic Programmer');
+    await booksSection.getByLabel('Author').fill('David Thomas');
+    await booksSection.getByLabel('Total pages').fill('320');
+    await booksSection.getByRole('button', { name: 'Add book' }).click();
+
+    await expect(
+      booksSection.getByRole('article', {
+        name: 'The Pragmatic Programmer by David Thomas',
+      })
+    ).toBeVisible();
+
+    const books = await getBookRows();
+    expect(books).toHaveLength(1);
+    expect(books[0].title).toBe('The Pragmatic Programmer');
+    expect(books[0].author).toBe('David Thomas');
+    expect(books[0].total_pages).toBe(320);
+  });
+
+  test('removes a book and its progress entries from settings', async ({ page }) => {
+    const bookId = randomUUID();
+    await insertBook(bookId, 'Removable', 'Author', 100, daysAgoAt(1, 8));
+    await insertReadingProgress(bookId, 25, daysAgoAt(0, 12));
+
+    await page.goto('/settings');
+    const booksSection = page.getByRole('region', { name: 'Books' });
+    await booksSection.getByRole('button', { name: 'Remove Removable' }).click();
+
+    await expect(
+      booksSection.getByRole('heading', { name: 'Removable' })
+    ).toBeHidden();
+
+    expect(await getBookRows()).toHaveLength(0);
+    expect(await getReadingProgressRows()).toHaveLength(0);
   });
 });

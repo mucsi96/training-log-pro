@@ -41,5 +41,68 @@ h2 {
 
 .actions {
   display: flex;
+  gap: 8px;
   justify-content: flex-end;
+}
+
+.books {
+  display: grid;
+  gap: 12px;
+}
+
+.empty {
+  margin: 0;
+  color: var(--mat-app-text-color);
+  font-size: 13px;
+}
+
+.book {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 0.75rem;
+  background: var(--mat-sys-surface-container);
+}
+
+.book-meta {
+  display: grid;
+  gap: 2px;
+}
+
+.book-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--mat-sys-on-primary);
+}
+
+.book-author {
+  margin: 0;
+  font-size: 13px;
+  color: var(--mat-app-text-color);
+}
+
+.add-book {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 0.75rem;
+  background: var(--mat-sys-surface-container);
+}
+
+.add-book h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--mat-sys-on-primary);
+}
+
+.add-button {
+  justify-self: stretch;
+}
+
+.page-loading {
+  margin: 24px auto;
 }
