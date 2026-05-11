@@ -6,7 +6,6 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -96,12 +95,11 @@ public class FitnessService {
 
     double fitness = 0;
     double fatigue = 0;
-    List<Fitness> series = new ArrayList<>();
     while (!cursor.isAfter(end)) {
       double load = loadByDay.getOrDefault(cursor, 0.0);
       fitness = LAMBDA_FITNESS * fitness + (1 - LAMBDA_FITNESS) * load;
       fatigue = LAMBDA_FATIGUE * fatigue + (1 - LAMBDA_FATIGUE) * load;
-      series.add(Fitness.builder()
+      entityManager.persist(Fitness.builder()
           .createdAt(cursor.atStartOfDay(zoneId).withZoneSameInstant(ZoneOffset.UTC))
           .pulledAt(pulledAt)
           .fitness((float) fitness)
@@ -110,7 +108,5 @@ public class FitnessService {
           .build());
       cursor = cursor.plusDays(1);
     }
-
-    fitnessRepository.saveAll(series);
   }
 }
