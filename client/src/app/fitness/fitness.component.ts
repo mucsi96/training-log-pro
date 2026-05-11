@@ -1,3 +1,4 @@
+import { DecimalPipe } from '@angular/common';
 import { Component, computed, inject, resource } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
@@ -6,14 +7,13 @@ import { NgxEchartsModule } from 'ngx-echarts';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { map } from 'rxjs';
 import { FitnessMeasurement, FitnessService } from './fitness.service';
-import { MeasurementWithUnitPipe } from '../utils/measurement-with-unit.pipe';
 
 @Component({
   standalone: true,
   imports: [
     NgxEchartsModule,
     MatProgressSpinnerModule,
-    MeasurementWithUnitPipe,
+    DecimalPipe,
   ],
   selector: 'app-fitness',
   templateUrl: './fitness.component.html',
