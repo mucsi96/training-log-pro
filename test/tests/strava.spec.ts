@@ -148,6 +148,7 @@ test.describe('Fitness without a ride today', () => {
     await expect(fitnessSection.getByRole('heading', { name: 'Fitness' })).toBeVisible();
     const chart = fitnessSection.locator('[role="img"]');
     await expect(chart).toHaveAttribute('aria-label', /Line chart.*Fitness/);
+    await expect(fitnessSection.getByText('0', { exact: true })).toBeVisible();
 
     const rows = await getFitnessRows();
     expect(rows).toHaveLength(1);
