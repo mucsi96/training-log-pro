@@ -17,6 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mucsi96.traininglog.rides.Ride;
@@ -31,6 +32,7 @@ public class FitnessService {
 
   private final RideRepository rideRepository;
   private final FitnessRepository fitnessRepository;
+  private final EntityManager entityManager;
   private final Clock clock;
 
   @Transactional
@@ -86,6 +88,7 @@ public class FitnessService {
             Collectors.summingDouble(ride -> ride.getSufferScore().doubleValue())));
 
     fitnessRepository.deleteAllInBatch();
+    entityManager.clear();
 
     LocalDate today = LocalDate.now(clock.withZone(zoneId));
     LocalDate cursor = loadByDay.isEmpty() ? today : loadByDay.keySet().iterator().next();
