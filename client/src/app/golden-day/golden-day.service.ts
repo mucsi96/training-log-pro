@@ -10,6 +10,7 @@ export type GoldenDayStats = {
   monthCount: number;
   currentStreak: number;
   todayGolden: boolean;
+  celebrateToday: boolean;
   todayPushups: number;
   todayElevationGain: number;
   todayReadingPages: number;
@@ -41,5 +42,9 @@ export class GoldenDayService {
       });
       throw e;
     }
+  }
+
+  async markCelebrated(): Promise<void> {
+    await fetchJson<void>(this.http, '/api/golden-day/celebrate', { method: 'post' });
   }
 }

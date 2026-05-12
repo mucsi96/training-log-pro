@@ -24,4 +24,7 @@ public class GoldenDayEntity {
 
   @Column(name = "created_at", nullable = false, insertable = false)
   private ZonedDateTime createdAt;
+
+  @Column(name = "celebrated_at")
+  private ZonedDateTime celebratedAt;
 }

@@ -127,6 +127,7 @@ paths:
                   - monthCount
                   - currentStreak
                   - todayGolden
+                  - celebrateToday
                   - todayPushups
                   - todayElevationGain
                   - todayReadingPages
@@ -142,6 +143,8 @@ paths:
                     type: integer
                     format: int32
                   todayGolden:
+                    type: boolean
+                  celebrateToday:
                     type: boolean
                   todayPushups:
                     type: integer
@@ -166,6 +169,12 @@ paths:
                     items:
                       type: string
                       format: date
+
+  /golden-day/celebrate:
+    post:
+      responses:
+        '204':
+          description: Celebration marked as shown
 
   /settings/golden-day-goal:
     get:

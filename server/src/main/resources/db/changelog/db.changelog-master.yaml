@@ -451,3 +451,20 @@ databaseChangeLog:
                   defaultValueNumeric: 0
                   constraints:
                     nullable: false
+
+  - changeSet:
+      id: 14-add-celebrated-at-to-golden-day
+      author: mucsi96
+      changes:
+        - addColumn:
+            tableName: golden_day
+            columns:
+              - column:
+                  name: celebrated_at
+                  type: timestamp(6)
+                  constraints:
+                    nullable: true
+        - sql:
+            dbms: postgresql
+            sql: |
+              UPDATE training_log.golden_day SET celebrated_at = created_at WHERE celebrated_at IS NULL;

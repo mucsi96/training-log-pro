@@ -4,7 +4,7 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
-import java.util.HashSet;
+import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -57,15 +57,14 @@ public class GoldenDayService {
 
     Map<LocalDate, Integer> readingPagesByDay = readingService.getPagesReadByDay(zoneId);
 
-    Set<LocalDate> persisted = goldenDayRepository.findAll().stream()
-        .map(GoldenDayEntity::getDate)
-        .collect(Collectors.toCollection(HashSet::new));
+    Map<LocalDate, GoldenDayEntity> persisted = goldenDayRepository.findAll().stream()
+        .collect(Collectors.toMap(GoldenDayEntity::getDate, e -> e));
 
     Set<LocalDate> candidates = new TreeSet<>(pushupsByDay.keySet());
     candidates.addAll(readingPagesByDay.keySet());
     candidates.add(today);
     for (LocalDate day : candidates) {
-      if (persisted.contains(day)) {
+      if (persisted.containsKey(day)) {
         continue;
       }
       int pushups = pushupsByDay.getOrDefault(day, 0);
@@ -74,21 +73,25 @@ public class GoldenDayService {
       if (pushups >= goal.getPushupGoal()
           && elevation >= goal.getElevationGoal()
           && (goal.getReadingPagesGoal() == 0 || readingPages >= goal.getReadingPagesGoal())) {
-        goldenDayRepository.save(GoldenDayEntity.builder().date(day).build());
-        persisted.add(day);
+        GoldenDayEntity saved = goldenDayRepository.save(GoldenDayEntity.builder().date(day).build());
+        persisted.put(day, saved);
       }
     }
 
-    Set<LocalDate> goldenDates = new TreeSet<>(persisted);
+    Set<LocalDate> goldenDates = new TreeSet<>(persisted.keySet());
     YearMonth currentMonth = YearMonth.from(today);
     int monthCount = (int) goldenDates.stream()
         .filter(date -> YearMonth.from(date).equals(currentMonth))
         .count();
 
+    GoldenDayEntity todayEntity = persisted.get(today);
+    boolean celebrateToday = todayEntity != null && todayEntity.getCelebratedAt() == null;
+
     return GoldenDayStats.builder()
         .monthCount(monthCount)
         .currentStreak(computeStreak(goldenDates, today))
         .todayGolden(goldenDates.contains(today))
+        .celebrateToday(celebrateToday)
         .todayPushups(pushupsByDay.getOrDefault(today, 0))
         .todayElevationGain(elevationByDay.getOrDefault(today, 0d))
         .todayReadingPages(readingPagesByDay.getOrDefault(today, 0))
@@ -97,6 +100,17 @@ public class GoldenDayService {
         .readingPagesGoal(goal.getReadingPagesGoal())
         .goldenDates(goldenDates.stream().sorted().toList())
         .build();
+  }
+
+  @Transactional
+  public void markTodayCelebrated(ZoneId zoneId) {
+    LocalDate today = LocalDate.now(clock.withZone(zoneId));
+    goldenDayRepository.findById(today).ifPresent(entity -> {
+      if (entity.getCelebratedAt() == null) {
+        entity.setCelebratedAt(ZonedDateTime.now(clock));
+        goldenDayRepository.save(entity);
+      }
+    });
   }
 
   private int computeStreak(Set<LocalDate> goldenDates, LocalDate today) {

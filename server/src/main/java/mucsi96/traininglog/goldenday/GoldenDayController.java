@@ -3,8 +3,10 @@ package mucsi96.traininglog.goldenday;
 import java.time.ZoneId;
 
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,5 +25,11 @@ public class GoldenDayController {
   @GetMapping
   GoldenDayStats getStats(@RequestHeader("X-Timezone") ZoneId zoneId) {
     return goldenDayService.getStats(zoneId);
+  }
+
+  @PostMapping("/celebrate")
+  ResponseEntity<Void> markCelebrated(@RequestHeader("X-Timezone") ZoneId zoneId) {
+    goldenDayService.markTodayCelebrated(zoneId);
+    return ResponseEntity.noContent().build();
   }
 }
