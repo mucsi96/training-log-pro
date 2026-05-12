@@ -1,31 +1,13 @@
 import { Component, computed, effect, inject, resource, signal } from '@angular/core';
 import { GoldenDayService } from './golden-day.service';
+import { ConfettiComponent } from './confetti/confetti.component';
 
-const CONFETTI_COUNT = 36;
-const CONFETTI_DURATION_MS = 2600;
-
-type ConfettiPiece = {
-  id: number;
-  left: number;
-  delay: number;
-  duration: number;
-  drift: number;
-  rotation: number;
-  color: string;
-  size: number;
-};
-
-const CONFETTI_COLORS = [
-  'hsl(45, 100%, 60%)',
-  'hsl(30, 100%, 60%)',
-  'hsl(145, 78%, 55%)',
-  'hsl(220, 89%, 63%)',
-  'hsl(0, 96%, 70%)',
-];
+const CONFETTI_DURATION_MS = 5000;
 
 @Component({
   standalone: true,
   selector: 'app-golden-day',
+  imports: [ConfettiComponent],
   templateUrl: './golden-day.component.html',
   styleUrl: './golden-day.component.css',
 })
@@ -41,8 +23,8 @@ export class GoldenDayComponent {
     loader: () => this.service.getStats(),
   });
 
-  readonly confetti = signal<ConfettiPiece[]>([]);
-  private previousGolden: boolean | undefined;
+  readonly showConfetti = signal(false);
+  private confettiTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   readonly monthCount = computed(() => this.stats.value()?.monthCount ?? 0);
   readonly streak = computed(() => this.stats.value()?.currentStreak ?? 0);
@@ -58,30 +40,22 @@ export class GoldenDayComponent {
   constructor() {
     effect(() => {
       const value = this.stats.value();
-      if (!value) {
+      if (!value?.celebrateToday) {
         return;
       }
-      const golden = value.todayGolden;
-      const previous = this.previousGolden;
-      this.previousGolden = golden;
-      if (previous === false && golden) {
-        this.fireConfetti();
-      }
+      this.fireConfetti();
+      this.service.markCelebrated();
     });
   }
 
   private fireConfetti() {
-    const pieces: ConfettiPiece[] = Array.from({ length: CONFETTI_COUNT }, (_, id) => ({
-      id,
-      left: Math.random() * 100,
-      delay: Math.random() * 250,
-      duration: CONFETTI_DURATION_MS - Math.random() * 600,
-      drift: (Math.random() - 0.5) * 120,
-      rotation: Math.random() * 720 - 360,
-      color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
-      size: 6 + Math.random() * 6,
-    }));
-    this.confetti.set(pieces);
-    setTimeout(() => this.confetti.set([]), CONFETTI_DURATION_MS + 400);
+    if (this.confettiTimeoutId !== null) {
+      clearTimeout(this.confettiTimeoutId);
+    }
+    this.showConfetti.set(true);
+    this.confettiTimeoutId = setTimeout(() => {
+      this.showConfetti.set(false);
+      this.confettiTimeoutId = null;
+    }, CONFETTI_DURATION_MS);
   }
 }
