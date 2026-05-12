@@ -451,24 +451,3 @@ databaseChangeLog:
                   defaultValueNumeric: 0
                   constraints:
                     nullable: false
-
-  - changeSet:
-      id: 14-add-updated-at-to-ride
-      author: mucsi96
-      changes:
-        - addColumn:
-            tableName: ride
-            columns:
-              - column:
-                  name: updated_at
-                  type: timestamp(6)
-                  constraints:
-                    nullable: true
-        - sql:
-            dbms: postgresql
-            sql: |
-              UPDATE training_log.ride SET updated_at = created_at WHERE updated_at IS NULL;
-        - addNotNullConstraint:
-            tableName: ride
-            columnName: updated_at
-            columnDataType: timestamp(6)

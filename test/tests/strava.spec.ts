@@ -83,22 +83,22 @@ test.describe('Strava', () => {
     await expect(chart).toHaveAttribute('aria-label', /Line chart.*Fitness/);
   });
 
-  test('should skip recompute when already pulled today after activities', async ({ page }) => {
-    // Pre-seed fitness as if it was pulled a minute in the future, so the
-    // rides synced just after have updated_at before the last pull and the
-    // recompute is skipped. The seeded values must remain.
-    const justAfterNow = new Date(Date.now() + 60_000);
-    await insertFitnessAt(justAfterNow, justAfterNow, 30, 40, -10);
-
+  test('does not rewrite fitness rows when re-syncing produces the same values', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
-    await expect(page.getByText('1 740').first()).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Fitness' })).toBeVisible();
 
-    const rows = await getFitnessRows();
-    expect(rows).toHaveLength(1);
-    expect(rows[0].fitness).toBeCloseTo(30, 1);
-    expect(rows[0].fatigue).toBeCloseTo(40, 1);
-    expect(rows[0].form).toBeCloseTo(-10, 1);
+    const firstRows = await getFitnessRows();
+    expect(firstRows).toHaveLength(1);
+    const firstPulledAt = firstRows[0].pulled_at as Date;
+    expect(firstPulledAt).not.toBeNull();
+
+    await page.reload();
+    await expect(page.getByRole('heading', { name: 'Fitness' })).toBeVisible();
+
+    const secondRows = await getFitnessRows();
+    expect(secondRows).toHaveLength(1);
+    expect(secondRows[0].fitness).toBeCloseTo(firstRows[0].fitness, 5);
+    expect((secondRows[0].pulled_at as Date).getTime()).toBe(firstPulledAt.getTime());
   });
 
   test('should recompute fitness when last pull was before today', async ({ page }) => {

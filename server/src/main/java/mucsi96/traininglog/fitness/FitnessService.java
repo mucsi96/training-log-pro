@@ -6,6 +6,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,18 +36,47 @@ public class FitnessService {
   private final Clock clock;
 
   @Transactional
-  public boolean recomputeIfNeeded(ZoneId zoneId) {
-    Optional<Fitness> latest = fitnessRepository.findFirstByOrderByPulledAtDesc();
+  public boolean recompute(ZoneId zoneId) {
     List<Ride> rides = rideRepository.findAll(Sort.by(Sort.Direction.ASC, "createdAt"));
+    Map<ZonedDateTime, Computed> intended = computeMeasurements(rides, zoneId);
+    Map<ZonedDateTime, Fitness> persisted = fitnessRepository.findAll().stream()
+        .collect(Collectors.toMap(Fitness::getCreatedAt, row -> row));
+    ZonedDateTime pulledAt = ZonedDateTime.now(clock).withZoneSameInstant(ZoneOffset.UTC);
+    boolean changed = false;
 
-    if (!shouldRecompute(latest, rides, zoneId)) {
-      log.info("Skipping fitness recompute; already pulled today and no new activities since");
-      return false;
+    for (Fitness row : persisted.values()) {
+      if (!intended.containsKey(row.getCreatedAt())) {
+        fitnessRepository.delete(row);
+        changed = true;
+      }
     }
 
-    ZonedDateTime pulledAt = ZonedDateTime.now(clock).withZoneSameInstant(ZoneOffset.UTC);
-    recompute(rides, zoneId, pulledAt);
-    return true;
+    for (Map.Entry<ZonedDateTime, Computed> entry : intended.entrySet()) {
+      ZonedDateTime date = entry.getKey();
+      Computed computed = entry.getValue();
+      Fitness row = persisted.get(date);
+      if (row == null) {
+        entityManager.persist(Fitness.builder()
+            .createdAt(date)
+            .pulledAt(pulledAt)
+            .fitness(computed.fitness())
+            .fatigue(computed.fatigue())
+            .form(computed.form())
+            .build());
+        changed = true;
+      } else if (row.getFitness() != computed.fitness()
+          || row.getFatigue() != computed.fatigue()
+          || row.getForm() != computed.form()) {
+        row.setFitness(computed.fitness());
+        row.setFatigue(computed.fatigue());
+        row.setForm(computed.form());
+        row.setPulledAt(pulledAt);
+        changed = true;
+      }
+    }
+
+    log.info(changed ? "Fitness recompute applied changes" : "Fitness recompute matched persisted values");
+    return changed;
   }
 
   public List<Fitness> getFitness(Optional<Integer> period, ZoneId zoneId) {
@@ -57,28 +87,7 @@ public class FitnessService {
     }).orElseGet(() -> fitnessRepository.findByCreatedAtBefore(endTime, Sort.by(Sort.Direction.ASC, "createdAt")));
   }
 
-  private boolean shouldRecompute(Optional<Fitness> latest, List<Ride> rides, ZoneId zoneId) {
-    if (latest.isEmpty()) {
-      log.info("No fitness computed yet; triggering first recompute");
-      return true;
-    }
-    ZonedDateTime lastPullAt = latest.get().getPulledAt();
-    if (lastPullAt == null) {
-      return true;
-    }
-    ZonedDateTime startOfToday = ZonedDateTime.now(clock).withZoneSameInstant(zoneId).truncatedTo(ChronoUnit.DAYS);
-    if (lastPullAt.isBefore(startOfToday)) {
-      log.info("Last fitness pull was before today; triggering first-of-day recompute");
-      return true;
-    }
-    boolean hasRideChanges = rides.stream().anyMatch(ride -> ride.getUpdatedAt().isAfter(lastPullAt));
-    if (hasRideChanges) {
-      log.info("Ride changes detected since last fitness pull; triggering recompute");
-    }
-    return hasRideChanges;
-  }
-
-  private void recompute(List<Ride> rides, ZoneId zoneId, ZonedDateTime pulledAt) {
+  private Map<ZonedDateTime, Computed> computeMeasurements(List<Ride> rides, ZoneId zoneId) {
     Map<LocalDate, Double> loadByDay = rides.stream()
         .filter(ride -> ride.getSufferScore() != null)
         .collect(Collectors.groupingBy(
@@ -86,27 +95,24 @@ public class FitnessService {
             TreeMap::new,
             Collectors.summingDouble(ride -> ride.getSufferScore().doubleValue())));
 
-    fitnessRepository.deleteAllInBatch();
-    entityManager.clear();
-
     LocalDate today = LocalDate.now(clock.withZone(zoneId));
     LocalDate cursor = loadByDay.isEmpty() ? today : loadByDay.keySet().iterator().next();
     LocalDate end = today.isAfter(cursor) ? today : cursor;
 
+    Map<ZonedDateTime, Computed> result = new LinkedHashMap<>();
     double fitness = 0;
     double fatigue = 0;
     while (!cursor.isAfter(end)) {
       double load = loadByDay.getOrDefault(cursor, 0.0);
       fitness = LAMBDA_FITNESS * fitness + (1 - LAMBDA_FITNESS) * load;
       fatigue = LAMBDA_FATIGUE * fatigue + (1 - LAMBDA_FATIGUE) * load;
-      entityManager.persist(Fitness.builder()
-          .createdAt(cursor.atStartOfDay(zoneId).withZoneSameInstant(ZoneOffset.UTC))
-          .pulledAt(pulledAt)
-          .fitness((float) fitness)
-          .fatigue((float) fatigue)
-          .form((float) (fitness - fatigue))
-          .build());
+      ZonedDateTime dayStart = cursor.atStartOfDay(zoneId).withZoneSameInstant(ZoneOffset.UTC);
+      result.put(dayStart, new Computed((float) fitness, (float) fatigue, (float) (fitness - fatigue)));
       cursor = cursor.plusDays(1);
     }
+    return result;
+  }
+
+  private record Computed(float fitness, float fatigue, float form) {
   }
 }

@@ -124,9 +124,9 @@ export async function insertRide(
   const date = new Date(Date.now() - daysAgo * 86400000);
   await query(
     `INSERT INTO training_log.ride (
-      created_at, updated_at, calories, distance, moving_time, name,
+      created_at, calories, distance, moving_time, name,
       sport_type, total_elevation_gain, weighted_average_watts, suffer_score
-    ) VALUES ($1, $1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
     [date, calories, distance, movingTime, name, sportType, totalElevationGain, weightedAverageWatts, sufferScore]
   );
 }
