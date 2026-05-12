@@ -29,6 +29,7 @@ import mucsi96.traininglog.rides.RideRepository;
 public class FitnessService {
   private static final double LAMBDA_FITNESS = Math.exp(-1.0 / 42.0);
   private static final double LAMBDA_FATIGUE = Math.exp(-1.0 / 7.0);
+  private static final float COMPARISON_EPSILON = 1e-3f;
 
   private final RideRepository rideRepository;
   private final FitnessRepository fitnessRepository;
@@ -64,9 +65,9 @@ public class FitnessService {
             .form(computed.form())
             .build());
         changed = true;
-      } else if (row.getFitness() != computed.fitness()
-          || row.getFatigue() != computed.fatigue()
-          || row.getForm() != computed.form()) {
+      } else if (differs(row.getFitness(), computed.fitness())
+          || differs(row.getFatigue(), computed.fatigue())
+          || differs(row.getForm(), computed.form())) {
         row.setFitness(computed.fitness());
         row.setFatigue(computed.fatigue());
         row.setForm(computed.form());
@@ -111,6 +112,10 @@ public class FitnessService {
       cursor = cursor.plusDays(1);
     }
     return result;
+  }
+
+  private static boolean differs(float persisted, float computed) {
+    return Math.abs(persisted - computed) >= COMPARISON_EPSILON;
   }
 
   private record Computed(float fitness, float fatigue, float form) {
