@@ -73,9 +73,10 @@ export function resetActivities(req: Request, res: Response) {
 }
 
 export function updateActivity(req: Request, res: Response) {
-  const id = parseInt(req.params.id);
+  const idParam = req.params.id as string;
+  const id = parseInt(idParam);
   if (isNaN(id)) {
-    res.status(400).json({ error: `Invalid activity id: "${req.params.id}"` });
+    res.status(400).json({ error: `Invalid activity id: "${idParam}"` });
     return;
   }
   const activity = activities.find((a) => a.id === id);
