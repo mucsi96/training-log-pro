@@ -1,5 +1,7 @@
 @let value = latest();
 @let chart = chartOptions();
+@let todayDiffVal = todayDiff();
+@let periodDiffVal = periodDiff();
 @if (todayFitness.isLoading() || periodFitness.isLoading()) {
 <mat-spinner class="page-loading" />
 } @else if (value && chart) {
@@ -16,6 +18,14 @@
   <article>
     <h2>Fitness</h2>
     <p class="value">{{ value.fitness | number : "1.0-0" }}</p>
+    <p [class]="'diff-value ' + (todayDiffVal | percentageDiffColor)">
+      <span class="diff-label">Today</span>
+      <span>{{ todayDiffVal | pointsDiff }}</span>
+    </p>
+    <p [class]="'diff-value ' + (periodDiffVal | percentageDiffColor)">
+      <span class="diff-label">Period</span>
+      <span>{{ periodDiffVal | pointsDiff }}</span>
+    </p>
   </article>
 </section>
 }
