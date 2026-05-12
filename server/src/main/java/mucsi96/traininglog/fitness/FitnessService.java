@@ -71,11 +71,11 @@ public class FitnessService {
       log.info("Last fitness pull was before today; triggering first-of-day recompute");
       return true;
     }
-    boolean hasNewActivity = rides.stream().anyMatch(ride -> ride.getCreatedAt().isAfter(lastPullAt));
-    if (hasNewActivity) {
-      log.info("New activity detected since last fitness pull; triggering recompute");
+    boolean hasRideChanges = rides.stream().anyMatch(ride -> ride.getUpdatedAt().isAfter(lastPullAt));
+    if (hasRideChanges) {
+      log.info("Ride changes detected since last fitness pull; triggering recompute");
     }
-    return hasNewActivity;
+    return hasRideChanges;
   }
 
   private void recompute(List<Ride> rides, ZoneId zoneId, ZonedDateTime pulledAt) {

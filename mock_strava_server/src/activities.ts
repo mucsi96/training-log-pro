@@ -72,6 +72,25 @@ export function resetActivities(req: Request, res: Response) {
   res.json({ count: 0 });
 }
 
+export function updateActivity(req: Request, res: Response) {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) {
+    res.status(400).json({ error: `Invalid activity id: "${req.params.id}"` });
+    return;
+  }
+  const activity = activities.find((a) => a.id === id);
+  if (!activity) {
+    res.status(404).json({ error: `Activity ${id} not found` });
+    return;
+  }
+  const body = req.body ?? {};
+  if ('sufferScore' in body) {
+    activity.sufferScore = body.sufferScore;
+  }
+  console.log('[updateActivity] Updated activity', activity);
+  res.json(activity);
+}
+
 export function getActivities(req: Request, res: Response) {
   const authorization = req.headers.authorization;
   const after = req.query.after as string | undefined;

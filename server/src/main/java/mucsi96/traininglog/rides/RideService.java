@@ -23,6 +23,9 @@ public class RideService {
 
   public void saveRide(Ride ride) {
     log.info("persisting activity in db with name {}", ride.getName());
+    activityRepository.findById(ride.getCreatedAt())
+        .map(Ride::getUpdatedAt)
+        .ifPresent(ride::setUpdatedAt);
     activityRepository.save(ride);
   }
 

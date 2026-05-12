@@ -6,6 +6,7 @@ import {
   getActivity,
   pushActivity,
   resetActivities,
+  updateActivity,
 } from './activities';
 
 const app = express();
@@ -30,6 +31,7 @@ app.get('/strava/api/v3/activities/:id', getActivity);
 
 // Test-only endpoints
 app.post('/strava/test/activities', pushActivity);
+app.post('/strava/test/activities/:id', updateActivity);
 app.post('/strava/test/reset', resetActivities);
 
 app.get('/health', (req, res) => {

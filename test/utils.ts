@@ -124,9 +124,9 @@ export async function insertRide(
   const date = new Date(Date.now() - daysAgo * 86400000);
   await query(
     `INSERT INTO training_log.ride (
-      created_at, calories, distance, moving_time, name,
+      created_at, updated_at, calories, distance, moving_time, name,
       sport_type, total_elevation_gain, weighted_average_watts, suffer_score
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+    ) VALUES ($1, $1, $2, $3, $4, $5, $6, $7, $8, $9)`,
     [date, calories, distance, movingTime, name, sportType, totalElevationGain, weightedAverageWatts, sufferScore]
   );
 }
@@ -301,6 +301,17 @@ export async function pushStravaActivity(options: PushStravaActivityOptions = {}
 export async function pushStravaActivities(count: number, options: PushStravaActivityOptions = {}) {
   for (let i = 0; i < count; i++) {
     await pushStravaActivity(options);
+  }
+}
+
+export async function updateStravaActivity(id: number, options: Partial<PushStravaActivityOptions>) {
+  const response = await fetch(`http://localhost:8180/strava/test/activities/${id}`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(options),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to update Strava activity: ${response.status}`);
   }
 }
 

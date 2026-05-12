@@ -9,6 +9,8 @@ import {
   insertFitnessAt,
   insertRide,
   pushStravaActivities,
+  pushStravaActivity,
+  updateStravaActivity,
 } from '../utils';
 
 test.describe('Strava', () => {
@@ -82,11 +84,11 @@ test.describe('Strava', () => {
   });
 
   test('should skip recompute when already pulled today after activities', async ({ page }) => {
-    // Pre-seed fitness as if it was pulled at 23:59 today, so the sync sees no
-    // newer activities and skips the recompute. The seeded values must remain.
-    const lateToday = new Date();
-    lateToday.setUTCHours(23, 59, 0, 0);
-    await insertFitnessAt(lateToday, lateToday, 30, 40, -10);
+    // Pre-seed fitness as if it was pulled a minute in the future, so the
+    // rides synced just after have updated_at before the last pull and the
+    // recompute is skipped. The seeded values must remain.
+    const justAfterNow = new Date(Date.now() + 60_000);
+    await insertFitnessAt(justAfterNow, justAfterNow, 30, 40, -10);
 
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
@@ -110,6 +112,39 @@ test.describe('Strava', () => {
     const rows = await getFitnessRows();
     expect(rows).toHaveLength(1);
     expect(rows[0].fitness).toBeCloseTo(5.747, 1);
+  });
+});
+
+test.describe('Fitness when Strava back-fills suffer_score', () => {
+  test('recomputes fitness after a previously null suffer_score becomes available', async ({ page }) => {
+    // First sync: Strava has the ride but has not yet computed suffer_score.
+    await pushStravaActivity({ sufferScore: null });
+
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: 'Fitness' })).toBeVisible();
+
+    const initialRideRows = await getRideRows();
+    expect(initialRideRows).toHaveLength(1);
+    expect(initialRideRows[0].suffer_score).toBeNull();
+
+    const initialFitnessRows = await getFitnessRows();
+    expect(initialFitnessRows).toHaveLength(1);
+    expect(initialFitnessRows[0].fitness).toBeCloseTo(0, 3);
+
+    // Strava finishes processing the activity and exposes a suffer_score for
+    // the same ride. Reloading the page must re-sync and recompute fitness,
+    // even though the ride's start time is before the previous pull.
+    await updateStravaActivity(1, { sufferScore: 100 });
+
+    await page.reload();
+    await expect(page.getByRole('heading', { name: 'Fitness' })).toBeVisible();
+
+    await expect.poll(async () => (await getRideRows())[0]?.suffer_score).toBeCloseTo(100, 0);
+
+    const updatedFitnessRows = await getFitnessRows();
+    expect(updatedFitnessRows).toHaveLength(1);
+    // fitness = (1 - exp(-1/42)) * 100 ≈ 2.355
+    expect(updatedFitnessRows[0].fitness).toBeCloseTo(2.355, 1);
   });
 });
 
