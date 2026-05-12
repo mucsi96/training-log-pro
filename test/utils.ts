@@ -304,6 +304,17 @@ export async function pushStravaActivities(count: number, options: PushStravaAct
   }
 }
 
+export async function updateStravaActivity(id: number, options: Partial<PushStravaActivityOptions>) {
+  const response = await fetch(`http://localhost:8180/strava/test/activities/${id}`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(options),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to update Strava activity: ${response.status}`);
+  }
+}
+
 export async function resetStravaActivities() {
   const response = await fetch('http://localhost:8180/strava/test/reset', {
     method: 'POST',

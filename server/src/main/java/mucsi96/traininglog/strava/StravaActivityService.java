@@ -21,10 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mucsi96.traininglog.rides.Ride;
@@ -62,18 +58,6 @@ public class StravaActivityService {
         HttpMethod.GET, request,
         new ParameterizedTypeReference<List<StravaSummaryActivity>>() {
         }, headers);
-    List<StravaSummaryActivity> activities = response.getBody();
-
-    if (activities == null) {
-      return List.of();
-    }
-
-    try {
-      ObjectMapper mapper = new ObjectMapper();
-      mapper.registerModule(new JavaTimeModule());
-      System.out.println(mapper.writeValueAsString(activities));
-    } catch (JsonProcessingException e) {
-    }
 
     if (response.getStatusCode() == HttpStatusCode.valueOf(401)) {
       throw new ClientAuthorizationRequiredException(StravaConfiguration.registrationId);
@@ -83,10 +67,27 @@ public class StravaActivityService {
       throw new StravaTechnicalException();
     }
 
-    List<SportTypeEnum> rideActivities = List.of(SportTypeEnum.RIDE, SportTypeEnum.GRAVELRIDE,
+    List<StravaSummaryActivity> activities = response.getBody();
+
+    if (activities == null) {
+      log.info("Strava returned no activities for today");
+      return List.of();
+    }
+
+    log.info("Strava returned {} summary activities for today", activities.size());
+    activities.forEach(activity -> log.info(
+        "Strava summary activity: id={} sport_type={} start_date={} name={} suffer_score={}",
+        activity.getId(), activity.getSportType(), activity.getStartDate(), activity.getName(),
+        activity.getSufferScore()));
+
+    List<SportTypeEnum> rideSportTypes = List.of(SportTypeEnum.RIDE, SportTypeEnum.GRAVELRIDE,
         SportTypeEnum.MOUNTAINBIKERIDE, SportTypeEnum.VIRTUALRIDE);
 
-    return activities.stream().filter((activity) -> rideActivities.contains(activity.getSportType())).toList();
+    List<StravaSummaryActivity> rides = activities.stream()
+        .filter(activity -> rideSportTypes.contains(activity.getSportType()))
+        .toList();
+    log.info("Filtered to {} ride activities (sport_types={})", rides.size(), rideSportTypes);
+    return rides;
   }
 
   public StravaSyncResult getTodayRides(OAuth2AuthorizedClient authorizedClient, ZoneId zoneId) {
@@ -94,7 +95,7 @@ public class StravaActivityService {
     List<SegmentEffort> segmentEfforts = new ArrayList<>();
 
     getTodayRideActivities(authorizedClient, zoneId).forEach(summary -> {
-      log.info("Getting Strava activity with id" + summary.getId());
+      log.info("Fetching Strava activity detail id={}", summary.getId());
       HttpHeaders headers = new HttpHeaders();
       headers.setBearerAuth(authorizedClient.getAccessToken().getTokenValue());
       HttpEntity<String> request = new HttpEntity<>("", headers);
@@ -113,13 +114,6 @@ public class StravaActivityService {
         throw new StravaTechnicalException();
       }
 
-      try {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        System.out.println(mapper.writeValueAsString(activity));
-      } catch (JsonProcessingException e) {
-      }
-
       if (activity == null) {
         throw new RuntimeException("No matching activity");
       }
@@ -127,7 +121,15 @@ public class StravaActivityService {
       Float sufferScore = activity.getSufferScore() != null ? activity.getSufferScore() : summary.getSufferScore();
       ZonedDateTime rideCreatedAt = activity.getStartDate().atZoneSameInstant(ZoneOffset.UTC);
 
-      rides.add(Ride.builder()
+      if (sufferScore == null) {
+        log.error(
+            "Strava activity id={} name={} returned no suffer_score (detail null, summary null). "
+                + "Fitness cannot be computed for this ride. Common causes: athlete is not a Strava Premium subscriber, "
+                + "activity has no heart-rate data, or Strava has not finished processing the activity yet.",
+            activity.getId(), activity.getName());
+      }
+
+      Ride ride = Ride.builder()
           .createdAt(rideCreatedAt)
           .name(activity.getName())
           .movingTime(activity.getMovingTime())
@@ -137,14 +139,32 @@ public class StravaActivityService {
           .calories(activity.getCalories())
           .sportType(activity.getSportType())
           .sufferScore(sufferScore)
-          .build());
+          .build();
+      rides.add(ride);
 
-      Optional.ofNullable(activity.getSegmentEfforts())
+      log.info(
+          "Strava ride to persist: id={} created_at={} name={} sport_type={} distance_m={} moving_time_s={} "
+              + "elevation_gain_m={} weighted_avg_watts={} calories={} suffer_score={}",
+          activity.getId(), ride.getCreatedAt(), ride.getName(), ride.getSportType(),
+          ride.getDistance(), ride.getMovingTime(), ride.getTotalElevationGain(),
+          ride.getWeightedAverageWatts(), ride.getCalories(), ride.getSufferScore());
+
+      List<SegmentEffort> efforts = Optional.ofNullable(activity.getSegmentEfforts())
           .orElse(List.of())
           .stream()
           .map(effort -> toSegmentEffort(effort, rideCreatedAt))
-          .forEach(segmentEfforts::add);
+          .toList();
+      efforts.forEach(effort -> log.info(
+          "Strava segment effort to persist: id={} segment_id={} segment_name={} distance_m={} "
+              + "avg_grade={} elapsed_time_s={} start_date={} ride_created_at={}",
+          effort.getId(), effort.getSegmentId(), effort.getSegmentName(), effort.getSegmentDistance(),
+          effort.getSegmentAverageGrade(), effort.getElapsedTime(), effort.getStartDate(),
+          effort.getRideCreatedAt()));
+      segmentEfforts.addAll(efforts);
     });
+
+    log.info("Strava sync prepared {} rides and {} segment efforts for persistence",
+        rides.size(), segmentEfforts.size());
 
     return StravaSyncResult.builder().rides(rides).segmentEfforts(segmentEfforts).build();
   }

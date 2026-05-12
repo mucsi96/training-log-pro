@@ -17,9 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mucsi96.traininglog.weight.Weight;
@@ -28,6 +25,10 @@ import mucsi96.traininglog.weight.Weight;
 @RequiredArgsConstructor
 @Slf4j
 public class WithingsService {
+
+  private static final int MEASURE_TYPE_WEIGHT = 1;
+  private static final int MEASURE_TYPE_FAT_RATIO = 6;
+  private static final int MEASURE_TYPE_FAT_MASS_WEIGHT = 8;
 
   private final WithingsConfiguration withingsConfiguration;
   private final Clock clock;
@@ -57,14 +58,6 @@ public class WithingsService {
     WithingsGetMeasureResponse response = restTemplate
         .postForObject(getMeasureUrl(zoneId), request, WithingsGetMeasureResponse.class);
 
-    ObjectMapper mapper = new ObjectMapper();
-
-    try {
-      log.info(mapper.writeValueAsString(response));
-    } catch (JsonProcessingException e) {
-      log.error("Cannot map response", e);
-    }
-
     if (response == null) {
       throw new WithingsTechnicalException();
     }
@@ -74,17 +67,41 @@ public class WithingsService {
     }
 
     if (response.getStatus() != 0) {
-      log.error(response.getError());
+      log.error("Withings returned non-zero status: status={} error={}", response.getStatus(), response.getError());
       throw new WithingsTechnicalException();
     }
 
-    return response.getBody();
+    WithingsGetMeasureResponseBody body = response.getBody();
+    List<WithingsMeasureGroup> measureGroups = body != null ? body.getMeasuregrps() : null;
+    log.info("Withings returned {} measure groups for today", measureGroups == null ? 0 : measureGroups.size());
+    if (measureGroups != null) {
+      measureGroups.forEach(group -> log.info(
+          "Withings measure group: grpid={} date={} category={} deviceid={} measures={}",
+          group.getGrpid(),
+          ZonedDateTime.ofInstant(Instant.ofEpochSecond(group.getDate()), ZoneOffset.UTC),
+          group.getCategory(), group.getDeviceid(),
+          formatMeasures(group.getMeasures())));
+    }
+
+    return body;
   }
 
-  private float getMeasurement(List<WithingsMeasure> measures, int type) {
-    WithingsMeasure measure = measures.stream().filter(m -> m.getType() == type).findFirst().orElseThrow();
-    float weight = Math.round(measure.getValue() * Math.pow(10, measure.getUnit()) * 10.0) / 10.0f;
-    return weight;
+  private String formatMeasures(List<WithingsMeasure> measures) {
+    if (measures == null || measures.isEmpty()) {
+      return "[]";
+    }
+    return measures.stream()
+        .map(m -> String.format("{type=%d value=%d unit=%d}", m.getType(), m.getValue(), m.getUnit()))
+        .reduce((a, b) -> a + ", " + b)
+        .map(s -> "[" + s + "]")
+        .orElse("[]");
+  }
+
+  private Optional<Float> getMeasurement(List<WithingsMeasure> measures, int type) {
+    return measures.stream()
+        .filter(m -> m.getType() == type)
+        .findFirst()
+        .map(m -> Math.round(m.getValue() * Math.pow(10, m.getUnit()) * 10.0) / 10.0f);
   }
 
   private Optional<Weight> getLastMeasureValue(WithingsGetMeasureResponseBody measureResponseBody) {
@@ -106,15 +123,22 @@ public class WithingsService {
         Weight
             .builder()
             .createdAt(ZonedDateTime.ofInstant(Instant.ofEpochSecond(measureGroup.getDate()), ZoneOffset.UTC))
-            .weight(getMeasurement(measures, 1))
-            .fatRatio(getMeasurement(measures, 6))
-            .fatMassWeight(getMeasurement(measures, 8))
+            .weight(getMeasurement(measures, MEASURE_TYPE_WEIGHT).orElseThrow())
+            .fatRatio(getMeasurement(measures, MEASURE_TYPE_FAT_RATIO).orElseThrow())
+            .fatMassWeight(getMeasurement(measures, MEASURE_TYPE_FAT_MASS_WEIGHT).orElseThrow())
             .build());
   }
 
   public Optional<Weight> getTodayWeight(OAuth2AuthorizedClient authorizedClient, ZoneId zoneId) {
     Optional<Weight> result = getLastMeasureValue(getMeasure(authorizedClient, zoneId));
-    log.info("Got {}", result.isPresent() ? result.get().getWeight() : "null");
+    if (result.isPresent()) {
+      Weight weight = result.get();
+      log.info(
+          "Withings weight to persist: created_at={} weight_kg={} fat_ratio_pct={} fat_mass_weight_kg={}",
+          weight.getCreatedAt(), weight.getWeight(), weight.getFatRatio(), weight.getFatMassWeight());
+    } else {
+      log.info("Withings sync produced no weight measurement for today");
+    }
     return result;
   }
 }

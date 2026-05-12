@@ -57,7 +57,7 @@ public class StravaController {
       StravaSyncResult syncResult = stravaActivityService.getTodayRides(authorizedClient, zoneId);
       syncResult.getRides().forEach(rideService::saveRide);
       segmentEffortService.saveAll(syncResult.getSegmentEfforts());
-      fitnessService.recomputeIfNeeded(zoneId);
+      fitnessService.recompute(zoneId);
     } catch (OAuth2AuthorizationException ex) {
       String token = tokenService.generate(principal.getName());
       String authorizeUrl = ServletUriComponentsBuilder.fromRequestUri(servletRequest)
