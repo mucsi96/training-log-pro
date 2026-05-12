@@ -7,6 +7,8 @@ import { NgxEchartsModule } from 'ngx-echarts';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { map } from 'rxjs';
 import { FitnessMeasurement, FitnessService } from './fitness.service';
+import { PercentageDiffColorPipe } from '../utils/percentage-diff-color.pipe';
+import { PointsDiffPipe } from '../utils/points-diff.pipe';
 
 @Component({
   standalone: true,
@@ -14,6 +16,8 @@ import { FitnessMeasurement, FitnessService } from './fitness.service';
     NgxEchartsModule,
     MatProgressSpinnerModule,
     DecimalPipe,
+    PercentageDiffColorPipe,
+    PointsDiffPipe,
   ],
   selector: 'app-fitness',
   templateUrl: './fitness.component.html',
@@ -28,7 +32,7 @@ export class FitnessComponent {
   readonly initOpts = { renderer: 'svg' as const };
 
   readonly todayFitness = resource({
-    loader: () => this.fitnessService.getFitness(1),
+    loader: () => this.fitnessService.getFitness(2),
   });
 
   readonly periodFitness = resource({
@@ -39,6 +43,26 @@ export class FitnessComponent {
   readonly latest = computed<FitnessMeasurement | undefined>(() => {
     const today = this.todayFitness.value();
     return today?.measurements.at(-1);
+  });
+
+  readonly todayDiff = computed<number | undefined>(() => {
+    const measurements = this.todayFitness.value()?.measurements;
+    if (!measurements || measurements.length < 2) {
+      return undefined;
+    }
+    const previous = measurements[measurements.length - 2];
+    const latest = measurements[measurements.length - 1];
+    return latest.fitness - previous.fitness;
+  });
+
+  readonly periodDiff = computed<number | undefined>(() => {
+    const measurements = this.periodFitness.value()?.measurements;
+    if (!measurements || measurements.length < 2) {
+      return undefined;
+    }
+    const initial = measurements[0];
+    const latest = measurements[measurements.length - 1];
+    return latest.fitness - initial.fitness;
   });
 
   readonly chartOptions = computed<EChartsOption | undefined>(() => {

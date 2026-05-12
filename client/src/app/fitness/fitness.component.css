@@ -28,6 +28,27 @@ h2 {
   font-weight: 700;
 }
 
+.diff-value {
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.diff-label {
+  color: var(--mat-app-text-color);
+  opacity: 0.7;
+  font-weight: 400;
+}
+
+.diff-value.green {
+  color: hsl(111, 32%, 66%);
+}
+
+.diff-value.red {
+  color: hsl(0, 91%, 74%);
+}
+
 .chart-wrapper {
   aspect-ratio: 1;
   min-width: 100px;
