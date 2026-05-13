@@ -1,7 +1,7 @@
 @let today = todayWeight.value();
 @let diffVal = diff();
 @let chart = chartOptions();
-@if (todayWeight.isLoading() || periodMeasurements.isLoading()) {
+@if (todayWeight.isLoading() || periodHistory.isLoading()) {
 <mat-spinner class="page-loading" />
 } @else if (chart) {
 <section>

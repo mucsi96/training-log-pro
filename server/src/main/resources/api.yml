@@ -16,26 +16,17 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  title: WeightMeasurement
-                  type: object
-                  required:
-                    - date
-                    - weight
-                  properties:
-                    date:
-                      type: string
-                      format: date-time
-                    weight:
-                      type: number
-                      format: float
-                    fatRatio:
-                      type: number
-                      format: float
-                    fatMassWeight:
-                      type: number
-                      format: float
+                title: WeightHistory
+                type: object
+                required:
+                  - measurements
+                properties:
+                  measurements:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WeightMeasurement'
+                  baseline:
+                    $ref: '#/components/schemas/WeightMeasurement'
 
   /ride/stats:
     get:
@@ -349,6 +340,24 @@ paths:
 
 components:
   schemas:
+    WeightMeasurement:
+      type: object
+      required:
+        - date
+        - weight
+      properties:
+        date:
+          type: string
+          format: date-time
+        weight:
+          type: number
+          format: float
+        fatRatio:
+          type: number
+          format: float
+        fatMassWeight:
+          type: number
+          format: float
     PushupSet:
       type: object
       required:

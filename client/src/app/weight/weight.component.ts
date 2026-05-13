@@ -35,19 +35,23 @@ export class WeightComponent {
     loader: () => this.weightService.getTodayWeight(),
   });
 
-  readonly periodMeasurements = resource({
+  readonly periodHistory = resource({
     params: () => this.period(),
     loader: ({ params: period }) => this.weightService.getWeight(period),
   });
 
   readonly diff = computed(() => {
-    const measurements = this.periodMeasurements.value();
-    if (!measurements || measurements.length < 2) {
+    const history = this.periodHistory.value();
+    if (!history || history.measurements.length === 0) {
       return undefined;
     }
 
-    const initial = measurements[0];
-    const latest = measurements[measurements.length - 1];
+    const initial = history.baseline ?? history.measurements[0];
+    const latest = history.measurements[history.measurements.length - 1];
+
+    if (initial === latest) {
+      return undefined;
+    }
 
     return {
       date: latest.date,
@@ -66,10 +70,14 @@ export class WeightComponent {
   });
 
   readonly chartOptions = computed<EChartsOption | undefined>(() => {
-    const measurements = this.periodMeasurements.value();
-    if (!measurements || measurements.length === 0) {
+    const history = this.periodHistory.value();
+    if (!history || history.measurements.length === 0) {
       return undefined;
     }
+
+    const chartMeasurements: WeightMeasurement[] = history.baseline
+      ? [history.baseline, ...history.measurements]
+      : history.measurements;
 
     return {
       aria: {
@@ -85,7 +93,7 @@ export class WeightComponent {
       dataset: {
         source: [
           ['date', 'weight'],
-          ...measurements.map(({ date, weight }: WeightMeasurement) => [
+          ...chartMeasurements.map(({ date, weight }: WeightMeasurement) => [
             new Date(date),
             weight,
           ]),
