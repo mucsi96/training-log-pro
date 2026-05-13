@@ -1,7 +1,6 @@
 package mucsi96.traininglog.weight;
 
 import java.time.ZoneId;
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.http.MediaType;
@@ -15,6 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import mucsi96.traininglog.api.WeightHistory;
 import mucsi96.traininglog.api.WeightMeasurement;
 
 @RestController
@@ -26,15 +26,22 @@ public class WeightController {
   private final WeightService weightService;
 
   @GetMapping
-  List<WeightMeasurement> weight(
+  WeightHistory weight(
       @RequestParam(required = false) @Positive Integer period,
       @RequestHeader("X-Timezone") ZoneId zoneId) {
-    return weightService.getWeight(Optional.ofNullable(period), zoneId).stream().map(measurement -> WeightMeasurement
-        .builder()
+    WeightService.WeightHistory history = weightService.getWeight(Optional.ofNullable(period), zoneId);
+    return WeightHistory.builder()
+        .measurements(history.measurements().stream().map(measurement -> toMeasurement(measurement, zoneId)).toList())
+        .baseline(history.baseline().map(measurement -> toMeasurement(measurement, zoneId)).orElse(null))
+        .build();
+  }
+
+  private WeightMeasurement toMeasurement(Weight measurement, ZoneId zoneId) {
+    return WeightMeasurement.builder()
         .date(measurement.getCreatedAt().withZoneSameInstant(zoneId).toOffsetDateTime())
         .weight(measurement.getWeight())
         .fatRatio(measurement.getFatRatio())
         .fatMassWeight(measurement.getFatMassWeight())
-        .build()).toList();
+        .build();
   }
 }

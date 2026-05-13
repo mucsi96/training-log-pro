@@ -11,14 +11,24 @@ export type WeightMeasurement = {
   fatMassWeight?: number;
 };
 
+export type WeightHistory = {
+  measurements: WeightMeasurement[];
+  baseline?: WeightMeasurement;
+};
+
+type WeightHistoryResponse = {
+  measurements: WeightMeasurement[];
+  baseline?: WeightMeasurement;
+};
+
 @Injectable({ providedIn: 'root' })
 export class WeightService {
   private readonly http = inject(HttpClient);
   private readonly withingsService = inject(WithingsService);
   private readonly snackBar = inject(MatSnackBar);
-  private readonly cache = new Map<number, WeightMeasurement[]>();
+  private readonly cache = new Map<number, WeightHistory>();
 
-  async getWeight(period = 0): Promise<WeightMeasurement[]> {
+  async getWeight(period = 0): Promise<WeightHistory> {
     const cached = this.cache.get(period);
     if (cached) {
       return cached;
@@ -27,11 +37,19 @@ export class WeightService {
     await this.withingsService.sync();
     const url = period ? `/api/weight?period=${period}` : '/api/weight';
     try {
-      const measurements = await fetchJson<WeightMeasurement[]>(this.http, url);
-      const result = measurements.map((measurement) => ({
-        ...measurement,
-        date: new Date(measurement.date),
-      }));
+      const response = await fetchJson<WeightHistoryResponse>(this.http, url);
+      const result: WeightHistory = {
+        measurements: response.measurements.map((measurement) => ({
+          ...measurement,
+          date: new Date(measurement.date),
+        })),
+        ...(response.baseline && {
+          baseline: {
+            ...response.baseline,
+            date: new Date(response.baseline.date),
+          },
+        }),
+      };
       this.cache.set(period, result);
       return result;
     } catch (e) {
@@ -45,7 +63,7 @@ export class WeightService {
   }
 
   async getTodayWeight(): Promise<WeightMeasurement | undefined> {
-    const measurements = await this.getWeight(1);
+    const { measurements } = await this.getWeight(1);
     return measurements.at(-1);
   }
 }

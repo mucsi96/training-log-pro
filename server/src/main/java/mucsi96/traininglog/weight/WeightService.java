@@ -20,20 +20,27 @@ public class WeightService {
   private final WeightRepository weightRepository;
   private final Clock clock;
 
+  public record WeightHistory(List<Weight> measurements, Optional<Weight> baseline) {
+  }
+
   public void saveWeight(Weight weight) {
     log.info("persisting weight in db with value {}", weight.getWeight());
     weightRepository.save(weight);
   }
 
-  public List<Weight> getWeight(Optional<Integer> period, ZoneId zoneId) {
+  public WeightHistory getWeight(Optional<Integer> period, ZoneId zoneId) {
     ZonedDateTime endTime = ZonedDateTime.now(clock).withZoneSameInstant(zoneId).truncatedTo(ChronoUnit.DAYS).plusDays(1);
     return period.map(days -> {
       ZonedDateTime startTime = ZonedDateTime.now(clock).withZoneSameInstant(zoneId).truncatedTo(ChronoUnit.DAYS).minusDays(days - 1);
       log.info("Getting weight measurements from {} to {}", startTime, endTime);
-      return weightRepository.findByCreatedAtBetween(startTime, endTime, Sort.by(Sort.Direction.ASC, "createdAt"));
+      List<Weight> measurements = weightRepository.findByCreatedAtBetween(startTime, endTime, Sort.by(Sort.Direction.ASC, "createdAt"));
+      Optional<Weight> baseline = weightRepository.findFirstByCreatedAtBeforeOrderByCreatedAtDesc(startTime);
+      return new WeightHistory(measurements, baseline);
     }).orElseGet(() -> {
       log.info("Getting weight measurements before {}", endTime);
-      return weightRepository.findByCreatedAtBefore(endTime, Sort.by(Sort.Direction.ASC, "createdAt"));
+      return new WeightHistory(
+          weightRepository.findByCreatedAtBefore(endTime, Sort.by(Sort.Direction.ASC, "createdAt")),
+          Optional.empty());
     });
   }
 }
