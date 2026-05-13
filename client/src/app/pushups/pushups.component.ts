@@ -75,15 +75,41 @@ export class PushupsComponent {
       totalsByDay.set(day, (totalsByDay.get(day) ?? 0) + set.count);
     }
 
-    const data = [...totalsByDay.entries()]
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([day, total]) => [new Date(day), total]);
+    const period = this.period() ?? 0;
+    const sortedDays = [...totalsByDay.keys()].sort();
+
+    const endDay = new Date();
+    endDay.setUTCHours(0, 0, 0, 0);
+
+    const startDay = new Date(endDay);
+    if (period > 0) {
+      startDay.setUTCDate(startDay.getUTCDate() - period + 1);
+    } else if (sortedDays.length > 0) {
+      startDay.setTime(new Date(sortedDays[0]).getTime());
+    }
+
+    const data: Array<[Date, number | null]> = [];
+    for (
+      const current = new Date(startDay);
+      current.getTime() <= endDay.getTime();
+      current.setUTCDate(current.getUTCDate() + 1)
+    ) {
+      const day = current.toISOString().slice(0, 10);
+      data.push([new Date(current), totalsByDay.get(day) ?? null]);
+    }
+
+    const dayMs = 24 * 3600 * 1000;
 
     return {
       aria: { enabled: true },
       animation: false,
       grid: { top: 10, right: 10, bottom: 10, left: 10 },
-      xAxis: { type: 'time', show: false },
+      xAxis: {
+        type: 'time',
+        show: false,
+        min: startDay.getTime() - dayMs / 2,
+        max: endDay.getTime() + dayMs / 2,
+      },
       yAxis: { type: 'value', show: false, min: 0 },
       series: [
         {
