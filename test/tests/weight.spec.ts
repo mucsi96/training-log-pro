@@ -25,7 +25,7 @@ test.describe('Weight', () => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
     await expect(page.getByText('↓ 2.2 kg')).toBeVisible();
-    await expect(page.getByText('↓ 9 kg')).toBeVisible();
+    await expect(page.getByText('↓ 9.0 kg')).toBeVisible();
     await expect(page.getByText('↑ 0.8 %')).toBeVisible();
   });
 

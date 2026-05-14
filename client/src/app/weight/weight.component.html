@@ -20,7 +20,7 @@
     <p class="value">
       {{ today.weight | measurementWithUnit : "kg" }}
     </p>
-    <p [class]="'diff-value ' + (diffVal?.weight | percentageDiffColor : 'inverse')">
+    <p [class]="'diff-value ' + (diffVal?.weight | diffColor : 'inverse')">
       {{ diffVal?.weight | absoluteDiff : "kg" }}
     </p>
   </article>
@@ -29,7 +29,7 @@
     <p class="value">
       {{ today.fatMassWeight | measurementWithUnit : "kg" }}
     </p>
-    <p [class]="'diff-value ' + (diffVal?.fatMassWeight | percentageDiffColor : 'inverse')">
+    <p [class]="'diff-value ' + (diffVal?.fatMassWeight | diffColor : 'inverse')">
       {{ diffVal?.fatMassWeight | absoluteDiff : "kg" }}
     </p>
   </article>
@@ -38,7 +38,7 @@
     <p class="value">
       {{ today.fatRatio | measurementWithUnit : "%" }}
     </p>
-    <p [class]="'diff-value ' + (diffVal?.fatRatio | percentageDiffColor : 'inverse')">
+    <p [class]="'diff-value ' + (diffVal?.fatRatio | diffColor : 'inverse')">
       {{ diffVal?.fatRatio | absoluteDiff : "%" }}
     </p>
   </article>

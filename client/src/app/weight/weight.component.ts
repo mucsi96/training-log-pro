@@ -7,8 +7,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { map } from 'rxjs';
 import { WeightMeasurement, WeightService } from './weight.service';
 import { AbsoluteDiffPipe } from '../utils/absolute-diff.pipe';
+import { DiffColorPipe } from '../utils/diff-color.pipe';
 import { MeasurementWithUnitPipe } from '../utils/measurement-with-unit.pipe';
-import { PercentageDiffColorPipe } from '../utils/percentage-diff-color.pipe';
 
 @Component({
   standalone: true,
@@ -16,7 +16,7 @@ import { PercentageDiffColorPipe } from '../utils/percentage-diff-color.pipe';
     NgxEchartsModule,
     MatProgressSpinnerModule,
     AbsoluteDiffPipe,
-    PercentageDiffColorPipe,
+    DiffColorPipe,
     MeasurementWithUnitPipe,
   ],
   selector: 'app-weight',
