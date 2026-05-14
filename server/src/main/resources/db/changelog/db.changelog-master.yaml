@@ -468,3 +468,17 @@ databaseChangeLog:
             dbms: postgresql
             sql: |
               UPDATE training_log.golden_day SET celebrated_at = created_at WHERE celebrated_at IS NULL;
+
+  - changeSet:
+      id: 15-add-starting-page-to-book
+      author: mucsi96
+      changes:
+        - addColumn:
+            tableName: book
+            columns:
+              - column:
+                  name: starting_page
+                  type: integer
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false

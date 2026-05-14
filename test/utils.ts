@@ -217,11 +217,12 @@ export async function insertBook(
   author: string,
   totalPages: number,
   createdAt: Date = new Date(),
-  completedAt: Date | null = null
+  completedAt: Date | null = null,
+  startingPage: number = 0
 ) {
   await query(
-    'INSERT INTO training_log.book (id, title, author, total_pages, created_at, completed_at) VALUES ($1, $2, $3, $4, $5, $6)',
-    [id, title, author, totalPages, createdAt, completedAt]
+    'INSERT INTO training_log.book (id, title, author, total_pages, starting_page, created_at, completed_at) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+    [id, title, author, totalPages, startingPage, createdAt, completedAt]
   );
 }
 
@@ -238,7 +239,7 @@ export async function insertReadingProgress(
 
 export async function getBookRows() {
   const result = await query(
-    'SELECT id, title, author, total_pages, completed_at FROM training_log.book ORDER BY created_at ASC'
+    'SELECT id, title, author, total_pages, starting_page, completed_at FROM training_log.book ORDER BY created_at ASC'
   );
   return result.rows;
 }

@@ -11,6 +11,7 @@ type NewBookDraft = {
   title: string;
   author: string;
   totalPages: number | null;
+  startingPage: number | null;
 };
 
 @Component({
@@ -32,7 +33,12 @@ export class ReadingLibraryComponent {
 
   readonly busy = signal(false);
   readonly addingBook = signal(false);
-  readonly draft = signal<NewBookDraft>({ title: '', author: '', totalPages: null });
+  readonly draft = signal<NewBookDraft>({
+    title: '',
+    author: '',
+    totalPages: null,
+    startingPage: null,
+  });
 
   readonly books = resource({
     params: () => this.readingService.version(),
@@ -48,17 +54,20 @@ export class ReadingLibraryComponent {
 
   readonly canSubmit = computed(() => {
     const d = this.draft();
+    const startingPage = d.startingPage ?? 0;
     return (
       !this.busy() &&
       d.title.trim().length > 0 &&
       d.author.trim().length > 0 &&
       typeof d.totalPages === 'number' &&
-      d.totalPages > 0
+      d.totalPages > 0 &&
+      startingPage >= 0 &&
+      startingPage < d.totalPages
     );
   });
 
   startAddingBook() {
-    this.draft.set({ title: '', author: '', totalPages: null });
+    this.draft.set({ title: '', author: '', totalPages: null, startingPage: null });
     this.addingBook.set(true);
   }
 
@@ -78,7 +87,8 @@ export class ReadingLibraryComponent {
       await this.readingService.addBook(
         d.title.trim(),
         d.author.trim(),
-        d.totalPages as number
+        d.totalPages as number,
+        d.startingPage ?? 0
       );
       this.addingBook.set(false);
     } finally {

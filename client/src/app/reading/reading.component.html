@@ -62,7 +62,7 @@
           <input
             matInput
             type="number"
-            min="0"
+            [min]="book.startingPage"
             [max]="book.totalPages"
             [value]="pageInputValue(book)"
             (input)="setPageInput(book, +$any($event.target).value)"
