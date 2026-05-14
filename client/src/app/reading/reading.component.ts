@@ -61,7 +61,7 @@ export class ReadingComponent {
   async saveProgress(book: Book) {
     const value = this.pageInputValue(book);
     if (this.busy() || value === book.currentPage) return;
-    if (value < 0 || value > book.totalPages) return;
+    if (value < book.startingPage || value > book.totalPages) return;
     this.busy.set(true);
     try {
       await this.readingService.updateProgress(book.id, value);

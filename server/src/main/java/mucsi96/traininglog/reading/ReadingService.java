@@ -7,7 +7,6 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -38,15 +37,21 @@ public class ReadingService {
   private final Clock clock;
 
   @Transactional
-  public BookSummary addBook(String title, String author, int totalPages) {
+  public BookSummary addBook(String title, String author, int totalPages, int startingPage) {
+    if (startingPage < 0 || startingPage >= totalPages) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+          "startingPage must be between 0 and " + (totalPages - 1));
+    }
     BookEntity book = BookEntity.builder()
         .id(UUID.randomUUID())
         .title(title)
         .author(author)
         .totalPages(totalPages)
+        .startingPage(startingPage)
         .createdAt(now())
         .build();
-    log.info("persisting book {} by {} with {} pages", title, author, totalPages);
+    log.info("persisting book {} by {} with {} pages (starting at {})",
+        title, author, totalPages, startingPage);
     return toSummary(bookRepository.save(book), List.of());
   }
 
@@ -54,9 +59,9 @@ public class ReadingService {
   public BookSummary updateProgress(UUID bookId, int currentPage) {
     BookEntity book = bookRepository.findById(bookId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Book not found"));
-    if (currentPage < 0 || currentPage > book.getTotalPages()) {
+    if (currentPage < book.getStartingPage() || currentPage > book.getTotalPages()) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-          "currentPage must be between 0 and " + book.getTotalPages());
+          "currentPage must be between " + book.getStartingPage() + " and " + book.getTotalPages());
     }
     ZonedDateTime timestamp = now();
     progressRepository.save(ReadingProgressEntity.builder()
@@ -111,9 +116,10 @@ public class ReadingService {
 
   @Transactional(readOnly = true)
   public Map<LocalDate, Integer> getPagesReadByDay(ZoneId zoneId) {
+    Map<UUID, Integer> lastSeen = bookRepository.findAll().stream()
+        .collect(Collectors.toMap(BookEntity::getId, BookEntity::getStartingPage));
     List<ReadingProgressEntity> all = progressRepository
         .findAll(Sort.by(Sort.Direction.ASC, "createdAt"));
-    Map<UUID, Integer> lastSeen = new HashMap<>();
     Map<LocalDate, Integer> pagesByDay = new TreeMap<>();
     for (ReadingProgressEntity entry : all) {
       int previous = lastSeen.getOrDefault(entry.getBookId(), 0);
@@ -134,17 +140,19 @@ public class ReadingService {
   private BookSummary toSummary(BookEntity book, List<ReadingProgressEntity> progress) {
     Optional<ReadingProgressEntity> latest = progress.stream()
         .max(Comparator.comparing(ReadingProgressEntity::getCreatedAt));
-    int currentPage = latest.map(ReadingProgressEntity::getCurrentPage).orElse(0);
+    int currentPage = latest.map(ReadingProgressEntity::getCurrentPage)
+        .orElse(book.getStartingPage());
     Optional<ZonedDateTime> startedAt = progress.stream()
         .map(ReadingProgressEntity::getCreatedAt)
         .min(Comparator.naturalOrder());
 
     Double averagePagesPerDay = null;
     Integer estimatedDaysRemaining = null;
-    if (startedAt.isPresent() && currentPage > 0) {
+    int pagesReadSinceStart = currentPage - book.getStartingPage();
+    if (startedAt.isPresent() && pagesReadSinceStart > 0) {
       long daysElapsed = Math.max(1,
           ChronoUnit.DAYS.between(startedAt.get().toLocalDate(), now().toLocalDate()) + 1);
-      double avg = (double) currentPage / daysElapsed;
+      double avg = (double) pagesReadSinceStart / daysElapsed;
       averagePagesPerDay = avg;
       int remainingPages = Math.max(0, book.getTotalPages() - currentPage);
       if (remainingPages == 0) {
@@ -159,6 +167,7 @@ public class ReadingService {
         .title(book.getTitle())
         .author(book.getAuthor())
         .totalPages(book.getTotalPages())
+        .startingPage(book.getStartingPage())
         .currentPage(currentPage)
         .createdAt(book.getCreatedAt())
         .startedAt(startedAt.orElse(null))
@@ -175,6 +184,7 @@ public class ReadingService {
     private String title;
     private String author;
     private int totalPages;
+    private int startingPage;
     private int currentPage;
     private ZonedDateTime createdAt;
     private ZonedDateTime startedAt;

@@ -263,6 +263,10 @@ paths:
                   type: integer
                   minimum: 1
                   maximum: 100000
+                startingPage:
+                  type: integer
+                  minimum: 0
+                  maximum: 100000
       responses:
         '200':
           description: OK
@@ -398,6 +402,7 @@ components:
         - title
         - author
         - totalPages
+        - startingPage
         - currentPage
         - createdAt
       properties:
@@ -409,6 +414,9 @@ components:
         author:
           type: string
         totalPages:
+          type: integer
+          format: int32
+        startingPage:
           type: integer
           format: int32
         currentPage:

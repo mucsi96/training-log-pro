@@ -98,6 +98,21 @@
           required
         />
       </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Starting page</mat-label>
+        <input
+          matInput
+          name="startingPage"
+          type="number"
+          min="0"
+          [ngModel]="draft().startingPage"
+          (ngModelChange)="updateDraft('startingPage', $event)"
+        />
+        <mat-hint
+          >Pages already read before tracking. Does not affect reading
+          pace.</mat-hint
+        >
+      </mat-form-field>
       <div class="actions">
         <button
           mat-stroked-button

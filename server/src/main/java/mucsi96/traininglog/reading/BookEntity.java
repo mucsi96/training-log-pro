@@ -31,6 +31,9 @@ public class BookEntity {
   @Column(name = "total_pages", nullable = false)
   private int totalPages;
 
+  @Column(name = "starting_page", nullable = false)
+  private int startingPage;
+
   @Column(name = "created_at", nullable = false)
   private ZonedDateTime createdAt;
 

@@ -73,11 +73,87 @@ test.describe('Reading', () => {
     expect(books[0].title).toBe('The Pragmatic Programmer');
     expect(books[0].author).toBe('David Thomas');
     expect(books[0].total_pages).toBe(320);
+    expect(books[0].starting_page).toBe(0);
 
     await page.goto('/');
     const section = page.getByRole('region', { name: 'Reading' });
     await expect(
       section.getByRole('heading', { name: 'The Pragmatic Programmer' })
+    ).toBeVisible();
+  });
+
+  test('adds a book with a starting page already read', async ({ page }) => {
+    await page.goto('/settings');
+    const library = page.getByRole('region', { name: 'Books' });
+
+    await library.getByRole('button', { name: 'Add book' }).click();
+    await library.getByLabel('Title').fill('Already Started');
+    await library.getByLabel('Author').fill('Author');
+    await library.getByLabel('Total pages').fill('300');
+    await library.getByLabel('Starting page').fill('80');
+    await library.getByRole('button', { name: 'Add book' }).click();
+
+    await expect(
+      library.getByRole('heading', { name: 'Already Started' })
+    ).toBeVisible();
+
+    const books = await getBookRows();
+    expect(books).toHaveLength(1);
+    expect(books[0].starting_page).toBe(80);
+    expect(books[0].total_pages).toBe(300);
+
+    await page.goto('/');
+    const section = page.getByRole('region', { name: 'Reading' });
+    await expect(
+      section.getByRole('article', { name: /Already Started, 80 of 300 pages/ })
+    ).toBeVisible();
+  });
+
+  test('starting page acts as baseline and does not inflate reading pace', async ({
+    page,
+  }) => {
+    const bookId = randomUUID();
+    await insertBook(
+      bookId,
+      'Resumed Book',
+      'Author',
+      300,
+      daysAgoAt(4, 8),
+      null,
+      100
+    );
+    await insertReadingProgress(bookId, 100, daysAgoAt(4, 8));
+    await insertReadingProgress(bookId, 140, daysAgoAt(0, 12));
+
+    await page.goto('/');
+    const section = page.getByRole('region', { name: 'Reading' });
+    await expect(
+      section.getByRole('article', { name: /Resumed Book, 140 of 300 pages/ })
+    ).toBeVisible();
+    await expect(section.getByText('8.0 pages/day avg')).toBeVisible();
+    await expect(section.getByText('About 20 days to finish')).toBeVisible();
+  });
+
+  test('only counts pages read past the starting page toward the daily goal', async ({
+    page,
+  }) => {
+    await setGoldenDayGoal(100, 250, 30);
+    const bookId = randomUUID();
+    await insertBook(
+      bookId,
+      'Resumed Book',
+      'Author',
+      300,
+      daysAgoAt(1, 8),
+      null,
+      100
+    );
+    await insertReadingProgress(bookId, 115, daysAgoAt(0, 12));
+
+    await page.goto('/');
+    const section = page.getByRole('region', { name: 'Reading' });
+    await expect(
+      section.getByRole('img', { name: '15 of 30 pages today' })
     ).toBeVisible();
   });
 

@@ -8,6 +8,7 @@ export type Book = {
   title: string;
   author: string;
   totalPages: number;
+  startingPage: number;
   currentPage: number;
   createdAt: Date;
   startedAt?: Date;
@@ -21,6 +22,7 @@ type BookDto = {
   title: string;
   author: string;
   totalPages: number;
+  startingPage: number;
   currentPage: number;
   createdAt: string;
   startedAt?: string;
@@ -67,11 +69,16 @@ export class ReadingService {
     }
   }
 
-  async addBook(title: string, author: string, totalPages: number): Promise<Book> {
+  async addBook(
+    title: string,
+    author: string,
+    totalPages: number,
+    startingPage: number
+  ): Promise<Book> {
     try {
       const book = await fetchJson<BookDto>(this.http, '/api/reading/books', {
         method: 'post',
-        body: { title, author, totalPages },
+        body: { title, author, totalPages, startingPage },
       });
       this.version.update((v) => v + 1);
       return toBook(book);

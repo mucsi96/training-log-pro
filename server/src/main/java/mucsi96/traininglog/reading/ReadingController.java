@@ -46,8 +46,9 @@ public class ReadingController {
   @PostMapping(value = "/books", consumes = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
   Book addBook(@Valid @RequestBody AddBookRequest request, @RequestHeader("X-Timezone") ZoneId zoneId) {
+    int startingPage = request.getStartingPage() == null ? 0 : request.getStartingPage();
     BookSummary saved = readingService.addBook(
-        request.getTitle().trim(), request.getAuthor().trim(), request.getTotalPages());
+        request.getTitle().trim(), request.getAuthor().trim(), request.getTotalPages(), startingPage);
     return toResponse(saved, zoneId);
   }
 
@@ -85,6 +86,7 @@ public class ReadingController {
         .title(book.getTitle())
         .author(book.getAuthor())
         .totalPages(book.getTotalPages())
+        .startingPage(book.getStartingPage())
         .currentPage(book.getCurrentPage())
         .createdAt(book.getCreatedAt().withZoneSameInstant(zoneId).toOffsetDateTime())
         .startedAt(book.getStartedAt() == null
@@ -110,6 +112,9 @@ public class ReadingController {
     @Min(1)
     @Max(100000)
     private Integer totalPages;
+    @Min(0)
+    @Max(100000)
+    private Integer startingPage;
   }
 
   @Data
