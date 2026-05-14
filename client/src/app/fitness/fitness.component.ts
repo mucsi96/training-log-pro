@@ -7,7 +7,7 @@ import { NgxEchartsModule } from 'ngx-echarts';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { map } from 'rxjs';
 import { FitnessMeasurement, FitnessService } from './fitness.service';
-import { PercentageDiffColorPipe } from '../utils/percentage-diff-color.pipe';
+import { DiffColorPipe } from '../utils/diff-color.pipe';
 import { PointsDiffPipe } from '../utils/points-diff.pipe';
 
 @Component({
@@ -16,7 +16,7 @@ import { PointsDiffPipe } from '../utils/points-diff.pipe';
     NgxEchartsModule,
     MatProgressSpinnerModule,
     DecimalPipe,
-    PercentageDiffColorPipe,
+    DiffColorPipe,
     PointsDiffPipe,
   ],
   selector: 'app-fitness',

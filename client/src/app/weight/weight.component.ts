@@ -6,17 +6,17 @@ import { NgxEchartsModule } from 'ngx-echarts';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { map } from 'rxjs';
 import { WeightMeasurement, WeightService } from './weight.service';
+import { AbsoluteDiffPipe } from '../utils/absolute-diff.pipe';
+import { DiffColorPipe } from '../utils/diff-color.pipe';
 import { MeasurementWithUnitPipe } from '../utils/measurement-with-unit.pipe';
-import { PercentageDiffColorPipe } from '../utils/percentage-diff-color.pipe';
-import { PercentageDiffPipe } from '../utils/percentage-diff.pipe';
 
 @Component({
   standalone: true,
   imports: [
     NgxEchartsModule,
     MatProgressSpinnerModule,
-    PercentageDiffPipe,
-    PercentageDiffColorPipe,
+    AbsoluteDiffPipe,
+    DiffColorPipe,
     MeasurementWithUnitPipe,
   ],
   selector: 'app-weight',
@@ -55,16 +55,14 @@ export class WeightComponent {
 
     return {
       date: latest.date,
-      weight: (latest.weight - initial.weight) / initial.weight,
+      weight: latest.weight - initial.weight,
       ...(initial.fatMassWeight &&
         latest.fatMassWeight && {
-          fatMassWeight:
-            (latest.fatMassWeight - initial.fatMassWeight) /
-            initial.fatMassWeight,
+          fatMassWeight: latest.fatMassWeight - initial.fatMassWeight,
         }),
       ...(initial.fatRatio &&
         latest.fatRatio && {
-          fatRatio: (latest.fatRatio - initial.fatRatio) / initial.fatRatio,
+          fatRatio: latest.fatRatio - initial.fatRatio,
         }),
     };
   });

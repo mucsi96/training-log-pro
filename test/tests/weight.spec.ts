@@ -24,9 +24,9 @@ test.describe('Weight', () => {
   test('should display weight diff for week', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
-    await expect(page.getByText('↓ 2.5 %')).toBeVisible();
-    await expect(page.getByText('↓ 29.2 %')).toBeVisible();
-    await expect(page.getByText('↑ 2.3 %')).toBeVisible();
+    await expect(page.getByText('↓ 2.2 kg')).toBeVisible();
+    await expect(page.getByText('↓ 9.0 kg')).toBeVisible();
+    await expect(page.getByText('↑ 0.8 %')).toBeVisible();
   });
 
   test('should display weight chart for week', async ({ page }) => {
@@ -48,9 +48,9 @@ test.describe('Weight', () => {
     await page.goto('/');
     await page.getByRole('link', { name: 'Month' }).click();
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
-    await expect(page.getByText('↓ 11 %')).toBeVisible();
-    await expect(page.getByText('↓ 36.8 %')).toBeVisible();
-    await expect(page.getByText('↑ 0.3 %')).toBeVisible();
+    await expect(page.getByText('↓ 10.8 kg')).toBeVisible();
+    await expect(page.getByText('↓ 12.7 kg')).toBeVisible();
+    await expect(page.getByText('↑ 0.1 %')).toBeVisible();
   });
 
   test('should display weight chart for month', async ({ page }) => {
@@ -73,9 +73,9 @@ test.describe('Weight', () => {
     await page.goto('/');
     await page.getByRole('link', { name: 'Year' }).click();
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
-    await expect(page.getByText('↓ 19.9 %')).toBeVisible();
-    await expect(page.getByText('↓ 43.5 %')).toBeVisible();
-    await expect(page.getByText('↓ 0.3 %')).toBeVisible();
+    await expect(page.getByText('↓ 21.7 kg')).toBeVisible();
+    await expect(page.getByText('↓ 16.8 kg')).toBeVisible();
+    await expect(page.getByText('↓ 0.1 %')).toBeVisible();
   });
 
   test('should display weight chart for year', async ({ page }) => {
@@ -98,9 +98,9 @@ test.describe('Weight', () => {
     await page.goto('/');
     await page.getByRole('link', { name: 'All time' }).click();
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
-    await expect(page.getByText('↓ 19.9 %')).toBeVisible();
-    await expect(page.getByText('↓ 43.5 %')).toBeVisible();
-    await expect(page.getByText('↓ 0.3 %')).toBeVisible();
+    await expect(page.getByText('↓ 21.7 kg')).toBeVisible();
+    await expect(page.getByText('↓ 16.8 kg')).toBeVisible();
+    await expect(page.getByText('↓ 0.1 %')).toBeVisible();
   });
 
   test('should display weight chart for all time', async ({ page }) => {
