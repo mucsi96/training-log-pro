@@ -93,6 +93,10 @@ test.describe('Reading', () => {
     await library.getByLabel('Starting page').fill('80');
     await library.getByRole('button', { name: 'Add book' }).click();
 
+    await expect(
+      library.getByRole('heading', { name: 'Already Started' })
+    ).toBeVisible();
+
     const books = await getBookRows();
     expect(books).toHaveLength(1);
     expect(books[0].starting_page).toBe(80);
