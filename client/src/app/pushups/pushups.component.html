@@ -1,6 +1,6 @@
 @let chart = chartOptions();
 @if (periodSets.isLoading() || settings.isLoading()) {
-<mat-spinner class="page-loading" />
+<div class="page-loading"><bt-bar-loader /></div>
 } @else {
 <section aria-labelledby="pushups-heading">
   <header class="header">

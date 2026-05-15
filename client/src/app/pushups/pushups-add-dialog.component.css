@@ -4,18 +4,3 @@
   padding-top: 8px;
   min-width: 320px;
 }
-
-.count-value {
-  color: var(--mat-sys-on-primary);
-  font-size: 56px;
-  font-weight: 700;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-
-.count-label {
-  color: var(--mat-app-text-color);
-  font-size: 13px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}

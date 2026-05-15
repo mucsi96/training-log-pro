@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationsService } from '@mucsi96/angular-material-theme';
 import { fetchJson } from '../utils/fetchJson';
 import { haltForNavigation } from '../utils/auth';
 
@@ -9,7 +9,7 @@ const REDIRECT_GUARD_KEY = 'withings-authorize-redirected';
 @Injectable({ providedIn: 'root' })
 export class WithingsService {
   private readonly http = inject(HttpClient);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notifications = inject(NotificationsService);
   private syncPromise: Promise<void> | undefined;
   private readonly _isSynced = signal(false);
   readonly isSynced = this._isSynced.asReadonly();
@@ -28,14 +28,9 @@ export class WithingsService {
           const authorizeUrl = httpError.error?._links?.oauth2Login?.href;
           if (httpError.status === 401 && authorizeUrl) {
             if (sessionStorage.getItem(REDIRECT_GUARD_KEY)) {
-              this.snackBar.open(
+              this.notifications.error(
                 'Unable to authorize Withings. Please try again later.',
-                'Close',
-                {
-                  duration: 5000,
-                  verticalPosition: 'top',
-                  panelClass: ['error'],
-                }
+                { duration: 5000 }
               );
             } else {
               sessionStorage.setItem(REDIRECT_GUARD_KEY, '1');
@@ -46,11 +41,7 @@ export class WithingsService {
               await haltForNavigation();
             }
           } else {
-            this.snackBar.open('Unable to sync with Withings', 'Close', {
-              duration: 3000,
-              verticalPosition: 'top',
-              panelClass: ['error'],
-            });
+            this.notifications.error('Unable to sync with Withings');
           }
         }
         this._isSynced.set(true);

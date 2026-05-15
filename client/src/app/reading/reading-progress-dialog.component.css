@@ -8,21 +8,6 @@
 
 .author {
   margin: 0;
-  color: var(--mat-app-text-color);
+  color: var(--bt-text-muted);
   font-size: 13px;
-}
-
-.page-value {
-  color: var(--mat-sys-on-primary);
-  font-size: 56px;
-  font-weight: 700;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-
-.page-label {
-  color: var(--mat-app-text-color);
-  font-size: 13px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
 }

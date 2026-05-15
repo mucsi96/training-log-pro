@@ -174,9 +174,7 @@ test.describe('Reading', () => {
     await section.getByRole('button', { name: /Clean Code/ }).click();
 
     const dialog = page.getByRole('dialog', { name: 'Clean Code' });
-    const dial = dialog.getByRole('spinbutton', {
-      name: 'Current page for Clean Code',
-    });
+    const dial = dialog.getByRole('slider', { name: 'Page' });
     await dial.focus();
     for (let i = 0; i < 5; i++) {
       await page.keyboard.press('PageUp');
@@ -244,9 +242,7 @@ test.describe('Reading', () => {
     await section.getByRole('button', { name: /Almost Done/ }).click();
 
     const dialog = page.getByRole('dialog', { name: 'Almost Done' });
-    const dial = dialog.getByRole('spinbutton', {
-      name: 'Current page for Almost Done',
-    });
+    const dial = dialog.getByRole('slider', { name: 'Page' });
     await dial.focus();
     for (let i = 0; i < 4; i++) {
       await page.keyboard.press('PageUp');

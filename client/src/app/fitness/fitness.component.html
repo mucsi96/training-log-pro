@@ -3,7 +3,7 @@
 @let todayDiffVal = todayDiff();
 @let periodDiffVal = periodDiff();
 @if (todayFitness.isLoading() || periodFitness.isLoading()) {
-<mat-spinner class="page-loading" />
+<div class="page-loading"><bt-bar-loader /></div>
 } @else if (value && chart) {
 <section>
   <div class="chart-wrapper">

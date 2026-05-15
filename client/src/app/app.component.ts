@@ -1,10 +1,10 @@
 import { Component, computed, effect, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { BarLoaderComponent } from '@mucsi96/angular-material-theme';
 import { HeaderComponent } from './header/header.component';
 import { AuthService } from './auth.service';
 import { StravaService } from './strava/strava.service';
@@ -20,7 +20,7 @@ import { WithingsService } from './withings/withings.service';
     MatButtonModule,
     MatMenuModule,
     MatTooltipModule,
-    MatProgressSpinnerModule,
+    BarLoaderComponent,
     HeaderComponent,
   ],
   templateUrl: './app.component.html',

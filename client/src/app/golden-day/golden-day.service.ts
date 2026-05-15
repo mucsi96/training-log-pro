@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationsService } from '@mucsi96/angular-material-theme';
 import { StravaService } from '../strava/strava.service';
 import { PushupsService } from '../pushups/pushups.service';
 import { ReadingService } from '../reading/reading.service';
@@ -23,7 +23,7 @@ export type GoldenDayStats = {
 @Injectable({ providedIn: 'root' })
 export class GoldenDayService {
   private readonly http = inject(HttpClient);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notifications = inject(NotificationsService);
   private readonly stravaService = inject(StravaService);
   readonly pushupsService = inject(PushupsService);
   readonly readingService = inject(ReadingService);
@@ -35,11 +35,7 @@ export class GoldenDayService {
     try {
       return await fetchJson<GoldenDayStats>(this.http, '/api/golden-day');
     } catch (e) {
-      this.snackBar.open('Unable to fetch golden day stats', 'Close', {
-        duration: 3000,
-        verticalPosition: 'top',
-        panelClass: ['error'],
-      });
+      this.notifications.error('Unable to fetch golden day stats');
       throw e;
     }
   }

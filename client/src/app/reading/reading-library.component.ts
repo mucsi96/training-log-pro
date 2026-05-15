@@ -4,7 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { BarLoaderComponent } from '@mucsi96/angular-material-theme';
 import { Book, ReadingService } from './reading.service';
 
 type NewBookDraft = {
@@ -22,7 +22,7 @@ type NewBookDraft = {
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
-    MatProgressSpinnerModule,
+    BarLoaderComponent,
   ],
   selector: 'app-reading-library',
   templateUrl: './reading-library.component.html',

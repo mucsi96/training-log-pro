@@ -86,7 +86,7 @@
 
 <main>
   @if (isAuthenticated() && !isReady()) {
-  <mat-spinner class="page-loading" />
+  <div class="page-loading"><bt-bar-loader /></div>
   } @else {
   <router-outlet></router-outlet>
   }

@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationsService } from '@mucsi96/angular-material-theme';
 import { fetchJson } from '../utils/fetchJson';
 
 export type Book = {
@@ -41,7 +41,7 @@ const toBook = (dto: BookDto): Book => ({
 @Injectable({ providedIn: 'root' })
 export class ReadingService {
   private readonly http = inject(HttpClient);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notifications = inject(NotificationsService);
   readonly version = signal(0);
 
   async getBooks(): Promise<Book[]> {
@@ -49,7 +49,7 @@ export class ReadingService {
       const books = await fetchJson<BookDto[]>(this.http, '/api/reading/books');
       return books.map(toBook);
     } catch (e) {
-      this.showError('Unable to fetch books');
+      this.notifications.error('Unable to fetch books');
       throw e;
     }
   }
@@ -68,7 +68,7 @@ export class ReadingService {
       this.version.update((v) => v + 1);
       return toBook(book);
     } catch (e) {
-      this.showError('Unable to add book');
+      this.notifications.error('Unable to add book');
       throw e;
     }
   }
@@ -83,7 +83,7 @@ export class ReadingService {
       this.version.update((v) => v + 1);
       return toBook(book);
     } catch (e) {
-      this.showError('Unable to update progress');
+      this.notifications.error('Unable to update progress');
       throw e;
     }
   }
@@ -95,16 +95,8 @@ export class ReadingService {
       });
       this.version.update((v) => v + 1);
     } catch (e) {
-      this.showError('Unable to delete book');
+      this.notifications.error('Unable to delete book');
       throw e;
     }
-  }
-
-  private showError(message: string) {
-    this.snackBar.open(message, 'Close', {
-      duration: 3000,
-      verticalPosition: 'top',
-      panelClass: ['error'],
-    });
   }
 }

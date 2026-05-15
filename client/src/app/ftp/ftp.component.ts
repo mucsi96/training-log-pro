@@ -4,7 +4,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { EChartsOption } from 'echarts';
 import { NgxEchartsModule } from 'ngx-echarts';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { BarLoaderComponent } from '@mucsi96/angular-material-theme';
 import { map } from 'rxjs';
 import { FtpMeasurement, FtpService } from './ftp.service';
 import { DiffColorPipe } from '../utils/diff-color.pipe';
@@ -14,7 +14,7 @@ import { PointsDiffPipe } from '../utils/points-diff.pipe';
   standalone: true,
   imports: [
     NgxEchartsModule,
-    MatProgressSpinnerModule,
+    BarLoaderComponent,
     DecimalPipe,
     DiffColorPipe,
     PointsDiffPipe,
