@@ -17,14 +17,16 @@
   </div>
   <article>
     <h2>Fitness</h2>
-    <p class="value">{{ value.fitness | number : "1.0-0" }}</p>
-    <p [class]="'diff-value ' + (todayDiffVal | diffColor)">
-      <span class="diff-label">Today</span>
-      <span>{{ todayDiffVal | pointsDiff }}</span>
+    <p class="value">
+      <span>{{ value.fitness | number : "1.0-0" }}</span>
+      @if (todayDiffVal) {
+      <span [class]="'today-diff ' + (todayDiffVal | diffColor)">
+        {{ todayDiffVal | pointsDiff }}
+      </span>
+      }
     </p>
-    <p [class]="'diff-value ' + (periodDiffVal | diffColor)">
-      <span class="diff-label">Period</span>
-      <span>{{ periodDiffVal | pointsDiff }}</span>
+    <p class="period-value">
+      {{ periodDiffVal | pointsDiff }}
     </p>
   </article>
 </section>
