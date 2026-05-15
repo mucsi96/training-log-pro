@@ -18,15 +18,12 @@ test.describe('Fitness diff', () => {
     const fitnessSection = page.locator('section').filter({ hasText: 'Fitness' });
     await expect(fitnessSection.getByRole('heading', { name: 'Fitness' })).toBeVisible();
 
-    const todayRow = fitnessSection.locator('p', { hasText: 'Today' });
-    await expect(todayRow).toBeVisible();
-    await expect(todayRow).toHaveText(/Today.*↑/);
-    await expect(todayRow).toHaveClass(/green/);
+    const todayDiff = fitnessSection.locator('.today-diff');
+    await expect(todayDiff).toHaveText(/↑/);
+    await expect(todayDiff).toHaveClass(/green/);
 
-    const periodRow = fitnessSection.locator('p', { hasText: 'Period' });
-    await expect(periodRow).toBeVisible();
-    await expect(periodRow).toHaveText(/Period.*↑/);
-    await expect(periodRow).toHaveClass(/green/);
+    const periodValue = fitnessSection.locator('.period-value');
+    await expect(periodValue).toHaveText(/↑/);
   });
 
   test('shows a downward today diff when fitness decays without a ride', async ({ page }) => {
@@ -39,9 +36,9 @@ test.describe('Fitness diff', () => {
     const fitnessSection = page.locator('section').filter({ hasText: 'Fitness' });
     await expect(fitnessSection.getByRole('heading', { name: 'Fitness' })).toBeVisible();
 
-    const todayRow = fitnessSection.locator('p', { hasText: 'Today' });
-    await expect(todayRow).toHaveText(/Today.*↓/);
-    await expect(todayRow).toHaveClass(/red/);
+    const todayDiff = fitnessSection.locator('.today-diff');
+    await expect(todayDiff).toHaveText(/↓/);
+    await expect(todayDiff).toHaveClass(/red/);
   });
 
   test('shows period diff over the selected month timeframe', async ({ page }) => {
@@ -55,9 +52,8 @@ test.describe('Fitness diff', () => {
     const fitnessSection = page.locator('section').filter({ hasText: 'Fitness' });
     await expect(fitnessSection.getByRole('heading', { name: 'Fitness' })).toBeVisible();
 
-    const periodRow = fitnessSection.locator('p', { hasText: 'Period' });
-    await expect(periodRow).toHaveText(/Period.*↑/);
-    await expect(periodRow).toHaveClass(/green/);
+    const periodValue = fitnessSection.locator('.period-value');
+    await expect(periodValue).toHaveText(/↑/);
   });
 
   test('renders a placeholder when there is only one fitness measurement', async ({ page }) => {
@@ -69,9 +65,7 @@ test.describe('Fitness diff', () => {
     const fitnessSection = page.locator('section').filter({ hasText: 'Fitness' });
     await expect(fitnessSection.getByRole('heading', { name: 'Fitness' })).toBeVisible();
 
-    const todayRow = fitnessSection.locator('p', { hasText: 'Today' });
-    await expect(todayRow).toHaveText(/Today.*-/);
-    const periodRow = fitnessSection.locator('p', { hasText: 'Period' });
-    await expect(periodRow).toHaveText(/Period.*-/);
+    await expect(fitnessSection.locator('.today-diff')).toHaveCount(0);
+    await expect(fitnessSection.locator('.period-value')).toHaveText('-');
   });
 });
