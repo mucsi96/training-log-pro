@@ -6,39 +6,8 @@
   position: relative;
   display: grid;
   justify-items: center;
-  padding: 32px 8px 8px;
-  min-width: 300px;
-  min-height: 300px;
-}
-
-.slider {
-  width: 280px;
-  height: 280px;
-}
-
-.count {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  align-content: center;
-  justify-items: center;
-  gap: 4px;
-  pointer-events: none;
-}
-
-.count-value {
-  color: var(--mat-sys-on-primary);
-  font-size: 56px;
-  font-weight: 700;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-
-.count-label {
-  color: var(--mat-app-text-color);
-  font-size: 13px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  padding: 36px 8px 8px;
+  min-width: 320px;
 }
 
 .range-label {
@@ -74,24 +43,17 @@
   right: 8px;
 }
 
-::ng-deep .rs-control .rs-handle {
-  background: #fff !important;
-  border: 4px solid hsl(220, 89%, 53%) !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+.count-value {
+  color: var(--mat-sys-on-primary);
+  font-size: 56px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
-::ng-deep .rs-control .rs-path-color {
-  background: hsl(213, 75%, 78%) !important;
-}
-
-::ng-deep .rs-control .rs-range-color {
-  background: hsl(220, 89%, 53%) !important;
-}
-
-::ng-deep .rs-control .rs-bar {
-  border: none !important;
-}
-
-::ng-deep .rs-control .rs-tooltip {
-  display: none !important;
+.count-label {
+  color: var(--mat-app-text-color);
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }

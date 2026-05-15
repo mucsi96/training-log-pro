@@ -1,0 +1,31 @@
+<svg
+  #svg
+  class="svg"
+  [attr.viewBox]="'0 0 ' + size + ' ' + size"
+  (pointerdown)="onPointerDown($event)"
+  (pointermove)="onPointerMove($event)"
+  (pointerup)="onPointerUp($event)"
+  (pointercancel)="onPointerUp($event)"
+>
+  <circle
+    class="track"
+    [attr.cx]="center"
+    [attr.cy]="center"
+    [attr.r]="trackRadius()"
+    [attr.stroke-width]="trackWidth()"
+  />
+  <path
+    class="range"
+    [attr.d]="arcPath()"
+    [attr.stroke-width]="trackWidth()"
+  />
+  <circle
+    class="handle"
+    [attr.cx]="handlePoint().x"
+    [attr.cy]="handlePoint().y"
+    [attr.r]="handleRadius()"
+  />
+</svg>
+<div class="center">
+  <ng-content />
+</div>

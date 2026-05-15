@@ -11,19 +11,17 @@
       <span>MAX</span>
       <span class="range-value">{{ data.maxSetSize }}</span>
     </div>
-    <div
-      #slider
+
+    <app-circular-slider
       class="slider"
-      role="slider"
-      [attr.aria-valuemin]="min"
-      [attr.aria-valuemax]="data.maxSetSize"
-      [attr.aria-valuenow]="count()"
-      aria-label="Pushup set count"
-    ></div>
-    <div class="count" aria-hidden="true">
+      [min]="min"
+      [max]="data.maxSetSize"
+      [(value)]="count"
+      ariaLabel="Pushup set count"
+    >
       <span class="count-value">{{ count() }}</span>
       <span class="count-label">pushups</span>
-    </div>
+    </app-circular-slider>
   </div>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
