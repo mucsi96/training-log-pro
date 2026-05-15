@@ -2,8 +2,8 @@
   <header class="header">
     <h1 id="settings-heading">Settings</h1>
     <p class="subtitle">
-      Configure goals and pushup input. Changes apply from today onwards and
-      never change the status of past golden days.
+      Configure golden day goals. Changes apply from today onwards and never
+      change the status of past golden days.
     </p>
   </header>
 
@@ -16,7 +16,7 @@
       [formRoot]="settingsForm"
       (submit)="save()"
     >
-      <h2 id="settings-form-heading">Goals and pushup input</h2>
+      <h2 id="settings-form-heading">Golden day goals</h2>
       <mat-form-field appearance="outline">
         <mat-label>Daily pushup goal</mat-label>
         <input
@@ -45,26 +45,6 @@
           [formField]="settingsForm.readingPagesGoal"
         />
         <span matTextSuffix>pages</span>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Default pushup set size</mat-label>
-        <input
-          matInput
-          type="number"
-          [formField]="settingsForm.pushupDefaultSetSize"
-        />
-        <span matTextSuffix>pushups</span>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Max pushup set size</mat-label>
-        <input
-          matInput
-          type="number"
-          [formField]="settingsForm.pushupMaxSetSize"
-        />
-        <span matTextSuffix>pushups</span>
       </mat-form-field>
 
       <div class="actions">

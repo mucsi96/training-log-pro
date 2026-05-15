@@ -379,8 +379,6 @@ components:
         - pushupGoal
         - elevationGoal
         - readingPagesGoal
-        - pushupDefaultSetSize
-        - pushupMaxSetSize
       properties:
         pushupGoal:
           type: integer
@@ -397,16 +395,6 @@ components:
           format: int32
           minimum: 0
           maximum: 10000
-        pushupDefaultSetSize:
-          type: integer
-          format: int32
-          minimum: 1
-          maximum: 500
-        pushupMaxSetSize:
-          type: integer
-          format: int32
-          minimum: 1
-          maximum: 500
     Book:
       type: object
       required:

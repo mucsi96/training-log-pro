@@ -510,3 +510,14 @@ databaseChangeLog:
         - renameTable:
             oldTableName: golden_day_goal
             newTableName: settings
+
+  - changeSet:
+      id: 18-drop-pushup-set-config-from-settings
+      author: mucsi96
+      changes:
+        - dropColumn:
+            tableName: settings
+            columnName: pushup_default_set_size
+        - dropColumn:
+            tableName: settings
+            columnName: pushup_max_set_size

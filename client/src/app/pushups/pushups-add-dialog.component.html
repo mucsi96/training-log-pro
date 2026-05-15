@@ -1,32 +1,23 @@
 <h2 mat-dialog-title>Add pushups</h2>
 <mat-dialog-content class="dialog-content">
-  <div class="slider-wrapper">
-    <div class="range-label range-label--min">
-      <mat-icon>fitness_center</mat-icon>
-      <span>MIN</span>
-      <span class="range-value">{{ min }}</span>
-    </div>
-    <div class="range-label range-label--max">
-      <mat-icon>fitness_center</mat-icon>
-      <span>MAX</span>
-      <span class="range-value">{{ data.maxSetSize }}</span>
-    </div>
-
-    <app-circular-slider
-      class="slider"
-      [min]="min"
-      [max]="data.maxSetSize"
-      [(value)]="count"
-      ariaLabel="Pushup set count"
-    >
-      <span class="count-value">{{ count() }}</span>
-      <span class="count-label">pushups</span>
-    </app-circular-slider>
-  </div>
+  <app-circular-slider
+    class="slider"
+    [(value)]="count"
+    ariaLabel="Pushup set count"
+  >
+    <span class="count-value">{{ count() }}</span>
+    <span class="count-label">pushups</span>
+  </app-circular-slider>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
   <button mat-button type="button" (click)="cancel()">Cancel</button>
-  <button mat-flat-button color="primary" type="button" (click)="add()">
+  <button
+    mat-flat-button
+    color="primary"
+    type="button"
+    [disabled]="!canAdd()"
+    (click)="add()"
+  >
     Add {{ count() }}
   </button>
 </mat-dialog-actions>

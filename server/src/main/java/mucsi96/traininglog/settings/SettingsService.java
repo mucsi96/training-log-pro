@@ -18,18 +18,11 @@ public class SettingsService {
   }
 
   @Transactional
-  public SettingsEntity update(
-      int pushupGoal,
-      int elevationGoal,
-      int readingPagesGoal,
-      int pushupDefaultSetSize,
-      int pushupMaxSetSize) {
+  public SettingsEntity update(int pushupGoal, int elevationGoal, int readingPagesGoal) {
     SettingsEntity entity = getCurrent();
     entity.setPushupGoal(pushupGoal);
     entity.setElevationGoal(elevationGoal);
     entity.setReadingPagesGoal(readingPagesGoal);
-    entity.setPushupDefaultSetSize(pushupDefaultSetSize);
-    entity.setPushupMaxSetSize(pushupMaxSetSize);
     return repository.save(entity);
   }
 }

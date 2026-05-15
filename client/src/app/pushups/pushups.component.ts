@@ -10,7 +10,6 @@ import { PushupsService } from './pushups.service';
 import { SettingsService } from '../settings/settings.service';
 import {
   PushupsAddDialogComponent,
-  PushupsAddDialogData,
   PushupsAddDialogResult,
 } from './pushups-add-dialog.component';
 
@@ -38,12 +37,6 @@ export class PushupsComponent {
   });
 
   readonly goal = computed(() => this.settings.value()?.pushupGoal ?? 0);
-  readonly defaultSetSize = computed(
-    () => this.settings.value()?.pushupDefaultSetSize ?? 5
-  );
-  readonly maxSetSize = computed(
-    () => this.settings.value()?.pushupMaxSetSize ?? 50
-  );
 
   readonly periodSets = resource({
     params: () => ({ period: this.period(), version: this.pushupsService.version() }),
@@ -122,13 +115,9 @@ export class PushupsComponent {
     }
     const ref = this.dialog.open<
       PushupsAddDialogComponent,
-      PushupsAddDialogData,
+      void,
       PushupsAddDialogResult
     >(PushupsAddDialogComponent, {
-      data: {
-        defaultSetSize: this.defaultSetSize(),
-        maxSetSize: this.maxSetSize(),
-      },
       autoFocus: 'dialog',
       restoreFocus: true,
     });

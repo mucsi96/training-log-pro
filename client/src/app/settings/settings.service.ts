@@ -8,8 +8,6 @@ export type Settings = {
   pushupGoal: number;
   elevationGoal: number;
   readingPagesGoal: number;
-  pushupDefaultSetSize: number;
-  pushupMaxSetSize: number;
 };
 
 @Injectable({ providedIn: 'root' })

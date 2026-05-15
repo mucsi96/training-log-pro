@@ -3,6 +3,7 @@ import {
   Component,
   ElementRef,
   computed,
+  effect,
   inject,
   input,
   model,
@@ -22,11 +23,10 @@ type Point = { x: number; y: number };
   styleUrl: './circular-slider.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    role: 'slider',
-    '[attr.aria-valuemin]': 'min()',
-    '[attr.aria-valuemax]': 'max()',
+    role: 'spinbutton',
     '[attr.aria-valuenow]': 'value()',
-    '[attr.aria-valuetext]': 'value() + " of " + max()',
+    '[attr.aria-valuemin]': '0',
+    '[attr.aria-valuetext]': 'ariaValueText()',
     '[attr.aria-label]': 'ariaLabel()',
     '[attr.tabindex]': 'disabled() ? -1 : 0',
     '[attr.aria-disabled]': 'disabled()',
@@ -34,11 +34,9 @@ type Point = { x: number; y: number };
   },
 })
 export class CircularSliderComponent {
-  readonly min = input(0);
-  readonly max = input(100);
-  readonly step = input(1);
-  readonly disabled = input(false);
   readonly ariaLabel = input('Value');
+  readonly unitsPerRevolution = input(10);
+  readonly disabled = input(false);
   readonly trackWidth = input(28);
   readonly handleRadius = input(16);
 
@@ -47,6 +45,8 @@ export class CircularSliderComponent {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly svgRef = viewChild.required<ElementRef<SVGSVGElement>>('svg');
   private readonly dragging = signal(false);
+  private readonly accumulator = signal(0);
+  private prevAngle: number | null = null;
 
   readonly size = SVG_SIZE;
   readonly center = CENTER;
@@ -54,9 +54,29 @@ export class CircularSliderComponent {
     () => CENTER - Math.max(this.trackWidth() / 2, this.handleRadius())
   );
 
-  private readonly angle = computed(() => this.valueToAngle(this.value()));
-  readonly arcPath = computed(() => this.buildArc(this.angle()));
-  readonly handlePoint = computed(() => this.angleToPoint(this.angle()));
+  private readonly displayAngle = computed(() => {
+    const v = this.value();
+    const units = this.unitsPerRevolution();
+    if (v > 0 && v % units === 0) {
+      return 359.999;
+    }
+    const degreesPerUnit = 360 / units;
+    const total = (v * degreesPerUnit) % 360;
+    return total < 0 ? total + 360 : total;
+  });
+
+  readonly arcPath = computed(() => this.buildArc(this.displayAngle()));
+  readonly handlePoint = computed(() => this.angleToPoint(this.displayAngle()));
+  readonly ariaValueText = computed(() => `${this.value()} pushups`);
+
+  constructor() {
+    effect(() => {
+      const v = this.value();
+      if (!this.dragging() && Math.round(this.accumulator()) !== v) {
+        this.accumulator.set(v);
+      }
+    });
+  }
 
   onPointerDown(event: PointerEvent): void {
     if (this.disabled()) {
@@ -65,16 +85,31 @@ export class CircularSliderComponent {
     event.preventDefault();
     const target = event.target as Element;
     target.setPointerCapture(event.pointerId);
+    this.accumulator.set(this.value());
+    this.prevAngle = this.pointToAngle(event);
     this.dragging.set(true);
-    this.commit(this.angleToValue(this.pointToAngle(event)));
     this.host.nativeElement.focus();
   }
 
   onPointerMove(event: PointerEvent): void {
-    if (!this.dragging() || this.disabled()) {
+    if (!this.dragging() || this.disabled() || this.prevAngle === null) {
       return;
     }
-    this.commit(this.angleToValue(this.pointToAngle(event)));
+    const angle = this.pointToAngle(event);
+    let delta = angle - this.prevAngle;
+    if (delta > 180) {
+      delta -= 360;
+    } else if (delta < -180) {
+      delta += 360;
+    }
+    this.prevAngle = angle;
+    const degreesPerUnit = 360 / this.unitsPerRevolution();
+    const next = Math.max(0, this.accumulator() + delta / degreesPerUnit);
+    this.accumulator.set(next);
+    const rounded = Math.round(next);
+    if (rounded !== this.value()) {
+      this.value.set(rounded);
+    }
   }
 
   onPointerUp(event: PointerEvent): void {
@@ -82,6 +117,7 @@ export class CircularSliderComponent {
       return;
     }
     this.dragging.set(false);
+    this.prevAngle = null;
     (event.target as Element).releasePointerCapture(event.pointerId);
   }
 
@@ -90,55 +126,33 @@ export class CircularSliderComponent {
       return;
     }
     const v = this.value();
-    const s = this.step();
     let next: number;
     switch (event.key) {
       case 'ArrowUp':
       case 'ArrowRight':
-        next = v + s;
+        next = v + 1;
         break;
       case 'ArrowDown':
       case 'ArrowLeft':
-        next = v - s;
+        next = v - 1;
         break;
       case 'PageUp':
-        next = v + s * 10;
+        next = v + this.unitsPerRevolution();
         break;
       case 'PageDown':
-        next = v - s * 10;
+        next = v - this.unitsPerRevolution();
         break;
       case 'Home':
-        next = this.min();
-        break;
-      case 'End':
-        next = this.max();
+        next = 0;
         break;
       default:
         return;
     }
     event.preventDefault();
-    this.commit(this.snap(next));
-  }
-
-  private valueToAngle(value: number): number {
-    const range = this.max() - this.min();
-    if (range <= 0) {
-      return 0;
+    const clamped = Math.max(0, next);
+    if (clamped !== v) {
+      this.value.set(clamped);
     }
-    const fraction = (value - this.min()) / range;
-    return Math.max(0, Math.min(1, fraction)) * 360;
-  }
-
-  private angleToValue(angle: number): number {
-    const range = this.max() - this.min();
-    return this.snap(this.min() + (angle / 360) * range);
-  }
-
-  private snap(value: number): number {
-    const step = this.step();
-    const min = this.min();
-    const snapped = Math.round((value - min) / step) * step + min;
-    return Math.max(min, Math.min(this.max(), snapped));
   }
 
   private angleToPoint(angleDeg: number): Point {
@@ -170,11 +184,5 @@ export class CircularSliderComponent {
       deg += 360;
     }
     return deg;
-  }
-
-  private commit(next: number): void {
-    if (next !== this.value()) {
-      this.value.set(next);
-    }
   }
 }

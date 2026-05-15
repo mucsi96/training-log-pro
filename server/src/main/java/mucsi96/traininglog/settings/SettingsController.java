@@ -31,9 +31,7 @@ public class SettingsController {
     SettingsEntity saved = settingsService.update(
         request.getPushupGoal(),
         request.getElevationGoal(),
-        request.getReadingPagesGoal(),
-        request.getPushupDefaultSetSize(),
-        request.getPushupMaxSetSize());
+        request.getReadingPagesGoal());
     return toResponse(saved);
   }
 
@@ -42,8 +40,6 @@ public class SettingsController {
         .pushupGoal(entity.getPushupGoal())
         .elevationGoal(entity.getElevationGoal())
         .readingPagesGoal(entity.getReadingPagesGoal())
-        .pushupDefaultSetSize(entity.getPushupDefaultSetSize())
-        .pushupMaxSetSize(entity.getPushupMaxSetSize())
         .build();
   }
 }
