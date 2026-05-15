@@ -103,8 +103,8 @@ export class PushupsComponent {
             color: 'hsl(0, 0%, 100%)',
             fontSize: 11,
             fontWeight: 600,
-            formatter: (params: { value: [Date, number | null] }) => {
-              const value = params.value[1];
+            formatter: (params) => {
+              const value = (params.value as [Date, number | null])[1];
               return value ? String(value) : '';
             },
           },
