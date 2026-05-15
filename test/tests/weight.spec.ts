@@ -21,6 +21,22 @@ test.describe('Weight', () => {
     await expect(page.getByText('35.3 %')).toBeVisible();
   });
 
+  test('should display today\'s diff inline with each value', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
+    const weightArticle = page.locator('article', { hasText: 'Weight' });
+    await expect(weightArticle.locator('.today-diff')).toHaveText('↓ 0.3 kg');
+    await expect(weightArticle.locator('.today-diff')).toHaveClass(/green/);
+
+    const fatArticle = page.locator('article', { hasText: 'Body fat' });
+    await expect(fatArticle.locator('.today-diff')).toHaveText('↓ 7.2 kg');
+    await expect(fatArticle.locator('.today-diff')).toHaveClass(/green/);
+
+    const ratioArticle = page.locator('article', { hasText: 'Fat ratio' });
+    await expect(ratioArticle.locator('.today-diff')).toHaveText('↑ 2.5 %');
+    await expect(ratioArticle.locator('.today-diff')).toHaveClass(/red/);
+  });
+
   test('should display weight diff for week', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();

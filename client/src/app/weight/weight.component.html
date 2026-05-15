@@ -1,7 +1,8 @@
-@let today = todayWeight.value();
-@let diffVal = diff();
+@let todayVal = today();
+@let todayDiffVal = todayDiff();
+@let periodDiffVal = periodDiff();
 @let chart = chartOptions();
-@if (todayWeight.isLoading() || periodHistory.isLoading()) {
+@if (todayHistory.isLoading() || periodHistory.isLoading()) {
 <mat-spinner class="page-loading" />
 } @else if (chart) {
 <section>
@@ -14,32 +15,47 @@
       [initOpts]="initOpts"
     ></div>
   </div>
-  @if (today) {
+  @if (todayVal) {
   <article>
     <h2>Weight</h2>
     <p class="value">
-      {{ today.weight | measurementWithUnit : "kg" }}
+      <span>{{ todayVal.weight | measurementWithUnit : "kg" }}</span>
+      @if (todayDiffVal?.weight; as weightDiff) {
+      <span [class]="'today-diff ' + (weightDiff | diffColor : 'inverse')">
+        {{ weightDiff | absoluteDiff : "kg" }}
+      </span>
+      }
     </p>
-    <p [class]="'diff-value ' + (diffVal?.weight | diffColor : 'inverse')">
-      {{ diffVal?.weight | absoluteDiff : "kg" }}
+    <p class="period-value">
+      {{ periodDiffVal?.weight | absoluteDiff : "kg" }}
     </p>
   </article>
   <article>
     <h2>Body fat</h2>
     <p class="value">
-      {{ today.fatMassWeight | measurementWithUnit : "kg" }}
+      <span>{{ todayVal.fatMassWeight | measurementWithUnit : "kg" }}</span>
+      @if (todayDiffVal?.fatMassWeight; as fatMassDiff) {
+      <span [class]="'today-diff ' + (fatMassDiff | diffColor : 'inverse')">
+        {{ fatMassDiff | absoluteDiff : "kg" }}
+      </span>
+      }
     </p>
-    <p [class]="'diff-value ' + (diffVal?.fatMassWeight | diffColor : 'inverse')">
-      {{ diffVal?.fatMassWeight | absoluteDiff : "kg" }}
+    <p class="period-value">
+      {{ periodDiffVal?.fatMassWeight | absoluteDiff : "kg" }}
     </p>
   </article>
   <article>
     <h2>Fat ratio</h2>
     <p class="value">
-      {{ today.fatRatio | measurementWithUnit : "%" }}
+      <span>{{ todayVal.fatRatio | measurementWithUnit : "%" }}</span>
+      @if (todayDiffVal?.fatRatio; as fatRatioDiff) {
+      <span [class]="'today-diff ' + (fatRatioDiff | diffColor : 'inverse')">
+        {{ fatRatioDiff | absoluteDiff : "%" }}
+      </span>
+      }
     </p>
-    <p [class]="'diff-value ' + (diffVal?.fatRatio | diffColor : 'inverse')">
-      {{ diffVal?.fatRatio | absoluteDiff : "%" }}
+    <p class="period-value">
+      {{ periodDiffVal?.fatRatio | absoluteDiff : "%" }}
     </p>
   </article>
   }
