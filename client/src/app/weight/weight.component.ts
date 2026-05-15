@@ -10,6 +10,29 @@ import { AbsoluteDiffPipe } from '../utils/absolute-diff.pipe';
 import { DiffColorPipe } from '../utils/diff-color.pipe';
 import { MeasurementWithUnitPipe } from '../utils/measurement-with-unit.pipe';
 
+type WeightDiff = {
+  weight: number;
+  fatMassWeight?: number;
+  fatRatio?: number;
+};
+
+function computeDiff(
+  initial: WeightMeasurement,
+  latest: WeightMeasurement,
+): WeightDiff {
+  return {
+    weight: latest.weight - initial.weight,
+    ...(initial.fatMassWeight &&
+      latest.fatMassWeight && {
+        fatMassWeight: latest.fatMassWeight - initial.fatMassWeight,
+      }),
+    ...(initial.fatRatio &&
+      latest.fatRatio && {
+        fatRatio: latest.fatRatio - initial.fatRatio,
+      }),
+  };
+}
+
 @Component({
   standalone: true,
   imports: [
@@ -31,7 +54,7 @@ export class WeightComponent {
 
   readonly initOpts = { renderer: 'svg' as const };
 
-  readonly todayWeight = resource({
+  readonly todayHistory = resource({
     loader: () => this.weightService.getTodayWeight(),
   });
 
@@ -40,7 +63,21 @@ export class WeightComponent {
     loader: ({ params: period }) => this.weightService.getWeight(period),
   });
 
-  readonly diff = computed(() => {
+  readonly today = computed<WeightMeasurement | undefined>(() => {
+    return this.todayHistory.value()?.measurements.at(-1);
+  });
+
+  readonly todayDiff = computed<WeightDiff | undefined>(() => {
+    const history = this.todayHistory.value();
+    const latest = history?.measurements.at(-1);
+    const previous = history?.baseline;
+    if (!history || !latest || !previous) {
+      return undefined;
+    }
+    return computeDiff(previous, latest);
+  });
+
+  readonly periodDiff = computed<WeightDiff | undefined>(() => {
     const history = this.periodHistory.value();
     if (!history || history.measurements.length === 0) {
       return undefined;
@@ -53,18 +90,7 @@ export class WeightComponent {
       return undefined;
     }
 
-    return {
-      date: latest.date,
-      weight: latest.weight - initial.weight,
-      ...(initial.fatMassWeight &&
-        latest.fatMassWeight && {
-          fatMassWeight: latest.fatMassWeight - initial.fatMassWeight,
-        }),
-      ...(initial.fatRatio &&
-        latest.fatRatio && {
-          fatRatio: latest.fatRatio - initial.fatRatio,
-        }),
-    };
+    return computeDiff(initial, latest);
   });
 
   readonly chartOptions = computed<EChartsOption | undefined>(() => {

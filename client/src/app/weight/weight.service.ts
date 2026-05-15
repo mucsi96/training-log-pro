@@ -62,8 +62,7 @@ export class WeightService {
     }
   }
 
-  async getTodayWeight(): Promise<WeightMeasurement | undefined> {
-    const { measurements } = await this.getWeight(1);
-    return measurements.at(-1);
+  async getTodayWeight(): Promise<WeightHistory> {
+    return this.getWeight(1);
   }
 }
