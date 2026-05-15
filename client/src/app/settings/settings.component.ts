@@ -34,6 +34,8 @@ export class SettingsComponent {
     pushupGoal: 100,
     elevationGoal: 250,
     readingPagesGoal: 0,
+    pushupDefaultSetSize: 5,
+    pushupMaxSetSize: 50,
   });
 
   readonly goalForm = form(this.model, (path) => {
@@ -46,6 +48,12 @@ export class SettingsComponent {
     required(path.readingPagesGoal);
     min(path.readingPagesGoal, 0);
     max(path.readingPagesGoal, 10000);
+    required(path.pushupDefaultSetSize);
+    min(path.pushupDefaultSetSize, 1);
+    max(path.pushupDefaultSetSize, 500);
+    required(path.pushupMaxSetSize);
+    min(path.pushupMaxSetSize, 1);
+    max(path.pushupMaxSetSize, 500);
   });
 
   readonly saving = signal(false);

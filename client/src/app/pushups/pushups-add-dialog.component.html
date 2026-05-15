@@ -1,0 +1,23 @@
+<h2 mat-dialog-title id="pushups-add-dialog-title">Add pushups</h2>
+<mat-dialog-content class="dialog-content">
+  <p class="hint">Drag the dial to set your latest set count.</p>
+  <div
+    #dial
+    class="dial"
+    role="slider"
+    [attr.aria-valuemin]="1"
+    [attr.aria-valuemax]="data.maxSetSize"
+    [attr.aria-valuenow]="count()"
+    [attr.aria-label]="'Pushup set count'"
+  ></div>
+  <p class="count" aria-live="polite">
+    <span class="count-value">{{ count() }}</span>
+    <span class="count-label">pushups</span>
+  </p>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()">Cancel</button>
+  <button mat-flat-button color="primary" type="button" (click)="add()">
+    Add {{ count() }}
+  </button>
+</mat-dialog-actions>

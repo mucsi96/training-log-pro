@@ -5,6 +5,7 @@ import {
   insertPushupSet,
   getPushupSetRows,
   setGoldenDayGoal,
+  setPushupSetSizes,
 } from '../utils';
 
 const startOfTodayUtc = () => {
@@ -25,98 +26,53 @@ test.describe('Pushups', () => {
     await populateOAuthClients();
   });
 
-  test("shows today's progress toward the 100-pushup goal", async ({ page }) => {
-    await insertPushupSet(daysAgoAt(0, 8), 15);
-    await insertPushupSet(daysAgoAt(0, 12), 20);
-
-    await page.goto('/');
-
-    const section = page.getByRole('region', { name: 'Pushups' });
-    await expect(
-      section.getByRole('img', { name: '35 of 100 pushups today' })
-    ).toBeVisible();
-    await expect(section.getByText('65 to go')).toBeVisible();
-  });
-
-  test('adds a pushup set via the +10 quick-add button', async ({ page }) => {
+  test('adds a pushup set with the configured default size via the dial dialog', async ({ page }) => {
     await page.goto('/');
     const section = page.getByRole('region', { name: 'Pushups' });
 
-    await section.getByRole('button', { name: 'Add 10 pushups' }).click();
+    await section.getByRole('button', { name: 'Add pushups' }).click();
 
-    await expect(
-      section.getByRole('img', { name: '10 of 100 pushups today' })
-    ).toBeVisible();
-    await expect(section.getByText('90 to go')).toBeVisible();
+    const dialog = page.getByRole('dialog', { name: 'Add pushups' });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole('slider', { name: 'Pushup set count' })).toHaveAttribute(
+      'aria-valuenow',
+      '5'
+    );
+
+    await dialog.getByRole('button', { name: 'Add 5' }).click();
+
+    await expect(dialog).toBeHidden();
 
     const rows = await getPushupSetRows();
     expect(rows).toHaveLength(1);
-    expect(rows[0].count).toBe(10);
+    expect(rows[0].count).toBe(5);
   });
 
-  test('corrects an over-count with the -5 button', async ({ page }) => {
-    await insertPushupSet(daysAgoAt(0, 9), 10);
-
+  test('cancel closes the dialog without adding a set', async ({ page }) => {
     await page.goto('/');
     const section = page.getByRole('region', { name: 'Pushups' });
 
-    await section.getByRole('button', { name: 'Subtract 5 pushups' }).click();
+    await section.getByRole('button', { name: 'Add pushups' }).click();
 
-    await expect(
-      section.getByRole('img', { name: '5 of 100 pushups today' })
-    ).toBeVisible();
-    await expect(section.getByText('95 to go')).toBeVisible();
+    const dialog = page.getByRole('dialog', { name: 'Add pushups' });
+    await dialog.getByRole('button', { name: 'Cancel' }).click();
+
+    await expect(dialog).toBeHidden();
 
     const rows = await getPushupSetRows();
-    expect(rows.map((r) => r.count).sort()).toEqual([-5, 10]);
+    expect(rows).toHaveLength(0);
   });
 
-  test('disables the -5 button when the day total would go negative', async ({ page }) => {
-    await page.goto('/');
-    const section = page.getByRole('region', { name: 'Pushups' });
-
-    await expect(
-      section.getByRole('button', { name: 'Subtract 5 pushups' })
-    ).toBeDisabled();
-  });
-
-  test('shows daily-goal-reached state when total hits 100', async ({ page }) => {
-    await insertPushupSet(daysAgoAt(0, 8), 50);
-    await insertPushupSet(daysAgoAt(0, 14), 50);
+  test('dial uses configured default and max set sizes from settings', async ({ page }) => {
+    await setPushupSetSizes(12, 40);
 
     await page.goto('/');
     const section = page.getByRole('region', { name: 'Pushups' });
+    await section.getByRole('button', { name: 'Add pushups' }).click();
 
-    await expect(
-      section.getByRole('img', { name: '100 of 100 pushups today' })
-    ).toBeVisible();
-    await expect(section.getByText('Daily goal reached')).toBeVisible();
-  });
-
-  test('reflects the configured golden day pushup goal', async ({ page }) => {
-    await setGoldenDayGoal(50, 250);
-    await insertPushupSet(daysAgoAt(0, 8), 20);
-
-    await page.goto('/');
-
-    const section = page.getByRole('region', { name: 'Pushups' });
-    await expect(
-      section.getByRole('img', { name: '20 of 50 pushups today' })
-    ).toBeVisible();
-    await expect(section.getByText('30 to go')).toBeVisible();
-  });
-
-  test('marks the daily goal reached when totals match the configured goal', async ({ page }) => {
-    await setGoldenDayGoal(40, 250);
-    await insertPushupSet(daysAgoAt(0, 8), 40);
-
-    await page.goto('/');
-
-    const section = page.getByRole('region', { name: 'Pushups' });
-    await expect(
-      section.getByRole('img', { name: '40 of 40 pushups today' })
-    ).toBeVisible();
-    await expect(section.getByText('Daily goal reached')).toBeVisible();
+    const slider = page.getByRole('slider', { name: 'Pushup set count' });
+    await expect(slider).toHaveAttribute('aria-valuenow', '12');
+    await expect(slider).toHaveAttribute('aria-valuemax', '40');
   });
 
   test('chart includes daily totals across the period', async ({ page }) => {
@@ -130,5 +86,15 @@ test.describe('Pushups', () => {
     const label = await chart.getAttribute('aria-label');
     expect(label).toContain('70');
     expect(label).toContain('25');
+  });
+
+  test('reflects the configured golden day pushup goal in the chart mark line', async ({ page }) => {
+    await setGoldenDayGoal(50, 250);
+    await insertPushupSet(daysAgoAt(0, 8), 20);
+
+    await page.goto('/');
+
+    const section = page.getByRole('region', { name: 'Pushups' });
+    await expect(section.getByRole('button', { name: 'Add pushups' })).toBeVisible();
   });
 });

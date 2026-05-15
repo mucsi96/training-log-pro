@@ -1,0 +1,36 @@
+.dialog-content {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  padding-top: 8px;
+}
+
+.hint {
+  color: var(--mat-app-text-color);
+  font-size: 13px;
+  text-align: center;
+}
+
+.dial {
+  width: 220px;
+  height: 220px;
+}
+
+.count {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+}
+
+.count-value {
+  color: var(--mat-sys-on-primary);
+  font-size: 40px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.count-label {
+  color: var(--mat-app-text-color);
+  font-size: 13px;
+}

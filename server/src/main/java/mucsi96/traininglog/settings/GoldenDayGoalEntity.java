@@ -32,6 +32,12 @@ public class GoldenDayGoalEntity {
   @Column(name = "reading_pages_goal", nullable = false)
   private int readingPagesGoal;
 
+  @Column(name = "pushup_default_set_size", nullable = false)
+  private int pushupDefaultSetSize;
+
+  @Column(name = "pushup_max_set_size", nullable = false)
+  private int pushupMaxSetSize;
+
   @Column(name = "updated_at", nullable = false, insertable = false)
   private ZonedDateTime updatedAt;
 }

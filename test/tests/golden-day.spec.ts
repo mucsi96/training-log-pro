@@ -87,7 +87,10 @@ test.describe('Golden day', () => {
     await expect(section.getByText('Today is golden')).toBeHidden();
 
     const pushups = page.getByRole('region', { name: 'Pushups' });
-    await pushups.getByRole('button', { name: 'Add 10 pushups' }).click();
+    await pushups.getByRole('button', { name: 'Add pushups' }).click();
+
+    const dialog = page.getByRole('dialog', { name: 'Add pushups' });
+    await dialog.getByRole('button', { name: 'Add 5' }).click();
 
     await expect(section.getByText('Today is golden')).toBeVisible();
     const month = section.getByText('This month').locator('..');

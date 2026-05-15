@@ -29,14 +29,22 @@ export async function cleanupDb() {
   await query('DELETE FROM training_log.oauth2_authorized_client');
   await query('DELETE FROM training_log.golden_day');
   await query(
-    `UPDATE training_log.golden_day_goal SET pushup_goal = $1, elevation_goal = $2, reading_pages_goal = $3 WHERE id = 1`,
-    [100, 250, 0]
+    `UPDATE training_log.golden_day_goal
+     SET pushup_goal = $1,
+         elevation_goal = $2,
+         reading_pages_goal = $3,
+         pushup_default_set_size = $4,
+         pushup_max_set_size = $5
+     WHERE id = 1`,
+    [100, 250, 0, 5, 50]
   );
 }
 
 export async function getGoldenDayGoal() {
   const result = await query(
-    'SELECT pushup_goal, elevation_goal, reading_pages_goal FROM training_log.golden_day_goal WHERE id = 1'
+    `SELECT pushup_goal, elevation_goal, reading_pages_goal,
+            pushup_default_set_size, pushup_max_set_size
+     FROM training_log.golden_day_goal WHERE id = 1`
   );
   return result.rows[0];
 }
@@ -49,6 +57,18 @@ export async function setGoldenDayGoal(
   await query(
     `UPDATE training_log.golden_day_goal SET pushup_goal = $1, elevation_goal = $2, reading_pages_goal = $3 WHERE id = 1`,
     [pushupGoal, elevationGoal, readingPagesGoal]
+  );
+}
+
+export async function setPushupSetSizes(
+  defaultSetSize: number,
+  maxSetSize: number
+) {
+  await query(
+    `UPDATE training_log.golden_day_goal
+     SET pushup_default_set_size = $1, pushup_max_set_size = $2
+     WHERE id = 1`,
+    [defaultSetSize, maxSetSize]
   );
 }
 

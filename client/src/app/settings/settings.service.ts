@@ -8,6 +8,8 @@ export type GoldenDayGoal = {
   pushupGoal: number;
   elevationGoal: number;
   readingPagesGoal: number;
+  pushupDefaultSetSize: number;
+  pushupMaxSetSize: number;
 };
 
 @Injectable({ providedIn: 'root' })
