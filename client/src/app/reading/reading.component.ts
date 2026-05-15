@@ -1,79 +1,34 @@
 import { Component, computed, inject, resource, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
+import { MatDialog } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import {
+  ReadingProgressDialogComponent,
+  ReadingProgressDialogData,
+  ReadingProgressDialogResult,
+} from './reading-progress-dialog.component';
 import { Book, ReadingService } from './reading.service';
 
 @Component({
   standalone: true,
-  imports: [
-    FormsModule,
-    MatButtonModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatProgressSpinnerModule,
-  ],
+  imports: [MatProgressSpinnerModule],
   selector: 'app-reading',
   templateUrl: './reading.component.html',
   styleUrl: './reading.component.css',
 })
 export class ReadingComponent {
   private readonly readingService = inject(ReadingService);
+  private readonly dialog = inject(MatDialog);
 
   readonly busy = signal(false);
-  readonly progressInputs = signal<Record<string, number>>({});
 
   readonly books = resource({
     params: () => this.readingService.version(),
     loader: () => this.readingService.getBooks(),
   });
 
-  readonly stats = resource({
-    params: () => this.readingService.version(),
-    loader: () => this.readingService.getStats(),
-  });
-
-  readonly dailyGoal = computed(() => this.stats.value()?.dailyPagesGoal ?? 0);
-  readonly todayPages = computed(() => this.stats.value()?.todayPages ?? 0);
-  readonly remaining = computed(() => Math.max(0, this.dailyGoal() - this.todayPages()));
-  readonly goalReached = computed(
-    () => this.dailyGoal() > 0 && this.todayPages() >= this.dailyGoal()
-  );
-  readonly progressPercent = computed(() => {
-    const goal = this.dailyGoal();
-    return goal > 0 ? Math.min(100, (this.todayPages() / goal) * 100) : 0;
-  });
-
   readonly inProgressBooks = computed(
     () => this.books.value()?.filter((book) => !book.completedAt) ?? []
   );
-
-  pageInputValue(book: Book): number {
-    return this.progressInputs()[book.id] ?? book.currentPage;
-  }
-
-  setPageInput(book: Book, value: number) {
-    this.progressInputs.update((map) => ({ ...map, [book.id]: value }));
-  }
-
-  async saveProgress(book: Book) {
-    const value = this.pageInputValue(book);
-    if (this.busy() || value === book.currentPage) return;
-    if (value < book.startingPage || value > book.totalPages) return;
-    this.busy.set(true);
-    try {
-      await this.readingService.updateProgress(book.id, value);
-      this.progressInputs.update((map) => {
-        const next = { ...map };
-        delete next[book.id];
-        return next;
-      });
-    } finally {
-      this.busy.set(false);
-    }
-  }
 
   bookProgressPercent(book: Book): number {
     return book.totalPages > 0
@@ -85,23 +40,53 @@ export class ReadingComponent {
     return `${book.title}, ${book.currentPage} of ${book.totalPages} pages`;
   }
 
-  estimatedFinishLabel(book: Book): string | null {
+  daysLabel(book: Book): string {
     if (book.estimatedDaysRemaining === undefined || book.estimatedDaysRemaining === null) {
-      return null;
+      return '–';
     }
-    if (book.estimatedDaysRemaining === 0) {
-      return 'Ready to finish';
-    }
-    if (book.estimatedDaysRemaining === 1) {
-      return 'About 1 day to finish';
-    }
-    return `About ${book.estimatedDaysRemaining} days to finish`;
+    return String(book.estimatedDaysRemaining);
   }
 
-  averageLabel(book: Book): string | null {
-    if (book.averagePagesPerDay === undefined || book.averagePagesPerDay === null) {
-      return null;
+  daysUnit(book: Book): string {
+    if (book.estimatedDaysRemaining === 1) {
+      return 'day left';
     }
-    return `${book.averagePagesPerDay.toFixed(1)} pages/day avg`;
+    return 'days left';
+  }
+
+  averageLabel(book: Book): string {
+    if (book.averagePagesPerDay === undefined || book.averagePagesPerDay === null) {
+      return '–';
+    }
+    return book.averagePagesPerDay.toFixed(1);
+  }
+
+  openProgressDialog(book: Book): void {
+    if (this.busy()) {
+      return;
+    }
+    const ref = this.dialog.open<
+      ReadingProgressDialogComponent,
+      ReadingProgressDialogData,
+      ReadingProgressDialogResult
+    >(ReadingProgressDialogComponent, {
+      data: { book },
+      autoFocus: 'dialog',
+      restoreFocus: true,
+    });
+    ref.afterClosed().subscribe((page) => {
+      if (typeof page === 'number' && page !== book.currentPage) {
+        this.updateProgress(book, page);
+      }
+    });
+  }
+
+  private async updateProgress(book: Book, page: number) {
+    this.busy.set(true);
+    try {
+      await this.readingService.updateProgress(book.id, page);
+    } finally {
+      this.busy.set(false);
+    }
   }
 }

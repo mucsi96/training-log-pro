@@ -37,20 +37,12 @@ test.describe('Reading', () => {
     await expect(
       section.getByText('No books in progress. Add a book in Settings.')
     ).toBeVisible();
-    await expect(section.getByRole('img', { name: '0 of 30 pages today' })).toBeVisible();
 
     await page.goto('/settings');
     const library = page.getByRole('region', { name: 'Books' });
     await expect(
       library.getByText('No books yet. Add your first one to get started.')
     ).toBeVisible();
-  });
-
-  test('hides daily goal ring when reading goal is 0', async ({ page }) => {
-    await page.goto('/');
-    const section = page.getByRole('region', { name: 'Reading' });
-    await expect(section).toBeVisible();
-    await expect(section.getByRole('img', { name: /pages today/ })).toBeHidden();
   });
 
   test('adds a new book through the settings page', async ({ page }) => {
@@ -105,7 +97,7 @@ test.describe('Reading', () => {
     await page.goto('/');
     const section = page.getByRole('region', { name: 'Reading' });
     await expect(
-      section.getByRole('article', { name: /Already Started, 80 of 300 pages/ })
+      section.getByRole('button', { name: /Already Started, 80 of 300 pages/ })
     ).toBeVisible();
   });
 
@@ -127,11 +119,13 @@ test.describe('Reading', () => {
 
     await page.goto('/');
     const section = page.getByRole('region', { name: 'Reading' });
-    await expect(
-      section.getByRole('article', { name: /Resumed Book, 140 of 300 pages/ })
-    ).toBeVisible();
-    await expect(section.getByText('8.0 pages/day avg')).toBeVisible();
-    await expect(section.getByText('About 20 days to finish')).toBeVisible();
+    const book = section.getByRole('button', {
+      name: /Resumed Book, 140 of 300 pages/,
+    });
+    await expect(book).toBeVisible();
+    await expect(book.getByText('8.0', { exact: true })).toBeVisible();
+    await expect(book.getByText('20', { exact: true })).toBeVisible();
+    await expect(book.getByText('days left')).toBeVisible();
   });
 
   test('only counts pages read past the starting page toward the daily goal', async ({
@@ -151,10 +145,8 @@ test.describe('Reading', () => {
     await insertReadingProgress(bookId, 115, daysAgoAt(0, 12));
 
     await page.goto('/');
-    const section = page.getByRole('region', { name: 'Reading' });
-    await expect(
-      section.getByRole('img', { name: '15 of 30 pages today' })
-    ).toBeVisible();
+    const golden = page.getByRole('region', { name: 'Golden day' });
+    await expect(golden.getByText('15/30 pages')).toBeVisible();
   });
 
   test('does not expose book add or remove controls on the dashboard', async ({
@@ -179,17 +171,27 @@ test.describe('Reading', () => {
 
     await page.goto('/');
     const section = page.getByRole('region', { name: 'Reading' });
-    const input = section.getByLabel('Current page for Clean Code');
-    await input.fill('120');
-    await section.getByRole('button', { name: 'Save' }).click();
+    await section.getByRole('button', { name: /Clean Code/ }).click();
+
+    const dialog = page.getByRole('dialog', { name: 'Clean Code' });
+    const dial = dialog.getByRole('spinbutton', {
+      name: 'Current page for Clean Code',
+    });
+    await dial.focus();
+    for (let i = 0; i < 5; i++) {
+      await page.keyboard.press('PageUp');
+    }
+    await expect(dial).toHaveAttribute('aria-valuenow', '125');
+    await dialog.getByRole('button', { name: 'Save 125' }).click();
+    await expect(dialog).toBeHidden();
 
     await expect(
-      section.getByRole('article', { name: /Clean Code, 120 of 400 pages/ })
+      section.getByRole('button', { name: /Clean Code, 125 of 400 pages/ })
     ).toBeVisible();
 
     const progress = await getReadingProgressRows();
     expect(progress).toHaveLength(1);
-    expect(progress[0].current_page).toBe(120);
+    expect(progress[0].current_page).toBe(125);
   });
 
   test('aggregates pages read across books toward the daily goal', async ({ page }) => {
@@ -204,9 +206,8 @@ test.describe('Reading', () => {
     await insertReadingProgress(bookB, 8, daysAgoAt(0, 12));
 
     await page.goto('/');
-    const section = page.getByRole('region', { name: 'Reading' });
-    await expect(section.getByRole('img', { name: '20 of 30 pages today' })).toBeVisible();
-    await expect(section.getByText('10 pages to go')).toBeVisible();
+    const golden = page.getByRole('region', { name: 'Golden day' });
+    await expect(golden.getByText('20/30 pages')).toBeVisible();
   });
 
   test('shows daily goal reached when total pages match the goal', async ({ page }) => {
@@ -217,9 +218,8 @@ test.describe('Reading', () => {
     await insertReadingProgress(bookId, 30, daysAgoAt(0, 12));
 
     await page.goto('/');
-    const section = page.getByRole('region', { name: 'Reading' });
-    await expect(section.getByRole('img', { name: '30 of 30 pages today' })).toBeVisible();
-    await expect(section.getByText('Daily goal reached')).toBeVisible();
+    const golden = page.getByRole('region', { name: 'Golden day' });
+    await expect(golden.getByText('30/30 pages')).toBeVisible();
   });
 
   test('shows estimated days to finish based on reading velocity', async ({ page }) => {
@@ -230,8 +230,9 @@ test.describe('Reading', () => {
 
     await page.goto('/');
     const section = page.getByRole('region', { name: 'Reading' });
-    await expect(section.getByText(/About \d+ days? to finish/)).toBeVisible();
-    await expect(section.getByText(/pages\/day avg/)).toBeVisible();
+    const book = section.getByRole('button', { name: /Long Book/ });
+    await expect(book.getByText(/days? left/)).toBeVisible();
+    await expect(book.getByText('pages/day')).toBeVisible();
   });
 
   test('marks a book as finished when current page reaches total pages', async ({ page }) => {
@@ -240,8 +241,19 @@ test.describe('Reading', () => {
 
     await page.goto('/');
     const section = page.getByRole('region', { name: 'Reading' });
-    await section.getByLabel('Current page for Almost Done').fill('100');
-    await section.getByRole('button', { name: 'Save' }).click();
+    await section.getByRole('button', { name: /Almost Done/ }).click();
+
+    const dialog = page.getByRole('dialog', { name: 'Almost Done' });
+    const dial = dialog.getByRole('spinbutton', {
+      name: 'Current page for Almost Done',
+    });
+    await dial.focus();
+    for (let i = 0; i < 4; i++) {
+      await page.keyboard.press('PageUp');
+    }
+    await expect(dial).toHaveAttribute('aria-valuenow', '100');
+    await dialog.getByRole('button', { name: 'Save 100' }).click();
+    await expect(dialog).toBeHidden();
 
     await expect(
       section.getByRole('heading', { name: 'Almost Done' })
@@ -316,8 +328,7 @@ test.describe('Reading', () => {
     await insertReadingProgress(bookId, 20, daysAgoAt(0, 12));
 
     await page.goto('/');
-    const section = page.getByRole('region', { name: 'Reading' });
-    await expect(section.getByRole('img', { name: '20 of 50 pages today' })).toBeVisible();
-    await expect(section.getByText('30 pages to go')).toBeVisible();
+    const golden = page.getByRole('region', { name: 'Golden day' });
+    await expect(golden.getByText('20/50 pages')).toBeVisible();
   });
 });
