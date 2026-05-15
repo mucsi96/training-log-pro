@@ -22,8 +22,8 @@ import mucsi96.traininglog.pushups.PushupSetRepository;
 import mucsi96.traininglog.reading.ReadingService;
 import mucsi96.traininglog.rides.Ride;
 import mucsi96.traininglog.rides.RideRepository;
-import mucsi96.traininglog.settings.GoldenDayGoalEntity;
-import mucsi96.traininglog.settings.GoldenDayGoalService;
+import mucsi96.traininglog.settings.SettingsEntity;
+import mucsi96.traininglog.settings.SettingsService;
 
 @Service
 @RequiredArgsConstructor
@@ -32,14 +32,14 @@ public class GoldenDayService {
   private final PushupSetRepository pushupSetRepository;
   private final RideRepository rideRepository;
   private final GoldenDayRepository goldenDayRepository;
-  private final GoldenDayGoalService goldenDayGoalService;
+  private final SettingsService settingsService;
   private final ReadingService readingService;
   private final Clock clock;
 
   @Transactional
   public GoldenDayStats getStats(ZoneId zoneId) {
     LocalDate today = LocalDate.now(clock.withZone(zoneId));
-    GoldenDayGoalEntity goal = goldenDayGoalService.getCurrent();
+    SettingsEntity goal = settingsService.getCurrent();
 
     Map<LocalDate, Integer> pushupsByDay = pushupSetRepository
         .findAll(Sort.by(Sort.Direction.ASC, "createdAt")).stream()

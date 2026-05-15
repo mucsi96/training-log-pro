@@ -17,18 +17,18 @@ import mucsi96.traininglog.api.GoldenDayGoal;
 @RequiredArgsConstructor
 public class SettingsController {
 
-  private final GoldenDayGoalService goldenDayGoalService;
+  private final SettingsService settingsService;
 
   @GetMapping("/golden-day-goal")
   @PreAuthorize("hasAuthority('APPROLE_WorkoutReader') and hasAuthority('SCOPE_readWorkouts')")
   GoldenDayGoal getGoldenDayGoal() {
-    return toResponse(goldenDayGoalService.getCurrent());
+    return toResponse(settingsService.getCurrent());
   }
 
   @PutMapping(value = "/golden-day-goal", consumes = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
   GoldenDayGoal updateGoldenDayGoal(@Valid @RequestBody GoldenDayGoal request) {
-    GoldenDayGoalEntity saved = goldenDayGoalService.update(
+    SettingsEntity saved = settingsService.update(
         request.getPushupGoal(),
         request.getElevationGoal(),
         request.getReadingPagesGoal(),
@@ -37,7 +37,7 @@ public class SettingsController {
     return toResponse(saved);
   }
 
-  private GoldenDayGoal toResponse(GoldenDayGoalEntity entity) {
+  private GoldenDayGoal toResponse(SettingsEntity entity) {
     return GoldenDayGoal.builder()
         .pushupGoal(entity.getPushupGoal())
         .elevationGoal(entity.getElevationGoal())

@@ -24,7 +24,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import mucsi96.traininglog.settings.GoldenDayGoalService;
+import mucsi96.traininglog.settings.SettingsService;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +33,7 @@ public class ReadingService {
 
   private final BookRepository bookRepository;
   private final ReadingProgressRepository progressRepository;
-  private final GoldenDayGoalService goldenDayGoalService;
+  private final SettingsService settingsService;
   private final Clock clock;
 
   @Transactional
@@ -104,7 +104,7 @@ public class ReadingService {
 
   @Transactional(readOnly = true)
   public ReadingStats getStats(ZoneId zoneId) {
-    int dailyGoal = goldenDayGoalService.getCurrent().getReadingPagesGoal();
+    int dailyGoal = settingsService.getCurrent().getReadingPagesGoal();
     LocalDate today = LocalDate.now(clock.withZone(zoneId));
     int todayPages = getPagesReadByDay(zoneId).getOrDefault(today, 0);
     return ReadingStats.builder()
