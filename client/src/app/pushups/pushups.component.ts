@@ -83,7 +83,7 @@ export class PushupsComponent {
     return {
       aria: { enabled: true },
       animation: false,
-      grid: { top: 10, right: 10, bottom: 10, left: 10 },
+      grid: { top: 24, right: 10, bottom: 10, left: 10 },
       xAxis: {
         type: 'time',
         show: false,
@@ -97,6 +97,17 @@ export class PushupsComponent {
           type: 'bar',
           data,
           itemStyle: { color: 'hsl(220, 89%, 53%)' },
+          label: {
+            show: true,
+            position: 'top',
+            color: 'hsl(0, 0%, 100%)',
+            fontSize: 11,
+            fontWeight: 600,
+            formatter: (params) => {
+              const value = (params.value as [Date, number | null])[1];
+              return value ? String(value) : '';
+            },
+          },
           markLine: {
             silent: true,
             symbol: 'none',
