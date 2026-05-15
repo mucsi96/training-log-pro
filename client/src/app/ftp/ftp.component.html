@@ -1,0 +1,33 @@
+@let value = latest();
+@let chart = chartOptions();
+@let todayDiffVal = todayDiff();
+@let periodDiffVal = periodDiff();
+@if (todayFtp.isLoading() || periodFtp.isLoading()) {
+<mat-spinner class="page-loading" />
+} @else if (value && chart) {
+<section>
+  <div class="chart-wrapper">
+    <div
+      role="img"
+      class="chart"
+      echarts
+      [options]="chart"
+      [initOpts]="initOpts"
+    ></div>
+  </div>
+  <article>
+    <h2>FTP/kg</h2>
+    <p class="value">
+      <span>{{ value.ftpPerKg | number : "1.1-1" }}</span>
+      @if (todayDiffVal) {
+      <span [class]="'today-diff ' + (todayDiffVal | diffColor)">
+        {{ todayDiffVal | pointsDiff }}
+      </span>
+      }
+    </p>
+    <p class="period-value">
+      {{ periodDiffVal | pointsDiff }}
+    </p>
+  </article>
+</section>
+}

@@ -521,3 +521,37 @@ databaseChangeLog:
         - dropColumn:
             tableName: settings
             columnName: pushup_max_set_size
+
+  - changeSet:
+      id: 19-create-ftp-table
+      author: mucsi96
+      changes:
+        - createTable:
+            tableName: ftp
+            columns:
+              - column:
+                  name: created_at
+                  type: timestamp(6)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: pulled_at
+                  type: timestamp(6)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: ftp
+                  type: float4
+                  constraints:
+                    nullable: true
+              - column:
+                  name: weight
+                  type: float4
+                  constraints:
+                    nullable: true
+              - column:
+                  name: ftp_per_kg
+                  type: float4
+                  constraints:
+                    nullable: true
