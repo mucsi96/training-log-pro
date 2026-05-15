@@ -29,10 +29,11 @@
             ],
             "styles": [
               "@angular/material/prebuilt-themes/cyan-orange.css",
+              "node_modules/round-slider/dist/roundslider.min.css",
               "src/styles.css"
             ],
             "scripts": [],
-            "allowedCommonJsDependencies": ["nexusui"]
+            "allowedCommonJsDependencies": ["round-slider", "jquery"]
           },
           "configurations": {
             "production": {
