@@ -15,11 +15,10 @@ test.describe('FTP/kg diff', () => {
   test('shows today and period change when FTP/kg has progressed', async ({ page }) => {
     // Past weight establishes the divisor for earlier days; the mock Withings
     // server provides today's weight on sync.
-    await insertWeight(7, 80, 20, 16);
-    // Week ago: a 60-minute steady effort at 200W (eFTP = 200W).
-    await insertRide(7, 600, 30000, 3600, 'Week ago', 'Ride', 100, 200, 80);
-    // Today: a 60-minute effort at 240W (eFTP = 240W), higher than the
-    // rolling-window max from a week ago, lifting today's FTP/kg.
+    await insertWeight(1, 80, 20, 16);
+    // Yesterday: a 60-minute steady effort at 200W (eFTP = 200W).
+    await insertRide(1, 600, 30000, 3600, 'Yesterday', 'Ride', 100, 200, 80);
+    // Today: a 60-minute effort at 240W (eFTP = 240W), lifting today's FTP/kg.
     await insertRide(0, 720, 32000, 3600, 'Today', 'Ride', 100, 240, 90);
 
     await page.goto('/');

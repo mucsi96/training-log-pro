@@ -29,7 +29,6 @@ import mucsi96.traininglog.weight.WeightRepository;
 @RequiredArgsConstructor
 @Slf4j
 public class FtpService {
-  private static final int ROLLING_WINDOW_DAYS = 42;
   private static final int MIN_RIDE_SECONDS = 1200;
   private static final double DURATION_EXPONENT = 0.07;
   private static final float COMPARISON_EPSILON = 1e-3f;
@@ -115,28 +114,16 @@ public class FtpService {
                 Collectors.maxBy((a, b) -> a.getCreatedAt().compareTo(b.getCreatedAt())),
                 latest -> latest.map(w -> (double) w.getWeight()).orElse(0.0))));
 
-    if (rideEftpByDay.isEmpty()) {
-      return Map.of();
-    }
-
-    LocalDate today = LocalDate.now(clock.withZone(zoneId));
-    LocalDate cursor = rideEftpByDay.firstKey();
-    LocalDate end = today.isAfter(cursor) ? today : cursor;
-
     Map<ZonedDateTime, Computed> result = new LinkedHashMap<>();
-    while (!cursor.isAfter(end)) {
-      LocalDate windowStart = cursor.minusDays(ROLLING_WINDOW_DAYS - 1L);
-      double eftp = rideEftpByDay.subMap(windowStart, true, cursor, true).values().stream()
-          .mapToDouble(Double::doubleValue)
-          .max()
-          .orElse(0.0);
-      Map.Entry<LocalDate, Double> weightEntry = weightByDay.floorEntry(cursor);
+    for (Map.Entry<LocalDate, Double> entry : rideEftpByDay.entrySet()) {
+      LocalDate day = entry.getKey();
+      double eftp = entry.getValue();
+      Map.Entry<LocalDate, Double> weightEntry = weightByDay.floorEntry(day);
       if (eftp > 0 && weightEntry != null && weightEntry.getValue() > 0) {
-        ZonedDateTime dayStart = cursor.atStartOfDay(zoneId).withZoneSameInstant(ZoneOffset.UTC);
+        ZonedDateTime dayStart = day.atStartOfDay(zoneId).withZoneSameInstant(ZoneOffset.UTC);
         double weight = weightEntry.getValue();
         result.put(dayStart, new Computed((float) eftp, (float) weight, (float) (eftp / weight)));
       }
-      cursor = cursor.plusDays(1);
     }
     return result;
   }
