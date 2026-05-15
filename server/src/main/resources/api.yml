@@ -230,6 +230,13 @@ paths:
 
   /ftp:
     get:
+      parameters:
+        - in: query
+          name: period
+          required: false
+          schema:
+            type: integer
+            minimum: 1
       responses:
         '200':
           description: OK

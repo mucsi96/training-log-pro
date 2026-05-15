@@ -128,6 +128,16 @@ public class FtpService {
     return result;
   }
 
+  // Riegel power-duration model inverted to solve for FTP: assuming the ride
+  // was a maximal effort, the max power sustainable for duration t is
+  //   P(t) = FTP * (1h / t)^DURATION_EXPONENT
+  // so the FTP that would explain a ride with Normalized Power NP held for
+  // duration t is
+  //   FTP = NP * (t / 1h)^DURATION_EXPONENT.
+  // The exponent is positive on purpose: a long ride held at a given NP
+  // implies a higher FTP than a short ride at the same NP, because sustaining
+  // power gets harder with duration. Non-maximal rides therefore yield a
+  // lower-bound FTP estimate, which is the intended interpretation.
   private static double rideEftp(Ride ride) {
     double durationHours = ride.getMovingTime() / 3600.0;
     return ride.getWeightedAverageWatts() * Math.pow(durationHours, DURATION_EXPONENT);

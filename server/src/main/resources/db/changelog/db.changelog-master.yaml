@@ -539,19 +539,19 @@ databaseChangeLog:
                   name: pulled_at
                   type: timestamp(6)
                   constraints:
-                    nullable: true
+                    nullable: false
               - column:
                   name: ftp
                   type: float4
                   constraints:
-                    nullable: true
+                    nullable: false
               - column:
                   name: weight
                   type: float4
                   constraints:
-                    nullable: true
+                    nullable: false
               - column:
                   name: ftp_per_kg
                   type: float4
                   constraints:
-                    nullable: true
+                    nullable: false
