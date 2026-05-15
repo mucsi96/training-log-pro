@@ -1,52 +1,28 @@
-@if (books.isLoading() || stats.isLoading()) {
+@if (books.isLoading()) {
 <mat-spinner class="page-loading" />
 } @else {
 <section class="reading" aria-labelledby="reading-heading">
   <header class="header">
     <h2 id="reading-heading">Reading</h2>
-    @if (dailyGoal() > 0) {
-    <p class="subtitle">
-      @if (goalReached()) { Daily goal reached } @else {
-      {{ remaining() }} pages to go
-      }
-    </p>
-    }
   </header>
-
-  @if (dailyGoal() > 0) {
-  <div
-    class="ring-wrapper"
-    role="img"
-    [attr.aria-label]="todayPages() + ' of ' + dailyGoal() + ' pages today'"
-  >
-    <svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
-      <circle class="ring-track" cx="60" cy="60" r="52" />
-      <circle
-        class="ring-progress"
-        [class.ring-progress--complete]="goalReached()"
-        cx="60"
-        cy="60"
-        r="52"
-        [style.stroke-dashoffset.px]="326.7 - (326.7 * progressPercent()) / 100"
-      />
-    </svg>
-    <div class="ring-content">
-      <span class="ring-count">{{ todayPages() }}</span>
-      <span class="ring-goal">/ {{ dailyGoal() }}</span>
-    </div>
-  </div>
-  }
 
   <div class="books">
     @if (inProgressBooks().length === 0) {
     <p class="empty">No books in progress. Add a book in Settings.</p>
     } @for (book of inProgressBooks(); track book.id) {
-    <article class="book" [attr.aria-label]="ariaForBook(book)">
+    <div
+      class="book"
+      role="button"
+      [attr.tabindex]="busy() ? -1 : 0"
+      [attr.aria-label]="ariaForBook(book)"
+      [attr.aria-disabled]="busy()"
+      (click)="openProgressDialog(book)"
+      (keydown.enter)="openProgressDialog(book); $event.preventDefault()"
+      (keydown.space)="openProgressDialog(book); $event.preventDefault()"
+    >
       <header class="book-header">
-        <div class="book-meta">
-          <h3 class="book-title">{{ book.title }}</h3>
-          <p class="book-author">{{ book.author }}</p>
-        </div>
+        <h3 class="book-title">{{ book.title }}</h3>
+        <p class="book-author">{{ book.author }}</p>
       </header>
 
       <div class="book-progress-bar" aria-hidden="true">
@@ -56,39 +32,30 @@
         ></div>
       </div>
 
-      <div class="book-progress">
-        <mat-form-field appearance="outline" class="page-input">
-          <mat-label>Current page</mat-label>
-          <input
-            matInput
-            type="number"
-            [min]="book.startingPage"
-            [max]="book.totalPages"
-            [value]="pageInputValue(book)"
-            (input)="setPageInput(book, +$any($event.target).value)"
-            [attr.aria-label]="'Current page for ' + book.title"
-          />
-          <span matTextSuffix>/ {{ book.totalPages }}</span>
-        </mat-form-field>
-        <button
-          mat-flat-button
-          color="primary"
-          type="button"
-          [disabled]="busy() || pageInputValue(book) === book.currentPage"
-          (click)="saveProgress(book)"
-        >
-          Save
-        </button>
-      </div>
-
-      <p class="book-stats">
-        @if (estimatedFinishLabel(book); as label) {
-        <span>{{ label }}</span>
-        } @if (averageLabel(book); as label) {
-        <span>· {{ label }}</span>
-        }
-      </p>
-    </article>
+      <dl class="stats">
+        <div class="stat">
+          <dt>Page</dt>
+          <dd>
+            <span class="stat-value">{{ book.currentPage }}</span>
+            <span class="stat-unit">of {{ book.totalPages }}</span>
+          </dd>
+        </div>
+        <div class="stat">
+          <dt>Pace</dt>
+          <dd>
+            <span class="stat-value">{{ averageLabel(book) }}</span>
+            <span class="stat-unit">pages/day</span>
+          </dd>
+        </div>
+        <div class="stat">
+          <dt>Remaining</dt>
+          <dd>
+            <span class="stat-value">{{ daysLabel(book) }}</span>
+            <span class="stat-unit">{{ daysUnit(book) }}</span>
+          </dd>
+        </div>
+      </dl>
+    </div>
     }
   </div>
 </section>

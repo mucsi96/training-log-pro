@@ -26,7 +26,8 @@ type Point = { x: number; y: number };
   host: {
     role: 'spinbutton',
     '[attr.aria-valuenow]': 'value()',
-    '[attr.aria-valuemin]': '0',
+    '[attr.aria-valuemin]': 'min()',
+    '[attr.aria-valuemax]': 'max()',
     '[attr.aria-valuetext]': 'ariaValueText()',
     '[attr.aria-label]': 'ariaLabel()',
     '[attr.tabindex]': 'disabled() ? -1 : 0',
@@ -42,6 +43,9 @@ export class CircularSliderComponent {
   readonly disabled = input(false);
   readonly trackWidth = input(28);
   readonly handleRadius = input(16);
+  readonly min = input(0);
+  readonly max = input<number | null>(null);
+  readonly unitLabel = input('pushups');
 
   readonly value = model.required<number>();
 
@@ -75,7 +79,7 @@ export class CircularSliderComponent {
   });
 
   readonly handlePoint = computed(() => this.angleToPoint(this.displayAngle()));
-  readonly ariaValueText = computed(() => `${this.value()} pushups`);
+  readonly ariaValueText = computed(() => `${this.value()} ${this.unitLabel()}`);
 
   constructor() {
     effect(() => {
@@ -111,8 +115,7 @@ export class CircularSliderComponent {
       delta += 360;
     }
     this.prevAngle = angle;
-    const next = Math.max(
-      0,
+    const next = this.clamp(
       this.accumulator() + (delta / 360) * this.unitsPerRevolution()
     );
     this.accumulator.set(next);
@@ -153,7 +156,7 @@ export class CircularSliderComponent {
         next = v - this.unitsPerRevolution();
         break;
       case 'Home':
-        next = 0;
+        next = this.min();
         break;
       default:
         return;
@@ -171,10 +174,16 @@ export class CircularSliderComponent {
   }
 
   private commit(next: number): void {
-    const clamped = Math.max(0, next);
+    const clamped = this.clamp(next);
     if (clamped !== this.value()) {
       this.value.set(clamped);
     }
+  }
+
+  private clamp(value: number): number {
+    const max = this.max();
+    const upperBound = max ?? Infinity;
+    return Math.min(upperBound, Math.max(this.min(), value));
   }
 
   private angleToPoint(angleDeg: number): Point {

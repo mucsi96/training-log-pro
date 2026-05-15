@@ -31,12 +31,6 @@ type BookDto = {
   estimatedDaysRemaining?: number;
 };
 
-export type ReadingStats = {
-  todayPages: number;
-  dailyPagesGoal: number;
-  goalReached: boolean;
-};
-
 const toBook = (dto: BookDto): Book => ({
   ...dto,
   createdAt: new Date(dto.createdAt),
@@ -56,15 +50,6 @@ export class ReadingService {
       return books.map(toBook);
     } catch (e) {
       this.showError('Unable to fetch books');
-      throw e;
-    }
-  }
-
-  async getStats(): Promise<ReadingStats> {
-    try {
-      return await fetchJson<ReadingStats>(this.http, '/api/reading/stats');
-    } catch (e) {
-      this.showError('Unable to fetch reading stats');
       throw e;
     }
   }
