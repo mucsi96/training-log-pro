@@ -40,7 +40,7 @@ export async function cleanupDb() {
   );
 }
 
-export async function getGoldenDayGoal() {
+export async function getSettings() {
   const result = await query(
     `SELECT pushup_goal, elevation_goal, reading_pages_goal,
             pushup_default_set_size, pushup_max_set_size
@@ -49,7 +49,7 @@ export async function getGoldenDayGoal() {
   return result.rows[0];
 }
 
-export async function setGoldenDayGoal(
+export async function setGoals(
   pushupGoal: number,
   elevationGoal: number,
   readingPagesGoal: number = 0

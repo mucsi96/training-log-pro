@@ -167,7 +167,7 @@ paths:
         '204':
           description: Celebration marked as shown
 
-  /settings/golden-day-goal:
+  /settings:
     get:
       responses:
         '200':
@@ -175,21 +175,21 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GoldenDayGoal'
+                $ref: '#/components/schemas/Settings'
     put:
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GoldenDayGoal'
+              $ref: '#/components/schemas/Settings'
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GoldenDayGoal'
+                $ref: '#/components/schemas/Settings'
 
   /fitness:
     get:
@@ -373,7 +373,7 @@ components:
           format: date-time
         count:
           type: integer
-    GoldenDayGoal:
+    Settings:
       type: object
       required:
         - pushupGoal

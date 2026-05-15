@@ -5,7 +5,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ReadingLibraryComponent } from '../reading/reading-library.component';
-import { GoldenDayGoal, SettingsService } from './settings.service';
+import { Settings, SettingsService } from './settings.service';
 
 @Component({
   standalone: true,
@@ -25,12 +25,12 @@ import { GoldenDayGoal, SettingsService } from './settings.service';
 export class SettingsComponent {
   private readonly settingsService = inject(SettingsService);
 
-  readonly goal = resource({
+  readonly settings = resource({
     params: () => this.settingsService.version(),
-    loader: () => this.settingsService.getGoldenDayGoal(),
+    loader: () => this.settingsService.getSettings(),
   });
 
-  readonly model = signal<GoldenDayGoal>({
+  readonly model = signal<Settings>({
     pushupGoal: 100,
     elevationGoal: 250,
     readingPagesGoal: 0,
@@ -38,7 +38,7 @@ export class SettingsComponent {
     pushupMaxSetSize: 50,
   });
 
-  readonly goalForm = form(this.model, (path) => {
+  readonly settingsForm = form(this.model, (path) => {
     required(path.pushupGoal);
     min(path.pushupGoal, 1);
     max(path.pushupGoal, 10000);
@@ -58,12 +58,12 @@ export class SettingsComponent {
 
   readonly saving = signal(false);
   readonly canSave = computed(
-    () => !this.saving() && this.goalForm().valid()
+    () => !this.saving() && this.settingsForm().valid()
   );
 
   constructor() {
     effect(() => {
-      const value = this.goal.value();
+      const value = this.settings.value();
       if (!value) {
         return;
       }
@@ -77,8 +77,8 @@ export class SettingsComponent {
     }
     this.saving.set(true);
     try {
-      await submit(this.goalForm, async (form) => {
-        await this.settingsService.updateGoldenDayGoal(form().value());
+      await submit(this.settingsForm, async (form) => {
+        await this.settingsService.updateSettings(form().value());
         return [];
       });
     } finally {

@@ -32,17 +32,17 @@ export class PushupsComponent {
   readonly initOpts = { renderer: 'svg' as const };
   readonly busy = signal(false);
 
-  readonly goldenDayGoal = resource({
+  readonly settings = resource({
     params: () => this.settingsService.version(),
-    loader: () => this.settingsService.getGoldenDayGoal(),
+    loader: () => this.settingsService.getSettings(),
   });
 
-  readonly goal = computed(() => this.goldenDayGoal.value()?.pushupGoal ?? 0);
+  readonly goal = computed(() => this.settings.value()?.pushupGoal ?? 0);
   readonly defaultSetSize = computed(
-    () => this.goldenDayGoal.value()?.pushupDefaultSetSize ?? 5
+    () => this.settings.value()?.pushupDefaultSetSize ?? 5
   );
   readonly maxSetSize = computed(
-    () => this.goldenDayGoal.value()?.pushupMaxSetSize ?? 50
+    () => this.settings.value()?.pushupMaxSetSize ?? 50
   );
 
   readonly periodSets = resource({

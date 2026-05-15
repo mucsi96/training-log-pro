@@ -4,7 +4,7 @@ import {
   populateOAuthClients,
   insertPushupSet,
   getPushupSetRows,
-  setGoldenDayGoal,
+  setGoals,
   setPushupSetSizes,
 } from '../utils';
 
@@ -89,7 +89,7 @@ test.describe('Pushups', () => {
   });
 
   test('reflects the configured golden day pushup goal in the chart mark line', async ({ page }) => {
-    await setGoldenDayGoal(50, 250);
+    await setGoals(50, 250);
     await insertPushupSet(daysAgoAt(0, 8), 20);
 
     await page.goto('/');

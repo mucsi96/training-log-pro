@@ -7,7 +7,7 @@ import {
   insertBook,
   insertReadingProgress,
   populateOAuthClients,
-  setGoldenDayGoal,
+  setGoals,
 } from '../utils';
 
 const startOfTodayUtc = () => {
@@ -29,7 +29,7 @@ test.describe('Reading', () => {
   });
 
   test('shows empty state when no books exist', async ({ page }) => {
-    await setGoldenDayGoal(100, 250, 30);
+    await setGoals(100, 250, 30);
     await page.goto('/');
 
     const section = page.getByRole('region', { name: 'Reading' });
@@ -137,7 +137,7 @@ test.describe('Reading', () => {
   test('only counts pages read past the starting page toward the daily goal', async ({
     page,
   }) => {
-    await setGoldenDayGoal(100, 250, 30);
+    await setGoals(100, 250, 30);
     const bookId = randomUUID();
     await insertBook(
       bookId,
@@ -193,7 +193,7 @@ test.describe('Reading', () => {
   });
 
   test('aggregates pages read across books toward the daily goal', async ({ page }) => {
-    await setGoldenDayGoal(100, 250, 30);
+    await setGoals(100, 250, 30);
     const bookA = randomUUID();
     const bookB = randomUUID();
     await insertBook(bookA, 'Book A', 'Author A', 200, daysAgoAt(1, 8));
@@ -210,7 +210,7 @@ test.describe('Reading', () => {
   });
 
   test('shows daily goal reached when total pages match the goal', async ({ page }) => {
-    await setGoldenDayGoal(100, 250, 30);
+    await setGoals(100, 250, 30);
     const bookId = randomUUID();
     await insertBook(bookId, 'Book', 'Author', 200, daysAgoAt(1, 8));
     await insertReadingProgress(bookId, 0, daysAgoAt(1, 8));
@@ -309,7 +309,7 @@ test.describe('Reading', () => {
   });
 
   test('reflects the configured daily reading goal', async ({ page }) => {
-    await setGoldenDayGoal(100, 250, 50);
+    await setGoals(100, 250, 50);
     const bookId = randomUUID();
     await insertBook(bookId, 'Book', 'Author', 200, daysAgoAt(1, 8));
     await insertReadingProgress(bookId, 0, daysAgoAt(1, 8));

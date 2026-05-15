@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import mucsi96.traininglog.api.GoldenDayGoal;
+import mucsi96.traininglog.api.Settings;
 
 @RestController
 @RequestMapping(value = "/settings", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -19,15 +19,15 @@ public class SettingsController {
 
   private final SettingsService settingsService;
 
-  @GetMapping("/golden-day-goal")
+  @GetMapping
   @PreAuthorize("hasAuthority('APPROLE_WorkoutReader') and hasAuthority('SCOPE_readWorkouts')")
-  GoldenDayGoal getGoldenDayGoal() {
+  Settings getSettings() {
     return toResponse(settingsService.getCurrent());
   }
 
-  @PutMapping(value = "/golden-day-goal", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
-  GoldenDayGoal updateGoldenDayGoal(@Valid @RequestBody GoldenDayGoal request) {
+  Settings updateSettings(@Valid @RequestBody Settings request) {
     SettingsEntity saved = settingsService.update(
         request.getPushupGoal(),
         request.getElevationGoal(),
@@ -37,8 +37,8 @@ public class SettingsController {
     return toResponse(saved);
   }
 
-  private GoldenDayGoal toResponse(SettingsEntity entity) {
-    return GoldenDayGoal.builder()
+  private Settings toResponse(SettingsEntity entity) {
+    return Settings.builder()
         .pushupGoal(entity.getPushupGoal())
         .elevationGoal(entity.getElevationGoal())
         .readingPagesGoal(entity.getReadingPagesGoal())
