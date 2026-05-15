@@ -1,11 +1,11 @@
 import { test, expect } from '../fixtures';
 import {
   getGoldenDayDates,
-  getGoldenDayGoal,
+  getSettings,
   insertGoldenDay,
   insertPushupSet,
   insertRide,
-  setGoldenDayGoal,
+  setGoals,
 } from '../utils';
 
 const startOfTodayUtc = () => {
@@ -62,7 +62,7 @@ test.describe('Settings', () => {
 
     await expect(page.getByText('Settings saved')).toBeVisible();
 
-    const goal = await getGoldenDayGoal();
+    const goal = await getSettings();
     expect(goal.pushup_goal).toBe(80);
     expect(goal.elevation_goal).toBe(200);
     expect(goal.reading_pages_goal).toBe(20);
@@ -108,7 +108,7 @@ test.describe('Settings', () => {
     const month = goldenSection.getByText('This month').locator('..');
     await expect(month.getByText(expectedCount, { exact: true })).toBeVisible();
 
-    await setGoldenDayGoal(500, 1000);
+    await setGoals(500, 1000);
 
     await page.goto('/');
     await expect(month.getByText(expectedCount, { exact: true })).toBeVisible();
@@ -138,7 +138,7 @@ test.describe('Settings', () => {
     const section = page.getByRole('region', { name: 'Golden day' });
     await expect(section.getByText('Today is golden')).toBeHidden();
 
-    await setGoldenDayGoal(50, 100);
+    await setGoals(50, 100);
 
     await page.goto('/');
     await expect(section.getByText('Today is golden')).toBeVisible();

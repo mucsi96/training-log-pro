@@ -482,3 +482,42 @@ databaseChangeLog:
                   defaultValueNumeric: 0
                   constraints:
                     nullable: false
+
+  - changeSet:
+      id: 16-add-pushup-set-config-to-golden-day-goal
+      author: mucsi96
+      changes:
+        - addColumn:
+            tableName: golden_day_goal
+            columns:
+              - column:
+                  name: pushup_default_set_size
+                  type: integer
+                  defaultValueNumeric: 5
+                  constraints:
+                    nullable: false
+              - column:
+                  name: pushup_max_set_size
+                  type: integer
+                  defaultValueNumeric: 50
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 17-rename-golden-day-goal-to-settings
+      author: mucsi96
+      changes:
+        - renameTable:
+            oldTableName: golden_day_goal
+            newTableName: settings
+
+  - changeSet:
+      id: 18-drop-pushup-set-config-from-settings
+      author: mucsi96
+      changes:
+        - dropColumn:
+            tableName: settings
+            columnName: pushup_default_set_size
+        - dropColumn:
+            tableName: settings
+            columnName: pushup_max_set_size

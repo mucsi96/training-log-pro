@@ -3,21 +3,19 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { EChartsOption } from 'echarts';
 import { NgxEchartsModule } from 'ngx-echarts';
-import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { map } from 'rxjs';
 import { PushupsService } from './pushups.service';
 import { SettingsService } from '../settings/settings.service';
-
-const QUICK_ADD_VALUES = [-5, 5, 10] as const;
+import {
+  PushupsAddDialogComponent,
+  PushupsAddDialogResult,
+} from './pushups-add-dialog.component';
 
 @Component({
   standalone: true,
-  imports: [
-    NgxEchartsModule,
-    MatButtonModule,
-    MatProgressSpinnerModule,
-  ],
+  imports: [NgxEchartsModule, MatProgressSpinnerModule],
   selector: 'app-pushups',
   templateUrl: './pushups.component.html',
   styleUrl: './pushups.component.css',
@@ -25,43 +23,25 @@ const QUICK_ADD_VALUES = [-5, 5, 10] as const;
 export class PushupsComponent {
   private readonly pushupsService = inject(PushupsService);
   private readonly settingsService = inject(SettingsService);
+  private readonly dialog = inject(MatDialog);
   private readonly period = toSignal(
     inject(ActivatedRoute).data.pipe(map((data) => (data['period'] as number) ?? 0))
   );
 
   readonly initOpts = { renderer: 'svg' as const };
-  readonly quickAddValues = QUICK_ADD_VALUES;
   readonly busy = signal(false);
 
-  readonly goldenDayGoal = resource({
+  readonly settings = resource({
     params: () => this.settingsService.version(),
-    loader: () => this.settingsService.getGoldenDayGoal(),
+    loader: () => this.settingsService.getSettings(),
   });
 
-  readonly goal = computed(() => this.goldenDayGoal.value()?.pushupGoal ?? 0);
-
-  readonly todaySets = resource({
-    params: () => this.pushupsService.version(),
-    loader: () => this.pushupsService.getSets(1),
-  });
+  readonly goal = computed(() => this.settings.value()?.pushupGoal ?? 0);
 
   readonly periodSets = resource({
     params: () => ({ period: this.period(), version: this.pushupsService.version() }),
     loader: ({ params }) => this.pushupsService.getSets(params.period),
   });
-
-  readonly todayCount = computed(
-    () => this.todaySets.value()?.reduce((total, set) => total + set.count, 0) ?? 0
-  );
-
-  readonly progressPercent = computed(() => {
-    const goal = this.goal();
-    return goal > 0 ? Math.min(100, (this.todayCount() / goal) * 100) : 0;
-  });
-
-  readonly remaining = computed(() => Math.max(0, this.goal() - this.todayCount()));
-
-  readonly goalReached = computed(() => this.goal() > 0 && this.todayCount() >= this.goal());
 
   readonly chartOptions = computed<EChartsOption | undefined>(() => {
     const sets = this.periodSets.value();
@@ -129,10 +109,26 @@ export class PushupsComponent {
     };
   });
 
-  async add(count: number) {
-    if (this.busy() || count === 0 || this.todayCount() + count < 0) {
+  openAddDialog(): void {
+    if (this.busy()) {
       return;
     }
+    const ref = this.dialog.open<
+      PushupsAddDialogComponent,
+      void,
+      PushupsAddDialogResult
+    >(PushupsAddDialogComponent, {
+      autoFocus: 'dialog',
+      restoreFocus: true,
+    });
+    ref.afterClosed().subscribe((count) => {
+      if (typeof count === 'number' && count > 0) {
+        this.add(count);
+      }
+    });
+  }
+
+  private async add(count: number) {
     this.busy.set(true);
     try {
       await this.pushupsService.addSet(count);
@@ -140,19 +136,4 @@ export class PushupsComponent {
       this.busy.set(false);
     }
   }
-
-  canApply(value: number): boolean {
-    return this.todayCount() + value >= 0;
-  }
-
-  formatValue(value: number): string {
-    return value > 0 ? `+${value}` : `${value}`;
-  }
-
-  ariaForValue(value: number): string {
-    return value > 0
-      ? `Add ${value} pushups`
-      : `Subtract ${-value} pushups`;
-  }
-
 }

@@ -13,11 +13,11 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Entity
-@Table(name = "golden_day_goal", schema = "training_log")
+@Table(name = "settings", schema = "training_log")
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class GoldenDayGoalEntity {
+public class SettingsEntity {
   static final int SINGLETON_ID = 1;
 
   @Id

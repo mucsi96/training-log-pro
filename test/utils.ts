@@ -29,25 +29,28 @@ export async function cleanupDb() {
   await query('DELETE FROM training_log.oauth2_authorized_client');
   await query('DELETE FROM training_log.golden_day');
   await query(
-    `UPDATE training_log.golden_day_goal SET pushup_goal = $1, elevation_goal = $2, reading_pages_goal = $3 WHERE id = 1`,
+    `UPDATE training_log.settings
+     SET pushup_goal = $1, elevation_goal = $2, reading_pages_goal = $3
+     WHERE id = 1`,
     [100, 250, 0]
   );
 }
 
-export async function getGoldenDayGoal() {
+export async function getSettings() {
   const result = await query(
-    'SELECT pushup_goal, elevation_goal, reading_pages_goal FROM training_log.golden_day_goal WHERE id = 1'
+    `SELECT pushup_goal, elevation_goal, reading_pages_goal
+     FROM training_log.settings WHERE id = 1`
   );
   return result.rows[0];
 }
 
-export async function setGoldenDayGoal(
+export async function setGoals(
   pushupGoal: number,
   elevationGoal: number,
   readingPagesGoal: number = 0
 ) {
   await query(
-    `UPDATE training_log.golden_day_goal SET pushup_goal = $1, elevation_goal = $2, reading_pages_goal = $3 WHERE id = 1`,
+    `UPDATE training_log.settings SET pushup_goal = $1, elevation_goal = $2, reading_pages_goal = $3 WHERE id = 1`,
     [pushupGoal, elevationGoal, readingPagesGoal]
   );
 }

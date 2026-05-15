@@ -4,7 +4,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { fetchJson } from '../utils/fetchJson';
 import { GoldenDayService } from '../golden-day/golden-day.service';
 
-export type GoldenDayGoal = {
+export type Settings = {
   pushupGoal: number;
   elevationGoal: number;
   readingPagesGoal: number;
@@ -18,21 +18,21 @@ export class SettingsService {
 
   readonly version = signal(0);
 
-  async getGoldenDayGoal(): Promise<GoldenDayGoal> {
+  async getSettings(): Promise<Settings> {
     try {
-      return await fetchJson<GoldenDayGoal>(this.http, '/api/settings/golden-day-goal');
+      return await fetchJson<Settings>(this.http, '/api/settings');
     } catch (e) {
       this.showError('Unable to load settings');
       throw e;
     }
   }
 
-  async updateGoldenDayGoal(goal: GoldenDayGoal): Promise<GoldenDayGoal> {
+  async updateSettings(settings: Settings): Promise<Settings> {
     try {
-      const saved = await fetchJson<GoldenDayGoal>(
+      const saved = await fetchJson<Settings>(
         this.http,
-        '/api/settings/golden-day-goal',
-        { method: 'put', body: goal }
+        '/api/settings',
+        { method: 'put', body: settings }
       );
       this.version.update((v) => v + 1);
       this.goldenDayService.version.update((v) => v + 1);

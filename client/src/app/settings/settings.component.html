@@ -7,22 +7,22 @@
     </p>
   </header>
 
-  @if (goal.isLoading()) {
+  @if (settings.isLoading()) {
     <mat-spinner class="page-loading" />
   } @else {
     <form
       class="form"
-      aria-labelledby="golden-day-goal-heading"
-      [formRoot]="goalForm"
+      aria-labelledby="settings-form-heading"
+      [formRoot]="settingsForm"
       (submit)="save()"
     >
-      <h2 id="golden-day-goal-heading">Golden day goals</h2>
+      <h2 id="settings-form-heading">Golden day goals</h2>
       <mat-form-field appearance="outline">
         <mat-label>Daily pushup goal</mat-label>
         <input
           matInput
           type="number"
-          [formField]="goalForm.pushupGoal"
+          [formField]="settingsForm.pushupGoal"
         />
         <span matTextSuffix>pushups</span>
       </mat-form-field>
@@ -32,7 +32,7 @@
         <input
           matInput
           type="number"
-          [formField]="goalForm.elevationGoal"
+          [formField]="settingsForm.elevationGoal"
         />
         <span matTextSuffix>m</span>
       </mat-form-field>
@@ -42,7 +42,7 @@
         <input
           matInput
           type="number"
-          [formField]="goalForm.readingPagesGoal"
+          [formField]="settingsForm.readingPagesGoal"
         />
         <span matTextSuffix>pages</span>
       </mat-form-field>

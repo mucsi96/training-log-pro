@@ -7,19 +7,19 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class GoldenDayGoalService {
+public class SettingsService {
 
-  private final GoldenDayGoalRepository repository;
+  private final SettingsRepository repository;
 
   @Transactional(readOnly = true)
-  public GoldenDayGoalEntity getCurrent() {
-    return repository.findById(GoldenDayGoalEntity.SINGLETON_ID)
-        .orElseThrow(() -> new IllegalStateException("Golden day goal row missing"));
+  public SettingsEntity getCurrent() {
+    return repository.findById(SettingsEntity.SINGLETON_ID)
+        .orElseThrow(() -> new IllegalStateException("Settings row missing"));
   }
 
   @Transactional
-  public GoldenDayGoalEntity update(int pushupGoal, int elevationGoal, int readingPagesGoal) {
-    GoldenDayGoalEntity entity = getCurrent();
+  public SettingsEntity update(int pushupGoal, int elevationGoal, int readingPagesGoal) {
+    SettingsEntity entity = getCurrent();
     entity.setPushupGoal(pushupGoal);
     entity.setElevationGoal(elevationGoal);
     entity.setReadingPagesGoal(readingPagesGoal);
