@@ -23,6 +23,7 @@ export async function cleanupDb() {
   await query('DELETE FROM training_log.segment_effort');
   await query('DELETE FROM training_log.ride');
   await query('DELETE FROM training_log.fitness');
+  await query('DELETE FROM training_log.ftp');
   await query('DELETE FROM training_log.pushup_set');
   await query('DELETE FROM training_log.reading_progress');
   await query('DELETE FROM training_log.book');
@@ -182,6 +183,13 @@ export async function getSegmentEffortRows() {
 export async function getFitnessRows() {
   const result = await query(
     'SELECT created_at, pulled_at, fitness, fatigue, form FROM training_log.fitness ORDER BY created_at ASC'
+  );
+  return result.rows;
+}
+
+export async function getFtpRows() {
+  const result = await query(
+    'SELECT created_at, pulled_at, ftp, weight, ftp_per_kg FROM training_log.ftp ORDER BY created_at ASC'
   );
   return result.rows;
 }

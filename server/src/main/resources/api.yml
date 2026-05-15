@@ -228,6 +228,50 @@ paths:
                           type: number
                           format: float
 
+  /ftp:
+    get:
+      parameters:
+        - in: query
+          name: period
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                title: FtpTimeline
+                type: object
+                required:
+                  - measurements
+                properties:
+                  measurements:
+                    type: array
+                    items:
+                      title: FtpMeasurement
+                      type: object
+                      required:
+                        - date
+                        - ftp
+                        - weight
+                        - ftpPerKg
+                      properties:
+                        date:
+                          type: string
+                          format: date-time
+                        ftp:
+                          type: number
+                          format: float
+                        weight:
+                          type: number
+                          format: float
+                        ftpPerKg:
+                          type: number
+                          format: float
+
   /reading/books:
     get:
       responses:
