@@ -13,6 +13,7 @@ import {
 
 const SVG_SIZE = 280;
 const CENTER = SVG_SIZE / 2;
+const TAU = Math.PI * 2;
 
 type Point = { x: number; y: number };
 
@@ -30,7 +31,9 @@ type Point = { x: number; y: number };
     '[attr.aria-label]': 'ariaLabel()',
     '[attr.tabindex]': 'disabled() ? -1 : 0',
     '[attr.aria-disabled]': 'disabled()',
+    '[class.dragging]': 'dragging()',
     '(keydown)': 'onKey($event)',
+    '(wheel)': 'onWheel($event)',
   },
 })
 export class CircularSliderComponent {
@@ -44,7 +47,7 @@ export class CircularSliderComponent {
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly svgRef = viewChild.required<ElementRef<SVGSVGElement>>('svg');
-  private readonly dragging = signal(false);
+  protected readonly dragging = signal(false);
   private readonly accumulator = signal(0);
   private prevAngle: number | null = null;
 
@@ -53,19 +56,24 @@ export class CircularSliderComponent {
   readonly trackRadius = computed(
     () => CENTER - Math.max(this.trackWidth() / 2, this.handleRadius())
   );
+  private readonly circumference = computed(() => TAU * this.trackRadius());
 
   private readonly displayAngle = computed(() => {
     const v = this.value();
-    const units = this.unitsPerRevolution();
-    if (v > 0 && v % units === 0) {
-      return 359.999;
+    const total = (v * 360) / this.unitsPerRevolution();
+    if (total === 0) {
+      return 0;
     }
-    const degreesPerUnit = 360 / units;
-    const total = (v * degreesPerUnit) % 360;
-    return total < 0 ? total + 360 : total;
+    const mod = total % 360;
+    return mod === 0 ? 360 : mod;
   });
 
-  readonly arcPath = computed(() => this.buildArc(this.displayAngle()));
+  readonly rangeDashArray = computed(() => {
+    const c = this.circumference();
+    const visible = (this.displayAngle() / 360) * c;
+    return `${visible} ${c - visible}`;
+  });
+
   readonly handlePoint = computed(() => this.angleToPoint(this.displayAngle()));
   readonly ariaValueText = computed(() => `${this.value()} pushups`);
 
@@ -79,7 +87,7 @@ export class CircularSliderComponent {
   }
 
   onPointerDown(event: PointerEvent): void {
-    if (this.disabled()) {
+    if (this.disabled() || event.button !== 0) {
       return;
     }
     event.preventDefault();
@@ -103,8 +111,10 @@ export class CircularSliderComponent {
       delta += 360;
     }
     this.prevAngle = angle;
-    const degreesPerUnit = 360 / this.unitsPerRevolution();
-    const next = Math.max(0, this.accumulator() + delta / degreesPerUnit);
+    const next = Math.max(
+      0,
+      this.accumulator() + (delta / 360) * this.unitsPerRevolution()
+    );
     this.accumulator.set(next);
     const rounded = Math.round(next);
     if (rounded !== this.value()) {
@@ -149,8 +159,20 @@ export class CircularSliderComponent {
         return;
     }
     event.preventDefault();
+    this.commit(next);
+  }
+
+  onWheel(event: WheelEvent): void {
+    if (this.disabled() || document.activeElement !== this.host.nativeElement) {
+      return;
+    }
+    event.preventDefault();
+    this.commit(this.value() + (event.deltaY < 0 ? 1 : -1));
+  }
+
+  private commit(next: number): void {
     const clamped = Math.max(0, next);
-    if (clamped !== v) {
+    if (clamped !== this.value()) {
       this.value.set(clamped);
     }
   }
@@ -162,17 +184,6 @@ export class CircularSliderComponent {
       x: CENTER + r * Math.sin(rad),
       y: CENTER - r * Math.cos(rad),
     };
-  }
-
-  private buildArc(angle: number): string {
-    if (angle <= 0) {
-      return '';
-    }
-    const r = this.trackRadius();
-    const clamped = Math.min(359.999, angle);
-    const end = this.angleToPoint(clamped);
-    const largeArc = clamped > 180 ? 1 : 0;
-    return `M ${CENTER} ${CENTER - r} A ${r} ${r} 0 ${largeArc} 1 ${end.x} ${end.y}`;
   }
 
   private pointToAngle(event: PointerEvent): number {
