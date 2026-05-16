@@ -78,7 +78,7 @@ test.describe('Golden coins', () => {
     await pushups.getByRole('button', { name: 'Add pushups' }).click();
 
     const dialog = page.getByRole('dialog', { name: 'Add pushups' });
-    const dial = dialog.getByRole('spinbutton', { name: 'Pushup set count' });
+    const dial = dialog.getByRole('slider', { name: 'Pushups' });
     await dial.focus();
     for (let i = 0; i < 5; i++) {
       await page.keyboard.press('ArrowUp');
