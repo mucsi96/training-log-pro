@@ -1,6 +1,6 @@
 import { Component, computed, inject, resource, signal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { BarLoaderComponent } from '@mucsi96/angular-material-theme';
 import {
   ReadingProgressDialogComponent,
   ReadingProgressDialogData,
@@ -10,7 +10,7 @@ import { Book, ReadingService } from './reading.service';
 
 @Component({
   standalone: true,
-  imports: [MatProgressSpinnerModule],
+  imports: [BarLoaderComponent],
   selector: 'app-reading',
   templateUrl: './reading.component.html',
   styleUrl: './reading.component.css',

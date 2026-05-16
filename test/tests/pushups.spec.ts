@@ -34,7 +34,7 @@ test.describe('Pushups', () => {
     const dialog = page.getByRole('dialog', { name: 'Add pushups' });
     await expect(dialog).toBeVisible();
 
-    const dial = dialog.getByRole('spinbutton', { name: 'Pushup set count' });
+    const dial = dialog.getByRole('slider', { name: 'Pushups' });
     await expect(dial).toHaveAttribute('aria-valuenow', '0');
     await expect(dialog.getByRole('button', { name: 'Add 0' })).toBeDisabled();
   });
@@ -46,7 +46,7 @@ test.describe('Pushups', () => {
     await section.getByRole('button', { name: 'Add pushups' }).click();
 
     const dialog = page.getByRole('dialog', { name: 'Add pushups' });
-    const dial = dialog.getByRole('spinbutton', { name: 'Pushup set count' });
+    const dial = dialog.getByRole('slider', { name: 'Pushups' });
     await dial.focus();
     for (let i = 0; i < 7; i++) {
       await page.keyboard.press('ArrowUp');
@@ -61,19 +61,18 @@ test.describe('Pushups', () => {
     expect(rows[0].count).toBe(7);
   });
 
-  test('one full rotation equals ten pushups via the PageUp shortcut', async ({ page }) => {
+  test('PageUp jumps by ten pushups on the dial', async ({ page }) => {
     await page.goto('/');
     const section = page.getByRole('region', { name: 'Pushups' });
 
     await section.getByRole('button', { name: 'Add pushups' }).click();
     const dialog = page.getByRole('dialog', { name: 'Add pushups' });
-    const dial = dialog.getByRole('spinbutton', { name: 'Pushup set count' });
+    const dial = dialog.getByRole('slider', { name: 'Pushups' });
     await dial.focus();
 
     await page.keyboard.press('PageUp');
     await page.keyboard.press('PageUp');
     await expect(dial).toHaveAttribute('aria-valuenow', '20');
-    await expect(dial).toHaveAttribute('aria-valuetext', '20 pushups');
   });
 
   test('cancel closes the dialog without adding a set', async ({ page }) => {

@@ -4,7 +4,7 @@ import { ActivatedRoute } from '@angular/router';
 import { EChartsOption } from 'echarts';
 import { NgxEchartsModule } from 'ngx-echarts';
 import { MatDialog } from '@angular/material/dialog';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { BarLoaderComponent } from '@mucsi96/angular-material-theme';
 import { map } from 'rxjs';
 import { PushupsService } from './pushups.service';
 import { SettingsService } from '../settings/settings.service';
@@ -15,7 +15,7 @@ import {
 
 @Component({
   standalone: true,
-  imports: [NgxEchartsModule, MatProgressSpinnerModule],
+  imports: [NgxEchartsModule, BarLoaderComponent],
   selector: 'app-pushups',
   templateUrl: './pushups.component.html',
   styleUrl: './pushups.component.css',

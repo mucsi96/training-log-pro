@@ -3,7 +3,7 @@
 @let periodDiffVal = periodDiff();
 @let chart = chartOptions();
 @if (todayHistory.isLoading() || periodHistory.isLoading()) {
-<mat-spinner class="page-loading" />
+<div class="page-loading"><bt-bar-loader /></div>
 } @else if (chart) {
 <section>
   <div class="chart-wrapper">

@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationsService } from '@mucsi96/angular-material-theme';
 import { fetchJson } from '../utils/fetchJson';
 import { GoldenDayService } from '../golden-day/golden-day.service';
 
@@ -13,7 +13,7 @@ export type Settings = {
 @Injectable({ providedIn: 'root' })
 export class SettingsService {
   private readonly http = inject(HttpClient);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notifications = inject(NotificationsService);
   private readonly goldenDayService = inject(GoldenDayService);
 
   readonly version = signal(0);
@@ -22,7 +22,7 @@ export class SettingsService {
     try {
       return await fetchJson<Settings>(this.http, '/api/settings');
     } catch (e) {
-      this.showError('Unable to load settings');
+      this.notifications.error('Unable to load settings');
       throw e;
     }
   }
@@ -36,22 +36,11 @@ export class SettingsService {
       );
       this.version.update((v) => v + 1);
       this.goldenDayService.version.update((v) => v + 1);
-      this.snackBar.open('Settings saved', 'Close', {
-        duration: 3000,
-        verticalPosition: 'top',
-      });
+      this.notifications.success('Settings saved');
       return saved;
     } catch (e) {
-      this.showError('Unable to save settings');
+      this.notifications.error('Unable to save settings');
       throw e;
     }
-  }
-
-  private showError(message: string) {
-    this.snackBar.open(message, 'Close', {
-      duration: 3000,
-      verticalPosition: 'top',
-      panelClass: ['error'],
-    });
   }
 }

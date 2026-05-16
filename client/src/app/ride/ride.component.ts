@@ -2,14 +2,14 @@ import { Component, inject, resource } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { BarLoaderComponent } from '@mucsi96/angular-material-theme';
 import { map } from 'rxjs';
 import { RideService } from './ride.service';
 import { MeasurementWithUnitPipe } from '../utils/measurement-with-unit.pipe';
 
 @Component({
   standalone: true,
-  imports: [MatIconModule, MatProgressSpinnerModule, MeasurementWithUnitPipe],
+  imports: [MatIconModule, BarLoaderComponent, MeasurementWithUnitPipe],
   selector: 'app-ride',
   templateUrl: './ride.component.html',
   styleUrl: './ride.component.css',

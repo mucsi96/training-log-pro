@@ -22,7 +22,7 @@ h2 {
 }
 
 .empty {
-  color: var(--mat-app-text-color);
+  color: var(--bt-text-muted);
   text-align: center;
   font-size: 14px;
 }
@@ -72,7 +72,7 @@ h2 {
 
 .book-author {
   margin: 0;
-  color: var(--mat-app-text-color);
+  color: var(--bt-text-muted);
   font-size: 12px;
 }
 
@@ -103,7 +103,7 @@ h2 {
 }
 
 dt {
-  color: var(--mat-app-text-color);
+  color: var(--bt-text-muted);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.02em;
@@ -126,13 +126,9 @@ dd {
 }
 
 .stat-unit {
-  color: var(--mat-app-text-color);
+  color: var(--bt-text-muted);
   font-size: 12px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.page-loading {
-  margin: 150px auto;
 }

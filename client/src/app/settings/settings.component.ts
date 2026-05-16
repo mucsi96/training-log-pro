@@ -3,7 +3,7 @@ import { form, FormField, FormRoot, max, min, required, submit } from '@angular/
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { BarLoaderComponent } from '@mucsi96/angular-material-theme';
 import { ReadingLibraryComponent } from '../reading/reading-library.component';
 import { Settings, SettingsService } from './settings.service';
 
@@ -16,7 +16,7 @@ import { Settings, SettingsService } from './settings.service';
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
-    MatProgressSpinnerModule,
+    BarLoaderComponent,
     ReadingLibraryComponent,
   ],
   templateUrl: './settings.component.html',

@@ -168,15 +168,15 @@ test.describe('Reading', () => {
   test('updates reading progress for a book', async ({ page }) => {
     const bookId = randomUUID();
     await insertBook(bookId, 'Clean Code', 'Robert Martin', 400, daysAgoAt(2, 8));
+    await insertReadingProgress(bookId, 120, daysAgoAt(1, 8));
 
     await page.goto('/');
     const section = page.getByRole('region', { name: 'Reading' });
     await section.getByRole('button', { name: /Clean Code/ }).click();
 
     const dialog = page.getByRole('dialog', { name: 'Clean Code' });
-    const dial = dialog.getByRole('spinbutton', {
-      name: 'Current page for Clean Code',
-    });
+    const dial = dialog.getByRole('slider', { name: 'Page' });
+    await expect(dial).toHaveAttribute('aria-valuenow', '120');
     await dial.focus();
     for (let i = 0; i < 5; i++) {
       await page.keyboard.press('PageUp');
@@ -190,8 +190,8 @@ test.describe('Reading', () => {
     ).toBeVisible();
 
     const progress = await getReadingProgressRows();
-    expect(progress).toHaveLength(1);
-    expect(progress[0].current_page).toBe(125);
+    expect(progress).toHaveLength(2);
+    expect(progress.at(-1)?.current_page).toBe(125);
   });
 
   test('aggregates pages read across books toward the daily goal', async ({ page }) => {
@@ -244,13 +244,9 @@ test.describe('Reading', () => {
     await section.getByRole('button', { name: /Almost Done/ }).click();
 
     const dialog = page.getByRole('dialog', { name: 'Almost Done' });
-    const dial = dialog.getByRole('spinbutton', {
-      name: 'Current page for Almost Done',
-    });
+    const dial = dialog.getByRole('slider', { name: 'Page' });
     await dial.focus();
-    for (let i = 0; i < 4; i++) {
-      await page.keyboard.press('PageUp');
-    }
+    await page.keyboard.press('End');
     await expect(dial).toHaveAttribute('aria-valuenow', '100');
     await dialog.getByRole('button', { name: 'Save 100' }).click();
     await expect(dialog).toBeHidden();

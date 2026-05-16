@@ -1,14 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { CircularSliderComponent } from '../circular-slider/circular-slider.component';
+import { DonutSliderComponent } from '@mucsi96/angular-material-theme';
 
 export type PushupsAddDialogResult = number | null;
 
 @Component({
   standalone: true,
   selector: 'app-pushups-add-dialog',
-  imports: [MatButtonModule, MatDialogModule, CircularSliderComponent],
+  imports: [MatButtonModule, MatDialogModule, DonutSliderComponent],
   templateUrl: './pushups-add-dialog.component.html',
   styleUrl: './pushups-add-dialog.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

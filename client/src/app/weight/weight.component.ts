@@ -3,7 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { EChartsOption } from 'echarts';
 import { NgxEchartsModule } from 'ngx-echarts';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { BarLoaderComponent } from '@mucsi96/angular-material-theme';
 import { map } from 'rxjs';
 import { WeightMeasurement, WeightService } from './weight.service';
 import { AbsoluteDiffPipe } from '../utils/absolute-diff.pipe';
@@ -37,7 +37,7 @@ function computeDiff(
   standalone: true,
   imports: [
     NgxEchartsModule,
-    MatProgressSpinnerModule,
+    BarLoaderComponent,
     AbsoluteDiffPipe,
     DiffColorPipe,
     MeasurementWithUnitPipe,
