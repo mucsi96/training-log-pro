@@ -135,7 +135,7 @@ export async function insertRide(
   weightedAverageWatts: number,
   sufferScore: number | null = null
 ) {
-  const date = new Date(Date.now() - daysAgo * 86400000 - rideInsertCounter++);
+  const date = new Date(Date.now() - daysAgo * 86400000 + rideInsertCounter++);
   await query(
     `INSERT INTO training_log.ride (
       created_at, calories, distance, moving_time, name,
