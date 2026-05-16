@@ -167,6 +167,26 @@ paths:
         '204':
           description: Celebration marked as shown
 
+  /coins:
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Coins'
+
+  /coins/reset:
+    post:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Coins'
+
   /settings:
     get:
       responses:
@@ -479,6 +499,22 @@ components:
           type: number
           format: double
         estimatedDaysRemaining:
+          type: integer
+          format: int32
+    Coins:
+      type: object
+      required:
+        - totalCoins
+        - totalPoints
+        - pointsPerCoin
+      properties:
+        totalCoins:
+          type: integer
+          format: int32
+        totalPoints:
+          type: integer
+          format: int32
+        pointsPerCoin:
           type: integer
           format: int32
     PodiumMessage:

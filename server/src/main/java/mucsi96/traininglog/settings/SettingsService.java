@@ -1,5 +1,8 @@
 package mucsi96.traininglog.settings;
 
+import java.time.Clock;
+import java.time.ZonedDateTime;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -10,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 public class SettingsService {
 
   private final SettingsRepository repository;
+  private final Clock clock;
 
   @Transactional(readOnly = true)
   public SettingsEntity getCurrent() {
@@ -23,6 +27,13 @@ public class SettingsService {
     entity.setPushupGoal(pushupGoal);
     entity.setElevationGoal(elevationGoal);
     entity.setReadingPagesGoal(readingPagesGoal);
+    return repository.save(entity);
+  }
+
+  @Transactional
+  public SettingsEntity resetCoins() {
+    SettingsEntity entity = getCurrent();
+    entity.setCoinsResetAt(ZonedDateTime.now(clock));
     return repository.save(entity);
   }
 }
