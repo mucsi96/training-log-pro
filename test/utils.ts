@@ -19,7 +19,6 @@ export async function query(text: string, params?: any[]) {
 }
 
 export async function cleanupDb() {
-  lastRideTimestampMs = null;
   await query('DELETE FROM training_log.weight');
   await query('DELETE FROM training_log.segment_effort');
   await query('DELETE FROM training_log.ride');
@@ -123,7 +122,7 @@ export async function insertWeight(
   );
 }
 
-let lastRideTimestampMs: number | null = null;
+let rideInsertCounter = 0;
 
 export async function insertRide(
   daysAgo: number,
@@ -136,15 +135,7 @@ export async function insertRide(
   weightedAverageWatts: number,
   sufferScore: number | null = null
 ) {
-  // ride_pkey is created_at; force strictly decreasing timestamps so back-to-back
-  // calls within the same millisecond do not collide.
-  const candidate = Date.now() - daysAgo * 86400000;
-  const createdAtMs =
-    lastRideTimestampMs === null || candidate < lastRideTimestampMs
-      ? candidate
-      : lastRideTimestampMs - 1;
-  lastRideTimestampMs = createdAtMs;
-  const date = new Date(createdAtMs);
+  const date = new Date(Date.now() - daysAgo * 86400000 + rideInsertCounter++);
   await query(
     `INSERT INTO training_log.ride (
       created_at, calories, distance, moving_time, name,
