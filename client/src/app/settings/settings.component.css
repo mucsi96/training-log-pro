@@ -101,12 +101,12 @@ h2 {
 }
 
 .coins-points-label {
-  color: var(--mat-app-text-color);
+  color: var(--bt-text-muted);
   font-size: 12px;
 }
 
 .coins-detail {
-  color: var(--mat-app-text-color);
+  color: var(--bt-text-muted);
   font-size: 12px;
   justify-self: end;
   text-align: right;

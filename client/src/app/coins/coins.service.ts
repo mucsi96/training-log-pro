@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationsService } from '@mucsi96/angular-material-theme';
 import { fetchJson } from '../utils/fetchJson';
 
 export type Coins = {
@@ -12,7 +12,7 @@ export type Coins = {
 @Injectable({ providedIn: 'root' })
 export class CoinsService {
   private readonly http = inject(HttpClient);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notifications = inject(NotificationsService);
 
   readonly version = signal(0);
 
@@ -20,7 +20,7 @@ export class CoinsService {
     try {
       return await fetchJson<Coins>(this.http, '/api/coins');
     } catch (e) {
-      this.showError('Unable to load coins');
+      this.notifications.error('Unable to load coins');
       throw e;
     }
   }
@@ -31,26 +31,15 @@ export class CoinsService {
         method: 'post',
       });
       this.version.update((v) => v + 1);
-      this.snackBar.open('Coins reset', 'Close', {
-        duration: 3000,
-        verticalPosition: 'top',
-      });
+      this.notifications.success('Coins reset');
       return coins;
     } catch (e) {
-      this.showError('Unable to reset coins');
+      this.notifications.error('Unable to reset coins');
       throw e;
     }
   }
 
   refresh() {
     this.version.update((v) => v + 1);
-  }
-
-  private showError(message: string) {
-    this.snackBar.open(message, 'Close', {
-      duration: 3000,
-      verticalPosition: 'top',
-      panelClass: ['error'],
-    });
   }
 }
