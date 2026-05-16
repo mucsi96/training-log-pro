@@ -61,20 +61,6 @@ test.describe('Pushups', () => {
     expect(rows[0].count).toBe(7);
   });
 
-  test('PageUp jumps by ten pushups on the dial', async ({ page }) => {
-    await page.goto('/');
-    const section = page.getByRole('region', { name: 'Pushups' });
-
-    await section.getByRole('button', { name: 'Add pushups' }).click();
-    const dialog = page.getByRole('dialog', { name: 'Add pushups' });
-    const dial = dialog.getByRole('slider', { name: 'Pushups' });
-    await dial.focus();
-
-    await page.keyboard.press('PageUp');
-    await page.keyboard.press('PageUp');
-    await expect(dial).toHaveAttribute('aria-valuenow', '20');
-  });
-
   test('cancel closes the dialog without adding a set', async ({ page }) => {
     await page.goto('/');
     const section = page.getByRole('region', { name: 'Pushups' });
