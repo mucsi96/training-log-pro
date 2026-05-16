@@ -4,6 +4,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { StravaService } from '../strava/strava.service';
 import { PushupsService } from '../pushups/pushups.service';
 import { ReadingService } from '../reading/reading.service';
+import { CoinsService } from '../coins/coins.service';
 import { fetchJson } from '../utils/fetchJson';
 
 export type GoldenDayStats = {
@@ -25,6 +26,7 @@ export class GoldenDayService {
   private readonly http = inject(HttpClient);
   private readonly snackBar = inject(MatSnackBar);
   private readonly stravaService = inject(StravaService);
+  private readonly coinsService = inject(CoinsService);
   readonly pushupsService = inject(PushupsService);
   readonly readingService = inject(ReadingService);
 
@@ -33,7 +35,9 @@ export class GoldenDayService {
   async getStats(): Promise<GoldenDayStats> {
     await this.stravaService.sync();
     try {
-      return await fetchJson<GoldenDayStats>(this.http, '/api/golden-day');
+      const stats = await fetchJson<GoldenDayStats>(this.http, '/api/golden-day');
+      this.coinsService.refresh();
+      return stats;
     } catch (e) {
       this.snackBar.open('Unable to fetch golden day stats', 'Close', {
         duration: 3000,

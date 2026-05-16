@@ -5,6 +5,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
 import { UserProfileService } from '../user-profile.service';
 import { MatMenuModule } from '@angular/material/menu';
+import { CoinsCounterComponent } from '../coins/coins-counter.component';
 
 @Component({
   selector: 'app-header',
@@ -14,6 +15,7 @@ import { MatMenuModule } from '@angular/material/menu';
     MatTooltipModule,
     MatMenuModule,
     RouterLink,
+    CoinsCounterComponent,
   ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',

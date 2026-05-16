@@ -1,0 +1,9 @@
+<div
+  class="coins"
+  role="status"
+  [attr.aria-label]="label()"
+  [matTooltip]="tooltip()"
+>
+  <span class="coin" aria-hidden="true">{{ pointsPerCoin() }}</span>
+  <span class="count" aria-hidden="true">{{ totalPoints() }}</span>
+</div>

@@ -31,7 +31,8 @@ export async function cleanupDb() {
   await query('DELETE FROM training_log.golden_day');
   await query(
     `UPDATE training_log.settings
-     SET pushup_goal = $1, elevation_goal = $2, reading_pages_goal = $3
+     SET pushup_goal = $1, elevation_goal = $2, reading_pages_goal = $3,
+         coins_reset_at = TIMESTAMP '1970-01-01 00:00:00'
      WHERE id = 1`,
     [100, 250, 0]
   );
@@ -68,6 +69,13 @@ export async function insertGoldenDay(date: Date | string) {
     `INSERT INTO training_log.golden_day (date) VALUES ($1) ON CONFLICT DO NOTHING`,
     [date]
   );
+}
+
+export async function getCoinsResetAt(): Promise<Date> {
+  const result = await query(
+    `SELECT coins_reset_at FROM training_log.settings WHERE id = 1`
+  );
+  return result.rows[0].coins_reset_at as Date;
 }
 
 export async function populateOAuthClients() {

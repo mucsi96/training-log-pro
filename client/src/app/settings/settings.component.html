@@ -60,5 +60,30 @@
     </form>
   }
 
+  <section class="coins-card" aria-labelledby="coins-heading">
+    <h2 id="coins-heading">Golden coins</h2>
+    <p class="coins-summary">
+      <span class="coin" aria-hidden="true">{{ pointsPerCoin() }}</span>
+      <span class="coins-total">
+        <span class="coins-points">{{ totalPoints() }}</span>
+        <span class="coins-points-label">points</span>
+      </span>
+      <span class="coins-detail">
+        {{ totalCoins() }} {{ totalCoins() === 1 ? 'coin' : 'coins' }} ·
+        {{ pointsPerCoin() }} per golden day
+      </span>
+    </p>
+    <div class="actions">
+      <button
+        mat-stroked-button
+        type="button"
+        [disabled]="resetting()"
+        (click)="resetCoins()"
+      >
+        Reset coin count
+      </button>
+    </div>
+  </section>
+
   <app-reading-library></app-reading-library>
 </section>
