@@ -11,7 +11,7 @@ import {
   MatDialogModule,
   MatDialogRef,
 } from '@angular/material/dialog';
-import { CircularSliderComponent } from '../circular-slider/circular-slider.component';
+import { DonutSliderComponent } from '@mucsi96/angular-material-theme';
 import { Book } from './reading.service';
 
 export type ReadingProgressDialogData = {
@@ -23,7 +23,7 @@ export type ReadingProgressDialogResult = number | null;
 @Component({
   standalone: true,
   selector: 'app-reading-progress-dialog',
-  imports: [MatButtonModule, MatDialogModule, CircularSliderComponent],
+  imports: [MatButtonModule, MatDialogModule, DonutSliderComponent],
   templateUrl: './reading-progress-dialog.component.html',
   styleUrl: './reading-progress-dialog.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,7 +37,7 @@ export class ReadingProgressDialogComponent {
   readonly book = this.data.book;
   readonly page = signal(this.book.currentPage);
   readonly canSave = computed(() => this.page() !== this.book.currentPage);
-  readonly ariaLabel = `Current page for ${this.book.title}`;
+  readonly pageUnit = `/ ${this.book.totalPages}`;
 
   cancel(): void {
     this.dialogRef.close(null);

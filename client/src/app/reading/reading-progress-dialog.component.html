@@ -1,18 +1,15 @@
 <h2 mat-dialog-title>{{ book.title }}</h2>
 <mat-dialog-content class="dialog-content">
   <p class="author">{{ book.author }}</p>
-  <app-circular-slider
+  <bt-donut-slider
     class="slider"
     [(value)]="page"
     [min]="book.startingPage"
     [max]="book.totalPages"
-    [unitsPerRevolution]="25"
-    unitLabel="pages"
-    [ariaLabel]="ariaLabel"
-  >
-    <span class="page-value">{{ page() }}</span>
-    <span class="page-label">of {{ book.totalPages }}</span>
-  </app-circular-slider>
+    [valuePerTurn]="10"
+    label="Page"
+    [unit]="pageUnit"
+  />
 </mat-dialog-content>
 <mat-dialog-actions align="end">
   <button mat-button type="button" (click)="cancel()">Cancel</button>

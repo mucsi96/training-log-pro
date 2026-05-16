@@ -10,6 +10,7 @@ import {
   RippleGlobalOptions,
 } from '@angular/material/core';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { provideAngularMaterialTheme } from '@mucsi96/angular-material-theme';
 import * as echarts from 'echarts';
 import { NGX_ECHARTS_CONFIG } from 'ngx-echarts';
 import { routes } from './app.routes';
@@ -43,6 +44,7 @@ export function getAppConfig(environment: EnvironmentConfig): ApplicationConfig 
       ),
       { provide: MAT_RIPPLE_GLOBAL_OPTIONS, useValue: globalRippleConfig },
       provideAnimationsAsync(),
+      provideAngularMaterialTheme(),
       { provide: ENVIRONMENT_CONFIG, useValue: environment },
       provideECharts(),
       provideOidcAuth(environment),

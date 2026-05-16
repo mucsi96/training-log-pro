@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationsService } from '@mucsi96/angular-material-theme';
 import { WithingsService } from '../withings/withings.service';
 import { fetchJson } from '../utils/fetchJson';
 import { haltForNavigation } from '../utils/auth';
@@ -10,7 +10,7 @@ const REDIRECT_GUARD_KEY = 'strava-authorize-redirected';
 @Injectable({ providedIn: 'root' })
 export class StravaService {
   private readonly http = inject(HttpClient);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notifications = inject(NotificationsService);
   private readonly withingsService = inject(WithingsService);
   private syncPromise: Promise<void> | undefined;
   private readonly _isSynced = signal(false);
@@ -30,14 +30,9 @@ export class StravaService {
           const authorizeUrl = httpError.error?._links?.oauth2Login?.href;
           if (httpError.status === 401 && authorizeUrl) {
             if (sessionStorage.getItem(REDIRECT_GUARD_KEY)) {
-              this.snackBar.open(
+              this.notifications.error(
                 'Unable to authorize Strava. Please try again later.',
-                'Close',
-                {
-                  duration: 5000,
-                  verticalPosition: 'top',
-                  panelClass: ['error'],
-                }
+                { duration: 5000 }
               );
             } else {
               sessionStorage.setItem(REDIRECT_GUARD_KEY, '1');
@@ -48,11 +43,7 @@ export class StravaService {
               await haltForNavigation();
             }
           } else {
-            this.snackBar.open('Unable to sync with Strava', 'Close', {
-              duration: 3000,
-              verticalPosition: 'top',
-              panelClass: ['error'],
-            });
+            this.notifications.error('Unable to sync with Strava');
           }
         }
         this._isSynced.set(true);

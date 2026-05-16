@@ -1,18 +1,14 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationsService } from '@mucsi96/angular-material-theme';
 import { catchError } from 'rxjs';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
-  const snackBar = inject(MatSnackBar);
+  const notifications = inject(NotificationsService);
   return next(req).pipe(
     catchError((error) => {
       if (error.status !== 401) {
-        snackBar.open('An error occurred. ' + error.message, 'Close', {
-          duration: 3000,
-          verticalPosition: 'top',
-          panelClass: ['error'],
-        });
+        notifications.error('An error occurred. ' + error.message);
       }
 
       return Promise.reject(error);

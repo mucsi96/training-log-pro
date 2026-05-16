@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationsService } from '@mucsi96/angular-material-theme';
 import { fetchJson } from '../utils/fetchJson';
 
 export type PushupSet = {
@@ -16,7 +16,7 @@ type PushupSetDto = {
 @Injectable({ providedIn: 'root' })
 export class PushupsService {
   private readonly http = inject(HttpClient);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notifications = inject(NotificationsService);
   readonly version = signal(0);
 
   async getSets(period = 0): Promise<PushupSet[]> {
@@ -25,7 +25,7 @@ export class PushupsService {
       const sets = await fetchJson<PushupSetDto[]>(this.http, url);
       return sets.map((set) => ({ ...set, createdAt: new Date(set.createdAt) }));
     } catch (e) {
-      this.showError('Unable to fetch pushups');
+      this.notifications.error('Unable to fetch pushups');
       throw e;
     }
   }
@@ -39,16 +39,8 @@ export class PushupsService {
       this.version.update((v) => v + 1);
       return { ...set, createdAt: new Date(set.createdAt) };
     } catch (e) {
-      this.showError('Unable to add pushups');
+      this.notifications.error('Unable to add pushups');
       throw e;
     }
-  }
-
-  private showError(message: string) {
-    this.snackBar.open(message, 'Close', {
-      duration: 3000,
-      verticalPosition: 'top',
-      panelClass: ['error'],
-    });
   }
 }

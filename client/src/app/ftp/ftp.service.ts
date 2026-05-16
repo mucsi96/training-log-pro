@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationsService } from '@mucsi96/angular-material-theme';
 import { StravaService } from '../strava/strava.service';
 import { fetchJson } from '../utils/fetchJson';
 
@@ -23,7 +23,7 @@ type FtpTimelineResponse = {
 export class FtpService {
   private readonly http = inject(HttpClient);
   private readonly stravaService = inject(StravaService);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notifications = inject(NotificationsService);
   private readonly cache = new Map<number, FtpTimeline>();
 
   async getFtp(period = 0): Promise<FtpTimeline> {
@@ -45,11 +45,7 @@ export class FtpService {
       this.cache.set(period, result);
       return result;
     } catch (e) {
-      this.snackBar.open('Unable to fetch FTP', 'Close', {
-        duration: 3000,
-        verticalPosition: 'top',
-        panelClass: ['error'],
-      });
+      this.notifications.error('Unable to fetch FTP');
       throw e;
     }
   }

@@ -1,0 +1,20 @@
+@use '@mucsi96/angular-material-theme/styles' as bt;
+
+html,
+body {
+  height: 100%;
+}
+
+html {
+  @include bt.theme();
+}
+
+body {
+  margin: 0;
+}
+
+.page-loading {
+  display: flex;
+  justify-content: center;
+  margin: 150px 0;
+}
