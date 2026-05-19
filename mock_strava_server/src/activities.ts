@@ -7,6 +7,7 @@ type PushedSegmentEffort = {
   segmentDistance: number;
   segmentAverageGrade: number;
   elapsedTime: number;
+  averageWatts: number | null;
 };
 
 type PushedActivity = {
@@ -40,6 +41,7 @@ export function pushActivity(req: Request, res: Response) {
       segmentDistance: effort.segmentDistance ?? 500,
       segmentAverageGrade: effort.segmentAverageGrade ?? 4,
       elapsedTime: effort.elapsedTime ?? 120,
+      averageWatts: effort.averageWatts ?? 220,
     })
   );
 
@@ -296,6 +298,7 @@ export function getActivity(req: Request, res: Response) {
         start_date: effortStart.toISOString(),
         start_date_local: effortStart.toISOString(),
         distance: effort.segmentDistance,
+        average_watts: effort.averageWatts,
         segment: {
           id: effort.segmentId,
           resource_state: 2,

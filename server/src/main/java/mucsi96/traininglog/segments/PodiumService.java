@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import mucsi96.traininglog.api.PodiumMessage;
 import mucsi96.traininglog.api.PodiumMessage.PeriodEnum;
+import mucsi96.traininglog.weight.Weight;
+import mucsi96.traininglog.weight.WeightRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +23,7 @@ public class PodiumService {
   private static final int PODIUM_SIZE = 3;
 
   private final SegmentEffortRepository segmentEffortRepository;
+  private final WeightRepository weightRepository;
   private final Clock clock;
 
   public Optional<PodiumMessage> getTodayPodium(ZoneId zoneId) {
@@ -70,7 +73,7 @@ public class PodiumService {
     for (SegmentEffort ranked : rankedEfforts) {
       if (ranked.getId() == effort.getId()) {
         if (position <= PODIUM_SIZE) {
-          return Optional.of(new PodiumPlacement(effort, period, position));
+          return Optional.of(new PodiumPlacement(effort, period, position, rankedEfforts));
         }
         return Optional.empty();
       }
@@ -103,16 +106,49 @@ public class PodiumService {
       case 3 -> "3rd place";
       default -> placement.position() + "th place";
     };
+    SegmentEffort effort = placement.effort();
     String message = String.format("%s %s on %s",
-        podiumLabel, periodLabel, placement.effort().getSegmentName());
+        podiumLabel, periodLabel, effort.getSegmentName());
+
+    int position = placement.position();
+    List<SegmentEffort> ranked = placement.rankedEfforts();
+    SegmentEffort faster = position >= 2 ? ranked.get(position - 2) : null;
+    SegmentEffort slower = ranked.size() > position ? ranked.get(position) : null;
+
+    float elevationGain = effort.getSegmentDistance() * effort.getSegmentAverageGrade() / 100f;
+    Float averageWattsPerKg = wattsPerKg(effort);
+
     return PodiumMessage.builder()
-        .segmentName(placement.effort().getSegmentName())
+        .segmentName(effort.getSegmentName())
         .period(placement.period())
-        .position(placement.position())
+        .position(position)
         .message(message)
+        .distance(effort.getSegmentDistance())
+        .elapsedTime(effort.getElapsedTime())
+        .averageGrade(effort.getSegmentAverageGrade())
+        .elevationGain(elevationGain)
+        .averageWatts(effort.getAverageWatts())
+        .averageWattsPerKg(averageWattsPerKg)
+        .fasterPosition(faster != null ? position - 1 : null)
+        .gapToFaster(faster != null ? effort.getElapsedTime() - faster.getElapsedTime() : null)
+        .slowerPosition(slower != null ? position + 1 : null)
+        .gapToSlower(slower != null ? slower.getElapsedTime() - effort.getElapsedTime() : null)
         .build();
   }
 
-  private record PodiumPlacement(SegmentEffort effort, PeriodEnum period, int position) {
+  private Float wattsPerKg(SegmentEffort effort) {
+    if (effort.getAverageWatts() == null) {
+      return null;
+    }
+    return weightRepository
+        .findFirstByCreatedAtBeforeOrderByCreatedAtDesc(effort.getStartDate().plusDays(1))
+        .map(Weight::getWeight)
+        .filter(weight -> weight > 0)
+        .map(weight -> effort.getAverageWatts() / weight)
+        .orElse(null);
+  }
+
+  private record PodiumPlacement(SegmentEffort effort, PeriodEnum period, int position,
+      List<SegmentEffort> rankedEfforts) {
   }
 }

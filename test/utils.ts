@@ -161,14 +161,15 @@ export async function insertSegmentEffort(
     segmentAverageGrade: number;
     elapsedTime: number;
     daysAgo: number;
+    averageWatts?: number | null;
   }
 ) {
   const startDate = new Date(Date.now() - effort.daysAgo * 86400000);
   await query(
     `INSERT INTO training_log.segment_effort (
       id, segment_id, segment_name, segment_distance, segment_average_grade,
-      elapsed_time, start_date, ride_created_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $7)`,
+      elapsed_time, average_watts, start_date, ride_created_at
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8)`,
     [
       effort.id,
       effort.segmentId,
@@ -176,6 +177,7 @@ export async function insertSegmentEffort(
       effort.segmentDistance,
       effort.segmentAverageGrade,
       effort.elapsedTime,
+      effort.averageWatts ?? null,
       startDate,
     ]
   );
@@ -184,7 +186,7 @@ export async function insertSegmentEffort(
 export async function getSegmentEffortRows() {
   const result = await query(
     `SELECT id, segment_id, segment_name, segment_distance, segment_average_grade,
-            elapsed_time, start_date
+            elapsed_time, average_watts, start_date
      FROM training_log.segment_effort ORDER BY id ASC`
   );
   return result.rows;
@@ -294,6 +296,7 @@ export type PushStravaSegmentEffortOptions = {
   segmentDistance?: number;
   segmentAverageGrade?: number;
   elapsedTime?: number;
+  averageWatts?: number | null;
 };
 
 export type PushStravaActivityOptions = {

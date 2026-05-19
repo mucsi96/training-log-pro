@@ -178,6 +178,7 @@ public class StravaActivityService {
         .segmentDistance(segment.getDistance())
         .segmentAverageGrade(segment.getAverageGrade())
         .elapsedTime(effort.getElapsedTime())
+        .averageWatts(effort.getAverageWatts())
         .startDate(effort.getStartDate().atZoneSameInstant(ZoneOffset.UTC))
         .rideCreatedAt(rideCreatedAt)
         .build();
