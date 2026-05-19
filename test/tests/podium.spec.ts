@@ -88,6 +88,35 @@ test.describe('Podium messages', () => {
     await expect(page.getByTestId('podium-banner')).toHaveCount(0);
   });
 
+  test('skips segments with negative elevation when syncing', async ({ page }) => {
+    await pushStravaActivity({
+      segmentEfforts: [
+        {
+          id: 8001,
+          segmentId: 81,
+          segmentName: 'Uphill Climb',
+          segmentDistance: 500,
+          segmentAverageGrade: 5,
+          elapsedTime: 120,
+        },
+        {
+          id: 8002,
+          segmentId: 82,
+          segmentName: 'Downhill Descent',
+          segmentDistance: 500,
+          segmentAverageGrade: -5,
+          elapsedTime: 80,
+        },
+      ],
+    });
+
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
+
+    const efforts = await getSegmentEffortRows();
+    expect(efforts.map((row) => Number(row.id))).toEqual([8001]);
+  });
+
   test('renders segment details and neighbour gaps on the podium panel', async ({
     page,
   }) => {
