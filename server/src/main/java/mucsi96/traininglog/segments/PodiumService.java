@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import mucsi96.traininglog.api.PodiumMessage;
 import mucsi96.traininglog.api.PodiumMessage.PeriodEnum;
+import mucsi96.traininglog.strava.StravaConfiguration;
 import mucsi96.traininglog.weight.Weight;
 import mucsi96.traininglog.weight.WeightRepository;
 
@@ -24,6 +25,7 @@ public class PodiumService {
 
   private final SegmentEffortRepository segmentEffortRepository;
   private final WeightRepository weightRepository;
+  private final StravaConfiguration stravaConfiguration;
   private final Clock clock;
 
   public Optional<PodiumMessage> getTodayPodium(ZoneId zoneId) {
@@ -118,8 +120,11 @@ public class PodiumService {
     float elevationGain = effort.getSegmentDistance() * effort.getSegmentAverageGrade() / 100f;
     Float averageWattsPerKg = wattsPerKg(effort);
 
+    String segmentUrl = stravaConfiguration.getApiUri() + "/segments/" + effort.getSegmentId();
+
     return PodiumMessage.builder()
         .segmentName(effort.getSegmentName())
+        .segmentUrl(segmentUrl)
         .period(placement.period())
         .position(position)
         .message(message)

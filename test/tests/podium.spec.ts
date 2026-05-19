@@ -131,6 +131,9 @@ test.describe('Podium messages', () => {
     await expect(panel).toBeVisible();
     await expect(panel).toContainText('2nd place all-time on UndAbflug');
     await expect(panel).toHaveAttribute('data-position', '2');
+    await expect(panel).toHaveAttribute('href', /\/segments\/42$/);
+    await expect(panel).toHaveAttribute('target', '_blank');
+    await expect(panel).toHaveAttribute('rel', /noopener/);
 
     await expect(page.getByTestId('podium-distance')).toContainText('1.2 km');
     await expect(page.getByTestId('podium-time')).toContainText('3:30');

@@ -5,12 +5,15 @@
 <div class="page-loading"><bt-bar-loader /></div>
 } @else if (today && period) {
 @if (podium) {
-<article
+<a
   class="podium-panel"
   data-testid="podium-banner"
   [attr.data-period]="podium.period"
   [attr.data-position]="podium.position"
-  [attr.aria-label]="podium.message"
+  [attr.aria-label]="podium.message + ' — open Strava segment'"
+  [href]="podium.segmentUrl"
+  target="_blank"
+  rel="noopener noreferrer"
 >
   <header class="podium-header">
     <mat-icon class="podium-medal" aria-hidden="true">emoji_events</mat-icon>
@@ -71,7 +74,7 @@
     }
   </ul>
   }
-</article>
+</a>
 }
 @if ((period.time ?? 0) > 0) {
 <section>

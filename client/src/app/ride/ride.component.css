@@ -44,6 +44,20 @@ h2 {
   background: var(--mat-sys-surface-container);
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
   border-left: 4px solid var(--podium-medal-color);
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 120ms ease, box-shadow 120ms ease;
+}
+
+.podium-panel:hover,
+.podium-panel:focus-visible {
+  background: var(--mat-sys-surface-container-high, var(--mat-sys-surface-container));
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.3);
+}
+
+.podium-panel:focus-visible {
+  outline: 2px solid var(--podium-medal-color);
+  outline-offset: 2px;
 }
 
 .podium-panel[data-position="1"] {

@@ -16,6 +16,7 @@ export type PodiumPeriod = 'WEEK' | 'MONTH' | 'ALL_TIME';
 
 export type PodiumMessage = {
   segmentName: string;
+  segmentUrl: string;
   period: PodiumPeriod;
   position: number;
   message: string;

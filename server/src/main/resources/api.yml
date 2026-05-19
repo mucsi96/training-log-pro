@@ -521,6 +521,7 @@ components:
       type: object
       required:
         - segmentName
+        - segmentUrl
         - period
         - position
         - message
@@ -531,6 +532,9 @@ components:
       properties:
         segmentName:
           type: string
+        segmentUrl:
+          type: string
+          format: uri
         period:
           type: string
           enum:
