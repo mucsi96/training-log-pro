@@ -153,6 +153,7 @@ public class StravaActivityService {
           .orElse(List.of())
           .stream()
           .map(effort -> toSegmentEffort(effort, rideCreatedAt))
+          .filter(effort -> effort.getSegmentAverageGrade() >= 0)
           .toList();
       efforts.forEach(effort -> log.info(
           "Strava segment effort to persist: id={} segment_id={} segment_name={} distance_m={} "
