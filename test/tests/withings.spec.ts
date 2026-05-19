@@ -42,8 +42,12 @@ test.describe('Withings', () => {
       { value: 217634, type: 8, unit: -4 },
     ]);
 
+    const syncResponsePromise = page.waitForResponse(
+      (response) => response.url().endsWith('/api/withings/sync') && response.request().method() === 'POST'
+    );
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
+    const syncResponse = await syncResponsePromise;
+    expect(syncResponse.status()).toBe(200);
 
     expect(await getWeightRows()).toEqual([]);
   });
