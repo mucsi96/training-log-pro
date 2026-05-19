@@ -534,7 +534,6 @@ components:
           type: string
         segmentUrl:
           type: string
-          format: uri
         period:
           type: string
           enum:
