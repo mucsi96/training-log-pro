@@ -1,11 +1,12 @@
 import express from 'express';
 import { authorize } from './authorize';
 import { getAccessToken } from './getAccessToken';
-import { measure } from './measure';
+import { measure, resetMeasureScenario, setMeasureScenario } from './measure';
 
 const app = express();
 
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 app.use((req, res, next) => {
   if (req.path !== '/health') {
@@ -18,6 +19,8 @@ app.use((req, res, next) => {
 app.get('/withings/oauth2_user/authorize2', authorize);
 app.post('/withings/v2/oauth2', getAccessToken);
 app.post('/withings/measure', measure);
+app.post('/withings/test/measure', setMeasureScenario);
+app.post('/withings/test/reset', resetMeasureScenario);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });

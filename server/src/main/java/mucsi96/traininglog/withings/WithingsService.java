@@ -119,13 +119,19 @@ public class WithingsService {
       return Optional.empty();
     }
 
+    Optional<Float> weight = getMeasurement(measures, MEASURE_TYPE_WEIGHT);
+    if (weight.isEmpty()) {
+      log.info("Withings measure group {} has no weight measurement, skipping", measureGroup.getGrpid());
+      return Optional.empty();
+    }
+
     return Optional.of(
         Weight
             .builder()
             .createdAt(ZonedDateTime.ofInstant(Instant.ofEpochSecond(measureGroup.getDate()), ZoneOffset.UTC))
-            .weight(getMeasurement(measures, MEASURE_TYPE_WEIGHT).orElseThrow())
-            .fatRatio(getMeasurement(measures, MEASURE_TYPE_FAT_RATIO).orElseThrow())
-            .fatMassWeight(getMeasurement(measures, MEASURE_TYPE_FAT_MASS_WEIGHT).orElseThrow())
+            .weight(weight.get())
+            .fatRatio(getMeasurement(measures, MEASURE_TYPE_FAT_RATIO).orElse(null))
+            .fatMassWeight(getMeasurement(measures, MEASURE_TYPE_FAT_MASS_WEIGHT).orElse(null))
             .build());
   }
 

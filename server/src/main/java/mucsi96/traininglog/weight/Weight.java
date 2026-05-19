@@ -25,8 +25,8 @@ public class Weight {
     private float weight;
 
     @Column
-    private float fatMassWeight;
+    private Float fatMassWeight;
 
     @Column
-    private float fatRatio;
+    private Float fatRatio;
 }

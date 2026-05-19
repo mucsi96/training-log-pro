@@ -1,5 +1,37 @@
 import { Request, Response } from 'express';
 
+type Measure = {
+  value: number;
+  type: number;
+  unit: number;
+  algo?: number;
+  fm?: number;
+  fw?: number;
+};
+
+const DEFAULT_MEASURES: Measure[] = [
+  { value: 871532, type: 1, unit: -4, algo: 3425, fm: 1, fw: 1000 },
+  { value: 352664, type: 6, unit: -4, algo: 3425, fm: 1, fw: 1000 },
+  { value: 217634, type: 8, unit: -4, algo: 3425, fm: 1, fw: 1000 },
+];
+
+let nextMeasures: Measure[] = DEFAULT_MEASURES;
+
+export function resetMeasureScenario(_req: Request, res: Response) {
+  nextMeasures = DEFAULT_MEASURES;
+  res.json({ status: 'ok' });
+}
+
+export function setMeasureScenario(req: Request, res: Response) {
+  const body = req.body as { measures?: Measure[] } | undefined;
+  if (!body || !Array.isArray(body.measures)) {
+    res.status(400).json({ error: 'measures array required' });
+    return;
+  }
+  nextMeasures = body.measures;
+  res.json({ status: 'ok' });
+}
+
 export function measure(req: Request, res: Response) {
   const authorization = req.headers.authorization;
   const action = req.query.action as string | undefined;
@@ -64,32 +96,7 @@ export function measure(req: Request, res: Response) {
           modified: date.getTime() / 1000,
           category: 1594257200,
           deviceid: '892359876fd8805ac45bab078c4828692f0276b1',
-          measures: [
-            {
-              value: 871532,
-              type: 1,
-              unit: -4,
-              algo: 3425,
-              fm: 1,
-              fw: 1000,
-            },
-            {
-              value: 352664,
-              type: 6,
-              unit: -4,
-              algo: 3425,
-              fm: 1,
-              fw: 1000,
-            },
-            {
-              value: 217634,
-              type: 8,
-              unit: -4,
-              algo: 3425,
-              fm: 1,
-              fw: 1000,
-            },
-          ],
+          measures: nextMeasures,
           comment: 'A measurement comment',
           timezone: 'Europe/Paris',
         },
@@ -99,6 +106,6 @@ export function measure(req: Request, res: Response) {
     },
   };
 
-  console.log('[measure] Response: measuregrps with', response.body.measuregrps.length, 'groups');
+  console.log('[measure] Response: measuregrps with', response.body.measuregrps.length, 'groups,', nextMeasures.length, 'measures');
   res.json(response);
 }

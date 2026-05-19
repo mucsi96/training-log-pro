@@ -345,3 +345,36 @@ export async function resetStravaActivities() {
     throw new Error(`Failed to reset Strava activities: ${response.status}`);
   }
 }
+
+export type WithingsMeasure = {
+  value: number;
+  type: number;
+  unit: number;
+};
+
+export async function setWithingsMeasures(measures: WithingsMeasure[]) {
+  const response = await fetch('http://localhost:8180/withings/test/measure', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ measures }),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to set Withings measures: ${response.status}`);
+  }
+}
+
+export async function resetWithingsMeasures() {
+  const response = await fetch('http://localhost:8180/withings/test/reset', {
+    method: 'POST',
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to reset Withings measures: ${response.status}`);
+  }
+}
+
+export async function getWeightRows() {
+  const result = await query(
+    'SELECT created_at, weight, fat_ratio, fat_mass_weight FROM training_log.weight ORDER BY created_at ASC'
+  );
+  return result.rows;
+}
