@@ -3,9 +3,9 @@ import {
   cleanupDb,
   getSegmentEffortRows,
   insertSegmentEffort,
-  insertWeight,
   populateOAuthClients,
   pushStravaActivity,
+  setWithingsMeasures,
 } from '../utils';
 
 test.describe('Podium messages', () => {
@@ -91,7 +91,10 @@ test.describe('Podium messages', () => {
   test('renders segment details and neighbour gaps on the podium panel', async ({
     page,
   }) => {
-    await insertWeight(1, 70, 0.18, 12.6);
+    // Strava sync triggers a Withings sync first, which persists today's
+    // weight from the mock. Lock today's weight to 70 kg so watts/kg is
+    // deterministic (280 W / 70 kg = 4.0 W/kg).
+    await setWithingsMeasures([{ value: 700000, type: 1, unit: -4 }]);
     for (const [daysAgo, elapsed, effortId] of [
       [3, 200, 3001],
       [4, 220, 3002],
