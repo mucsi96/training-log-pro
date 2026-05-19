@@ -521,11 +521,18 @@ components:
       type: object
       required:
         - segmentName
+        - segmentUrl
         - period
         - position
         - message
+        - distance
+        - elapsedTime
+        - averageGrade
+        - elevationGain
       properties:
         segmentName:
+          type: string
+        segmentUrl:
           type: string
         period:
           type: string
@@ -540,3 +547,33 @@ components:
           maximum: 3
         message:
           type: string
+        distance:
+          type: number
+          format: float
+        elapsedTime:
+          type: integer
+          format: int32
+        averageGrade:
+          type: number
+          format: float
+        elevationGain:
+          type: number
+          format: float
+        averageWatts:
+          type: number
+          format: float
+        averageWattsPerKg:
+          type: number
+          format: float
+        fasterPosition:
+          type: integer
+          format: int32
+        gapToFaster:
+          type: integer
+          format: int32
+        slowerPosition:
+          type: integer
+          format: int32
+        gapToSlower:
+          type: integer
+          format: int32

@@ -16,9 +16,20 @@ export type PodiumPeriod = 'WEEK' | 'MONTH' | 'ALL_TIME';
 
 export type PodiumMessage = {
   segmentName: string;
+  segmentUrl: string;
   period: PodiumPeriod;
   position: number;
   message: string;
+  distance: number;
+  elapsedTime: number;
+  averageGrade: number;
+  elevationGain: number;
+  averageWatts?: number;
+  averageWattsPerKg?: number;
+  fasterPosition?: number;
+  gapToFaster?: number;
+  slowerPosition?: number;
+  gapToSlower?: number;
 };
 
 @Injectable({ providedIn: 'root' })

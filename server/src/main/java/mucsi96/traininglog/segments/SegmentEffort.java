@@ -37,6 +37,9 @@ public class SegmentEffort {
   private int elapsedTime;
 
   @Column
+  private Float averageWatts;
+
+  @Column
   private ZonedDateTime startDate;
 
   @Column

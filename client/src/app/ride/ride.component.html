@@ -5,17 +5,76 @@
 <div class="page-loading"><bt-bar-loader /></div>
 } @else if (today && period) {
 @if (podium) {
-<aside
-  class="podium-banner"
+<a
+  class="podium-panel"
   data-testid="podium-banner"
   [attr.data-period]="podium.period"
   [attr.data-position]="podium.position"
+  [attr.aria-label]="podium.message + ' — open Strava segment'"
+  [href]="podium.segmentUrl"
+  target="_blank"
+  rel="noopener noreferrer"
 >
-  <mat-icon aria-hidden="true">emoji_events</mat-icon>
-  <div class="podium-text">
-    <p class="podium-title">{{ podium.message }}</p>
-  </div>
-</aside>
+  <header class="podium-header">
+    <mat-icon class="podium-medal" aria-hidden="true">emoji_events</mat-icon>
+    <div class="podium-meta">
+      <p class="podium-title">{{ podium.message }}</p>
+      <p class="podium-subtitle">{{ podium.segmentName }}</p>
+    </div>
+  </header>
+  <dl class="podium-stats">
+    <div>
+      <dt>Length</dt>
+      <dd data-testid="podium-distance">
+        {{ podium.distance | measurementWithUnit : "km" : 2 : 1000 }}
+      </dd>
+    </div>
+    <div>
+      <dt>Time</dt>
+      <dd data-testid="podium-time">{{ formatDuration(podium.elapsedTime) }}</dd>
+    </div>
+    <div>
+      <dt>Elevation</dt>
+      <dd data-testid="podium-elevation">
+        {{ podium.elevationGain | measurementWithUnit : "m" : 0 }}
+      </dd>
+    </div>
+    @if (podium.averageWatts) {
+    <div>
+      <dt>Avg watts</dt>
+      <dd data-testid="podium-watts">
+        {{ podium.averageWatts | measurementWithUnit : "W" : 0 }}
+      </dd>
+    </div>
+    } @if (podium.averageWattsPerKg) {
+    <div>
+      <dt>Watts / kg</dt>
+      <dd data-testid="podium-watts-per-kg">
+        {{ podium.averageWattsPerKg | number : "1.1-1" }} W/kg
+      </dd>
+    </div>
+    }
+  </dl>
+  @if (podium.gapToFaster != null || podium.gapToSlower != null) {
+  <ul class="podium-gaps">
+    @if (podium.gapToFaster != null && podium.fasterPosition) {
+    <li data-testid="podium-gap-faster">
+      <span class="gap-label"
+        >{{ formatPosition(podium.fasterPosition) }} place</span
+      >
+      <span class="gap-value">-{{ formatDuration(podium.gapToFaster) }}</span>
+    </li>
+    } @if (podium.gapToSlower != null && podium.slowerPosition) {
+    <li data-testid="podium-gap-slower">
+      <span class="gap-label"
+        >{{ formatPosition(podium.slowerPosition) }} place</span
+      >
+      <span class="gap-value">+{{ formatDuration(podium.gapToSlower) }}</span>
+    </li>
+    }
+  </ul>
+  }
+</a>
 }
 @if ((period.time ?? 0) > 0) {
 <section>

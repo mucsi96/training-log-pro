@@ -5,6 +5,7 @@ import {
   insertSegmentEffort,
   populateOAuthClients,
   pushStravaActivity,
+  setWithingsMeasures,
 } from '../utils';
 
 test.describe('Podium messages', () => {
@@ -85,5 +86,63 @@ test.describe('Podium messages', () => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
     await expect(page.getByTestId('podium-banner')).toHaveCount(0);
+  });
+
+  test('renders segment details and neighbour gaps on the podium panel', async ({
+    page,
+  }) => {
+    // Strava sync triggers a Withings sync first, which persists today's
+    // weight from the mock. Lock today's weight to 70 kg so watts/kg is
+    // deterministic (280 W / 70 kg = 4.0 W/kg).
+    await setWithingsMeasures([{ value: 700000, type: 1, unit: -4 }]);
+    for (const [daysAgo, elapsed, effortId] of [
+      [3, 200, 3001],
+      [4, 220, 3002],
+      [5, 260, 3003],
+    ] as const) {
+      await insertSegmentEffort({
+        id: effortId,
+        segmentId: 42,
+        segmentName: 'UndAbflug',
+        segmentDistance: 1200,
+        segmentAverageGrade: 6,
+        elapsedTime: elapsed,
+        daysAgo,
+        averageWatts: 240,
+      });
+    }
+
+    await pushStravaActivity({
+      segmentEfforts: [
+        {
+          id: 9101,
+          segmentId: 42,
+          segmentName: 'UndAbflug',
+          segmentDistance: 1200,
+          segmentAverageGrade: 6,
+          elapsedTime: 210,
+          averageWatts: 280,
+        },
+      ],
+    });
+
+    await page.goto('/');
+    const panel = page.getByTestId('podium-banner');
+    await expect(panel).toBeVisible();
+    await expect(panel).toContainText('2nd place all-time on UndAbflug');
+    await expect(panel).toHaveAttribute('data-position', '2');
+    await expect(panel).toHaveAttribute('href', /\/segments\/42$/);
+    await expect(panel).toHaveAttribute('target', '_blank');
+    await expect(panel).toHaveAttribute('rel', /noopener/);
+
+    await expect(page.getByTestId('podium-distance')).toContainText('1.2 km');
+    await expect(page.getByTestId('podium-time')).toContainText('3:30');
+    await expect(page.getByTestId('podium-elevation')).toContainText('72 m');
+    await expect(page.getByTestId('podium-watts')).toContainText('280 W');
+    await expect(page.getByTestId('podium-watts-per-kg')).toContainText('4.0 W/kg');
+    await expect(page.getByTestId('podium-gap-faster')).toContainText('1st place');
+    await expect(page.getByTestId('podium-gap-faster')).toContainText('-0:10');
+    await expect(page.getByTestId('podium-gap-slower')).toContainText('3rd place');
+    await expect(page.getByTestId('podium-gap-slower')).toContainText('+0:10');
   });
 });
