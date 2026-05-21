@@ -50,7 +50,7 @@ test.describe('Podium messages', () => {
           segmentName: 'Flat Loop',
           segmentDistance: 1000,
           segmentAverageGrade: 1,
-          elapsedTime: 100,
+          elapsedTime: 150,
         },
         {
           id: 9002,
@@ -115,6 +115,35 @@ test.describe('Podium messages', () => {
 
     const efforts = await getSegmentEffortRows();
     expect(efforts.map((row) => Number(row.id))).toEqual([8001]);
+  });
+
+  test('skips segments shorter than two minutes when syncing', async ({ page }) => {
+    await pushStravaActivity({
+      segmentEfforts: [
+        {
+          id: 7001,
+          segmentId: 71,
+          segmentName: 'Long Climb',
+          segmentDistance: 1000,
+          segmentAverageGrade: 5,
+          elapsedTime: 120,
+        },
+        {
+          id: 7002,
+          segmentId: 72,
+          segmentName: 'Sprint Section',
+          segmentDistance: 200,
+          segmentAverageGrade: 3,
+          elapsedTime: 119,
+        },
+      ],
+    });
+
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
+
+    const efforts = await getSegmentEffortRows();
+    expect(efforts.map((row) => Number(row.id))).toEqual([7001]);
   });
 
   test('renders segment details and neighbour gaps on the podium panel', async ({
