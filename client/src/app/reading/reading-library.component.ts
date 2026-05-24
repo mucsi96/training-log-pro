@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, inject, resource, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -7,16 +8,24 @@ import { MatInputModule } from '@angular/material/input';
 import { BarLoaderComponent } from '@mucsi96/angular-material-theme';
 import { Book, ReadingService } from './reading.service';
 
-type NewBookDraft = {
+type BookDraft = {
   title: string;
   author: string;
   totalPages: number | null;
   startingPage: number | null;
 };
 
+const emptyDraft = (): BookDraft => ({
+  title: '',
+  author: '',
+  totalPages: null,
+  startingPage: null,
+});
+
 @Component({
   standalone: true,
   imports: [
+    NgTemplateOutlet,
     FormsModule,
     MatButtonModule,
     MatFormFieldModule,
@@ -33,12 +42,8 @@ export class ReadingLibraryComponent {
 
   readonly busy = signal(false);
   readonly addingBook = signal(false);
-  readonly draft = signal<NewBookDraft>({
-    title: '',
-    author: '',
-    totalPages: null,
-    startingPage: null,
-  });
+  readonly editingBookId = signal<string | null>(null);
+  readonly draft = signal<BookDraft>(emptyDraft());
 
   readonly books = resource({
     params: () => this.readingService.version(),
@@ -46,28 +51,35 @@ export class ReadingLibraryComponent {
   });
 
   readonly inProgressBooks = computed(
-    () => this.books.value()?.filter((book) => !book.completedAt) ?? []
+    () =>
+      this.books.value()?.filter(
+        (book) => book.totalPages !== null && !book.completedAt
+      ) ?? []
   );
   readonly completedBooks = computed(
-    () => this.books.value()?.filter((book) => book.completedAt) ?? []
+    () => this.books.value()?.filter((book) => !!book.completedAt) ?? []
+  );
+  readonly wantedBooks = computed(
+    () => this.books.value()?.filter((book) => book.totalPages === null) ?? []
   );
 
   readonly canSubmit = computed(() => {
     const d = this.draft();
+    if (this.busy()) return false;
+    if (d.title.trim().length === 0 || d.author.trim().length === 0) {
+      return false;
+    }
+    if (d.totalPages === null) {
+      return (d.startingPage ?? 0) === 0;
+    }
+    if (d.totalPages <= 0) return false;
     const startingPage = d.startingPage ?? 0;
-    return (
-      !this.busy() &&
-      d.title.trim().length > 0 &&
-      d.author.trim().length > 0 &&
-      typeof d.totalPages === 'number' &&
-      d.totalPages > 0 &&
-      startingPage >= 0 &&
-      startingPage < d.totalPages
-    );
+    return startingPage >= 0 && startingPage < d.totalPages;
   });
 
   startAddingBook() {
-    this.draft.set({ title: '', author: '', totalPages: null, startingPage: null });
+    this.editingBookId.set(null);
+    this.draft.set(emptyDraft());
     this.addingBook.set(true);
   }
 
@@ -75,22 +87,49 @@ export class ReadingLibraryComponent {
     this.addingBook.set(false);
   }
 
-  updateDraft<K extends keyof NewBookDraft>(field: K, value: NewBookDraft[K]) {
+  startEditingBook(book: Book) {
+    this.addingBook.set(false);
+    this.draft.set({
+      title: book.title,
+      author: book.author,
+      totalPages: book.totalPages,
+      startingPage: book.startingPage,
+    });
+    this.editingBookId.set(book.id);
+  }
+
+  cancelEditingBook() {
+    this.editingBookId.set(null);
+  }
+
+  updateDraft<K extends keyof BookDraft>(field: K, value: BookDraft[K]) {
     this.draft.update((d) => ({ ...d, [field]: value }));
   }
 
   async submitBook() {
     if (!this.canSubmit()) return;
     const d = this.draft();
+    const editingId = this.editingBookId();
     this.busy.set(true);
     try {
-      await this.readingService.addBook(
-        d.title.trim(),
-        d.author.trim(),
-        d.totalPages as number,
-        d.startingPage ?? 0
-      );
-      this.addingBook.set(false);
+      if (editingId) {
+        await this.readingService.updateBook(
+          editingId,
+          d.title.trim(),
+          d.author.trim(),
+          d.totalPages,
+          d.startingPage ?? 0
+        );
+        this.editingBookId.set(null);
+      } else {
+        await this.readingService.addBook(
+          d.title.trim(),
+          d.author.trim(),
+          d.totalPages,
+          d.startingPage ?? 0
+        );
+        this.addingBook.set(false);
+      }
     } finally {
       this.busy.set(false);
     }
@@ -107,6 +146,9 @@ export class ReadingLibraryComponent {
   }
 
   ariaForBook(book: Book): string {
+    if (book.totalPages === null) {
+      return `${book.title}, wanted`;
+    }
     return `${book.title}, ${book.currentPage} of ${book.totalPages} pages`;
   }
 
@@ -115,5 +157,9 @@ export class ReadingLibraryComponent {
       return null;
     }
     return `${book.averagePagesPerDay.toFixed(1)} pages/day avg`;
+  }
+
+  isEditing(book: Book): boolean {
+    return this.editingBookId() === book.id;
   }
 }

@@ -37,11 +37,8 @@ public class ReadingService {
   private final Clock clock;
 
   @Transactional
-  public BookSummary addBook(String title, String author, int totalPages, int startingPage) {
-    if (startingPage < 0 || startingPage >= totalPages) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-          "startingPage must be between 0 and " + (totalPages - 1));
-    }
+  public BookSummary addBook(String title, String author, Integer totalPages, int startingPage) {
+    validatePages(totalPages, startingPage);
     BookEntity book = BookEntity.builder()
         .id(UUID.randomUUID())
         .title(title)
@@ -56,9 +53,42 @@ public class ReadingService {
   }
 
   @Transactional
+  public BookSummary updateBook(UUID bookId, String title, String author, Integer totalPages, int startingPage) {
+    BookEntity book = bookRepository.findById(bookId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Book not found"));
+    validatePages(totalPages, startingPage);
+    List<ReadingProgressEntity> progress = progressRepository
+        .findByBookId(bookId, Sort.by(Sort.Direction.ASC, "createdAt"));
+    int currentPage = progress.stream()
+        .max(Comparator.comparing(ReadingProgressEntity::getCreatedAt))
+        .map(ReadingProgressEntity::getCurrentPage)
+        .orElse(startingPage);
+    if (totalPages != null && currentPage > totalPages) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+          "totalPages cannot be less than the latest recorded page " + currentPage);
+    }
+    book.setTitle(title);
+    book.setAuthor(author);
+    book.setTotalPages(totalPages);
+    book.setStartingPage(startingPage);
+    if (totalPages == null) {
+      book.setCompletedAt(null);
+    } else if (currentPage >= totalPages && book.getCompletedAt() == null) {
+      book.setCompletedAt(now());
+    } else if (currentPage < totalPages && book.getCompletedAt() != null) {
+      book.setCompletedAt(null);
+    }
+    return toSummary(bookRepository.save(book), progress);
+  }
+
+  @Transactional
   public BookSummary updateProgress(UUID bookId, int currentPage) {
     BookEntity book = bookRepository.findById(bookId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Book not found"));
+    if (book.getTotalPages() == null) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+          "Cannot record progress on a wanted book without a page count");
+    }
     if (currentPage < book.getStartingPage() || currentPage > book.getTotalPages()) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
           "currentPage must be between " + book.getStartingPage() + " and " + book.getTotalPages());
@@ -137,6 +167,20 @@ public class ReadingService {
     return ZonedDateTime.now(clock).withZoneSameInstant(ZoneOffset.UTC).truncatedTo(ChronoUnit.MILLIS);
   }
 
+  private void validatePages(Integer totalPages, int startingPage) {
+    if (totalPages == null) {
+      if (startingPage != 0) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            "startingPage must be 0 when totalPages is not provided");
+      }
+      return;
+    }
+    if (startingPage < 0 || startingPage >= totalPages) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+          "startingPage must be between 0 and " + (totalPages - 1));
+    }
+  }
+
   private BookSummary toSummary(BookEntity book, List<ReadingProgressEntity> progress) {
     Optional<ReadingProgressEntity> latest = progress.stream()
         .max(Comparator.comparing(ReadingProgressEntity::getCreatedAt));
@@ -149,7 +193,7 @@ public class ReadingService {
     Double averagePagesPerDay = null;
     Integer estimatedDaysRemaining = null;
     int pagesReadSinceStart = currentPage - book.getStartingPage();
-    if (startedAt.isPresent() && pagesReadSinceStart > 0) {
+    if (book.getTotalPages() != null && startedAt.isPresent() && pagesReadSinceStart > 0) {
       long daysElapsed = Math.max(1,
           ChronoUnit.DAYS.between(startedAt.get().toLocalDate(), now().toLocalDate()) + 1);
       double avg = (double) pagesReadSinceStart / daysElapsed;
@@ -183,7 +227,7 @@ public class ReadingService {
     private UUID id;
     private String title;
     private String author;
-    private int totalPages;
+    private Integer totalPages;
     private int startingPage;
     private int currentPage;
     private ZonedDateTime createdAt;

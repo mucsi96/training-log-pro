@@ -35,9 +35,10 @@ export class ReadingProgressDialogComponent {
   readonly data = inject<ReadingProgressDialogData>(MAT_DIALOG_DATA);
 
   readonly book = this.data.book;
+  readonly totalPages = this.book.totalPages ?? 0;
   readonly page = signal(this.book.currentPage);
   readonly canSave = computed(() => this.page() !== this.book.currentPage);
-  readonly pageUnit = `/ ${this.book.totalPages}`;
+  readonly pageUnit = `/ ${this.totalPages}`;
 
   cancel(): void {
     this.dialogRef.close(null);

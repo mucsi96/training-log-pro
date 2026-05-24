@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -45,11 +46,23 @@ public class ReadingController {
 
   @PostMapping(value = "/books", consumes = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
-  Book addBook(@Valid @RequestBody AddBookRequest request, @RequestHeader("X-Timezone") ZoneId zoneId) {
+  Book addBook(@Valid @RequestBody BookRequest request, @RequestHeader("X-Timezone") ZoneId zoneId) {
     int startingPage = request.getStartingPage() == null ? 0 : request.getStartingPage();
     BookSummary saved = readingService.addBook(
         request.getTitle().trim(), request.getAuthor().trim(), request.getTotalPages(), startingPage);
     return toResponse(saved, zoneId);
+  }
+
+  @PutMapping(value = "/books/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
+  Book updateBook(
+      @PathVariable UUID id,
+      @Valid @RequestBody BookRequest request,
+      @RequestHeader("X-Timezone") ZoneId zoneId) {
+    int startingPage = request.getStartingPage() == null ? 0 : request.getStartingPage();
+    BookSummary updated = readingService.updateBook(
+        id, request.getTitle().trim(), request.getAuthor().trim(), request.getTotalPages(), startingPage);
+    return toResponse(updated, zoneId);
   }
 
   @PostMapping(value = "/books/{id}/progress", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -101,14 +114,13 @@ public class ReadingController {
   }
 
   @Data
-  public static class AddBookRequest {
+  public static class BookRequest {
     @NotBlank
     @Size(max = 255)
     private String title;
     @NotBlank
     @Size(max = 255)
     private String author;
-    @NotNull
     @Min(1)
     @Max(100000)
     private Integer totalPages;

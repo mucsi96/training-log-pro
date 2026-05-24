@@ -582,3 +582,12 @@ databaseChangeLog:
                   type: float4
                   constraints:
                     nullable: true
+
+  - changeSet:
+      id: 22-make-book-total-pages-nullable
+      author: mucsi96
+      changes:
+        - dropNotNullConstraint:
+            tableName: book
+            columnName: total_pages
+            columnDataType: integer

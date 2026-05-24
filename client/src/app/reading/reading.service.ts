@@ -7,7 +7,7 @@ export type Book = {
   id: string;
   title: string;
   author: string;
-  totalPages: number;
+  totalPages: number | null;
   startingPage: number;
   currentPage: number;
   createdAt: Date;
@@ -21,7 +21,7 @@ type BookDto = {
   id: string;
   title: string;
   author: string;
-  totalPages: number;
+  totalPages?: number | null;
   startingPage: number;
   currentPage: number;
   createdAt: string;
@@ -33,6 +33,7 @@ type BookDto = {
 
 const toBook = (dto: BookDto): Book => ({
   ...dto,
+  totalPages: dto.totalPages ?? null,
   createdAt: new Date(dto.createdAt),
   startedAt: dto.startedAt ? new Date(dto.startedAt) : undefined,
   completedAt: dto.completedAt ? new Date(dto.completedAt) : undefined,
@@ -57,7 +58,7 @@ export class ReadingService {
   async addBook(
     title: string,
     author: string,
-    totalPages: number,
+    totalPages: number | null,
     startingPage: number
   ): Promise<Book> {
     try {
@@ -69,6 +70,27 @@ export class ReadingService {
       return toBook(book);
     } catch (e) {
       this.notifications.error('Unable to add book');
+      throw e;
+    }
+  }
+
+  async updateBook(
+    bookId: string,
+    title: string,
+    author: string,
+    totalPages: number | null,
+    startingPage: number
+  ): Promise<Book> {
+    try {
+      const book = await fetchJson<BookDto>(
+        this.http,
+        `/api/reading/books/${bookId}`,
+        { method: 'put', body: { title, author, totalPages, startingPage } }
+      );
+      this.version.update((v) => v + 1);
+      return toBook(book);
+    } catch (e) {
+      this.notifications.error('Unable to update book');
       throw e;
     }
   }

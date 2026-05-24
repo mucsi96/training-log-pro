@@ -238,7 +238,7 @@ export async function insertBook(
   id: string,
   title: string,
   author: string,
-  totalPages: number,
+  totalPages: number | null,
   createdAt: Date = new Date(),
   completedAt: Date | null = null,
   startingPage: number = 0

@@ -27,11 +27,14 @@ export class ReadingComponent {
   });
 
   readonly inProgressBooks = computed(
-    () => this.books.value()?.filter((book) => !book.completedAt) ?? []
+    () =>
+      this.books.value()?.filter(
+        (book) => book.totalPages !== null && !book.completedAt
+      ) ?? []
   );
 
   bookProgressPercent(book: Book): number {
-    return book.totalPages > 0
+    return book.totalPages && book.totalPages > 0
       ? Math.min(100, (book.currentPage / book.totalPages) * 100)
       : 0;
   }

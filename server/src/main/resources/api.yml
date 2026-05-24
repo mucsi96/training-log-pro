@@ -313,7 +313,6 @@ paths:
               required:
                 - title
                 - author
-                - totalPages
               properties:
                 title:
                   type: string
@@ -377,6 +376,40 @@ paths:
         schema:
           type: string
           format: uuid
+    put:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - author
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                author:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                totalPages:
+                  type: integer
+                  minimum: 1
+                  maximum: 100000
+                startingPage:
+                  type: integer
+                  minimum: 0
+                  maximum: 100000
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
     delete:
       responses:
         '204':
@@ -465,7 +498,6 @@ components:
         - id
         - title
         - author
-        - totalPages
         - startingPage
         - currentPage
         - createdAt
