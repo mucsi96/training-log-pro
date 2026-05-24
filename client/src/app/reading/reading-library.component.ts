@@ -83,10 +83,6 @@ export class ReadingLibraryComponent {
     this.addingBook.set(true);
   }
 
-  cancelAddingBook() {
-    this.addingBook.set(false);
-  }
-
   startEditingBook(book: Book) {
     this.addingBook.set(false);
     this.draft.set({
@@ -98,8 +94,12 @@ export class ReadingLibraryComponent {
     this.editingBookId.set(book.id);
   }
 
-  cancelEditingBook() {
-    this.editingBookId.set(null);
+  cancelForm() {
+    if (this.editingBookId() !== null) {
+      this.editingBookId.set(null);
+    } else {
+      this.addingBook.set(false);
+    }
   }
 
   updateDraft<K extends keyof BookDraft>(field: K, value: BookDraft[K]) {
@@ -157,9 +157,5 @@ export class ReadingLibraryComponent {
       return null;
     }
     return `${book.averagePagesPerDay.toFixed(1)} pages/day avg`;
-  }
-
-  isEditing(book: Book): boolean {
-    return this.editingBookId() === book.id;
   }
 }

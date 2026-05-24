@@ -74,9 +74,9 @@
 </section>
 
 <ng-template #bookCard let-book let-variant="variant">
-  @if (isEditing(book)) {
+  @if (editingBookId() === book.id) {
   <ng-container
-    *ngTemplateOutlet="bookForm; context: { mode: 'edit', book: book }"
+    *ngTemplateOutlet="bookForm; context: { mode: 'edit' }"
   ></ng-container>
   } @else {
   <article
@@ -199,7 +199,7 @@
         mat-stroked-button
         type="button"
         [disabled]="busy()"
-        (click)="mode === 'edit' ? cancelEditingBook() : cancelAddingBook()"
+        (click)="cancelForm()"
       >
         Cancel
       </button>

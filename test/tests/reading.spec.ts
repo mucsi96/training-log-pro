@@ -375,6 +375,73 @@ test.describe('Reading', () => {
     expect(books[0].total_pages).toBe(250);
   });
 
+  test('restores the book card when an edit is cancelled', async ({ page }) => {
+    const bookId = randomUUID();
+    await insertBook(bookId, 'Keep Me', 'Author', 200, daysAgoAt(1, 8));
+
+    await page.goto('/settings');
+    const library = page.getByRole('region', { name: 'Books' });
+    await library.getByRole('button', { name: 'Edit Keep Me' }).click();
+
+    await expect(
+      library.getByRole('heading', { name: 'Edit book' })
+    ).toBeVisible();
+    await library.getByLabel('Title').fill('Different Title');
+    await library.getByRole('button', { name: 'Cancel' }).click();
+
+    await expect(
+      library.getByRole('heading', { name: 'Edit book' })
+    ).toBeHidden();
+    await expect(
+      library.getByRole('heading', { name: 'Keep Me' })
+    ).toBeVisible();
+    await expect(
+      library.getByRole('heading', { name: 'Different Title' })
+    ).toBeHidden();
+
+    const books = await getBookRows();
+    expect(books).toHaveLength(1);
+    expect(books[0].title).toBe('Keep Me');
+  });
+
+  test('rejects an edit that sets the starting page above the current page', async ({
+    page,
+  }) => {
+    const bookId = randomUUID();
+    await insertBook(bookId, 'Halfway Book', 'Author', 300, daysAgoAt(2, 8));
+    await insertReadingProgress(bookId, 50, daysAgoAt(0, 12));
+
+    await page.goto('/settings');
+    const library = page.getByRole('region', { name: 'Books' });
+    await library.getByRole('button', { name: 'Edit Halfway Book' }).click();
+    await library.getByLabel('Starting page').fill('150');
+    await library.getByRole('button', { name: 'Save book' }).click();
+
+    await expect(page.getByText('Unable to update book')).toBeVisible();
+
+    const books = await getBookRows();
+    expect(books[0].starting_page).toBe(0);
+  });
+
+  test('rejects an edit that lowers total pages below the current page', async ({
+    page,
+  }) => {
+    const bookId = randomUUID();
+    await insertBook(bookId, 'Too Far In', 'Author', 300, daysAgoAt(2, 8));
+    await insertReadingProgress(bookId, 150, daysAgoAt(0, 12));
+
+    await page.goto('/settings');
+    const library = page.getByRole('region', { name: 'Books' });
+    await library.getByRole('button', { name: 'Edit Too Far In' }).click();
+    await library.getByLabel('Total pages').fill('100');
+    await library.getByRole('button', { name: 'Save book' }).click();
+
+    await expect(page.getByText('Unable to update book')).toBeVisible();
+
+    const books = await getBookRows();
+    expect(books[0].total_pages).toBe(300);
+  });
+
   test('moves a wanted book to reading in progress when a page count is added', async ({
     page,
   }) => {
