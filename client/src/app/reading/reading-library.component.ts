@@ -5,7 +5,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { BarLoaderComponent } from '@mucsi96/angular-material-theme';
+import {
+  BarLoaderComponent,
+  NotificationsService,
+} from '@mucsi96/angular-material-theme';
 import { Book, ReadingService } from './reading.service';
 
 type BookDraft = {
@@ -39,6 +42,7 @@ const emptyDraft = (): BookDraft => ({
 })
 export class ReadingLibraryComponent {
   private readonly readingService = inject(ReadingService);
+  private readonly notifications = inject(NotificationsService);
 
   readonly busy = signal(false);
   readonly addingBook = signal(false);
@@ -138,6 +142,16 @@ export class ReadingLibraryComponent {
       }
     } finally {
       this.busy.set(false);
+    }
+  }
+
+  async copyBook(book: Book) {
+    const text = `${book.author} - ${book.title}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      this.notifications.success('Copied to clipboard');
+    } catch {
+      this.notifications.error('Unable to copy to clipboard');
     }
   }
 
