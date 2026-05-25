@@ -316,6 +316,195 @@ test.describe('Reading', () => {
     ).toBeVisible();
   });
 
+  test('adds a wanted book without a page count and hides it from the dashboard', async ({
+    page,
+  }) => {
+    await page.goto('/settings');
+    const library = page.getByRole('region', { name: 'Books' });
+
+    await library.getByRole('button', { name: 'Add book' }).click();
+    await library.getByLabel('Title').fill('Some Day');
+    await library.getByLabel('Author').fill('Future Author');
+    await library.getByRole('button', { name: 'Add book' }).click();
+
+    await expect(
+      library.getByRole('heading', { name: 'Wanted list' })
+    ).toBeVisible();
+    await expect(
+      library.getByRole('heading', { name: 'Some Day' })
+    ).toBeVisible();
+    await expect(library.getByText('Page count not set')).toBeVisible();
+
+    const books = await getBookRows();
+    expect(books).toHaveLength(1);
+    expect(books[0].total_pages).toBeNull();
+    expect(books[0].starting_page).toBe(0);
+
+    await page.goto('/');
+    const section = page.getByRole('region', { name: 'Reading' });
+    await expect(
+      section.getByRole('heading', { name: 'Some Day' })
+    ).toBeHidden();
+    await expect(
+      section.getByText('No books in progress. Add a book in Settings.')
+    ).toBeVisible();
+  });
+
+  test('edits an existing book through the settings page', async ({ page }) => {
+    const bookId = randomUUID();
+    await insertBook(bookId, 'Old Title', 'Old Author', 200, daysAgoAt(1, 8));
+
+    await page.goto('/settings');
+    const library = page.getByRole('region', { name: 'Books' });
+    await library.getByRole('button', { name: 'Edit Old Title' }).click();
+
+    await library.getByLabel('Title').fill('New Title');
+    await library.getByLabel('Author').fill('New Author');
+    await library.getByLabel('Total pages').fill('250');
+    await library.getByRole('button', { name: 'Save book' }).click();
+
+    await expect(
+      library.getByRole('heading', { name: 'New Title' })
+    ).toBeVisible();
+    await expect(library.getByText('New Author')).toBeVisible();
+
+    const books = await getBookRows();
+    expect(books).toHaveLength(1);
+    expect(books[0].title).toBe('New Title');
+    expect(books[0].author).toBe('New Author');
+    expect(books[0].total_pages).toBe(250);
+  });
+
+  test('restores the book card when an edit is cancelled', async ({ page }) => {
+    const bookId = randomUUID();
+    await insertBook(bookId, 'Keep Me', 'Author', 200, daysAgoAt(1, 8));
+
+    await page.goto('/settings');
+    const library = page.getByRole('region', { name: 'Books' });
+    await library.getByRole('button', { name: 'Edit Keep Me' }).click();
+
+    await expect(
+      library.getByRole('heading', { name: 'Edit book' })
+    ).toBeVisible();
+    await library.getByLabel('Title').fill('Different Title');
+    await library.getByRole('button', { name: 'Cancel' }).click();
+
+    await expect(
+      library.getByRole('heading', { name: 'Edit book' })
+    ).toBeHidden();
+    await expect(
+      library.getByRole('heading', { name: 'Keep Me' })
+    ).toBeVisible();
+    await expect(
+      library.getByRole('heading', { name: 'Different Title' })
+    ).toBeHidden();
+
+    const books = await getBookRows();
+    expect(books).toHaveLength(1);
+    expect(books[0].title).toBe('Keep Me');
+  });
+
+  test('rejects an edit that sets the starting page above the current page', async ({
+    page,
+  }) => {
+    const bookId = randomUUID();
+    await insertBook(bookId, 'Halfway Book', 'Author', 300, daysAgoAt(2, 8));
+    await insertReadingProgress(bookId, 50, daysAgoAt(0, 12));
+
+    await page.goto('/settings');
+    const library = page.getByRole('region', { name: 'Books' });
+    await library.getByRole('button', { name: 'Edit Halfway Book' }).click();
+    await library.getByLabel('Starting page').fill('150');
+    await library.getByRole('button', { name: 'Save book' }).click();
+
+    await expect(page.getByText('Unable to update book')).toBeVisible();
+
+    const books = await getBookRows();
+    expect(books[0].starting_page).toBe(0);
+  });
+
+  test('rejects an edit that lowers total pages below the current page', async ({
+    page,
+  }) => {
+    const bookId = randomUUID();
+    await insertBook(bookId, 'Too Far In', 'Author', 300, daysAgoAt(2, 8));
+    await insertReadingProgress(bookId, 150, daysAgoAt(0, 12));
+
+    await page.goto('/settings');
+    const library = page.getByRole('region', { name: 'Books' });
+    await library.getByRole('button', { name: 'Edit Too Far In' }).click();
+    await library.getByLabel('Total pages').fill('100');
+    await library.getByRole('button', { name: 'Save book' }).click();
+
+    await expect(page.getByText('Unable to update book')).toBeVisible();
+
+    const books = await getBookRows();
+    expect(books[0].total_pages).toBe(300);
+  });
+
+  test('moves a book to the wanted list when its page count is cleared', async ({
+    page,
+  }) => {
+    const bookId = randomUUID();
+    await insertBook(bookId, 'On The Fence', 'Author', 200, daysAgoAt(1, 8));
+
+    await page.goto('/settings');
+    const library = page.getByRole('region', { name: 'Books' });
+    await library.getByRole('button', { name: 'Edit On The Fence' }).click();
+    await library.getByLabel('Total pages').fill('');
+    await library.getByRole('button', { name: 'Save book' }).click();
+
+    await expect(
+      library.getByRole('heading', { name: 'Wanted list' })
+    ).toBeVisible();
+    await expect(
+      library.getByRole('heading', { name: 'Reading in progress' })
+    ).toBeHidden();
+
+    const books = await getBookRows();
+    expect(books[0].total_pages).toBeNull();
+    expect(books[0].starting_page).toBe(0);
+
+    await page.goto('/');
+    const section = page.getByRole('region', { name: 'Reading' });
+    await expect(
+      section.getByRole('heading', { name: 'On The Fence' })
+    ).toBeHidden();
+  });
+
+  test('moves a wanted book to reading in progress when a page count is added', async ({
+    page,
+  }) => {
+    const bookId = randomUUID();
+    await insertBook(bookId, 'Wanted Book', 'Author', null, daysAgoAt(1, 8));
+
+    await page.goto('/settings');
+    const library = page.getByRole('region', { name: 'Books' });
+
+    await expect(
+      library.getByRole('heading', { name: 'Wanted list' })
+    ).toBeVisible();
+    await library.getByRole('button', { name: 'Edit Wanted Book' }).click();
+    await library.getByLabel('Total pages').fill('180');
+    await library.getByRole('button', { name: 'Save book' }).click();
+
+    await expect(
+      library.getByRole('heading', { name: 'Wanted list' })
+    ).toBeHidden();
+    await expect(
+      library.getByRole('heading', { name: 'Reading in progress' })
+    ).toBeVisible();
+
+    const books = await getBookRows();
+    expect(books[0].total_pages).toBe(180);
+
+    await page.goto('/');
+    const section = page.getByRole('region', { name: 'Reading' });
+    await expect(
+      section.getByRole('button', { name: /Wanted Book, 0 of 180 pages/ })
+    ).toBeVisible();
+  });
+
   test('reflects the configured daily reading goal', async ({ page }) => {
     await setGoals(100, 250, 50);
     const bookId = randomUUID();

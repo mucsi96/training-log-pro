@@ -4,17 +4,104 @@
 <section class="library" aria-labelledby="reading-library-heading">
   <h2 id="reading-library-heading">Books</h2>
 
-  <div class="books">
-    @if (inProgressBooks().length === 0 && completedBooks().length === 0 &&
-    !addingBook()) {
-    <p class="empty">No books yet. Add your first one to get started.</p>
-    } @for (book of inProgressBooks(); track book.id) {
-    <article class="book" [attr.aria-label]="ariaForBook(book)">
-      <header class="book-header">
-        <div class="book-meta">
-          <h3 class="book-title">{{ book.title }}</h3>
-          <p class="book-author">{{ book.author }}</p>
-        </div>
+  @if (inProgressBooks().length === 0 && completedBooks().length === 0 &&
+  wantedBooks().length === 0 && !addingBook()) {
+  <p class="empty">No books yet. Add your first one to get started.</p>
+  }
+
+  @if (inProgressBooks().length > 0) {
+    <div class="book-group">
+      <h3>Reading in progress</h3>
+      <div class="books">
+        @for (book of inProgressBooks(); track book.id) {
+          <ng-container
+            *ngTemplateOutlet="
+              bookCard;
+              context: { $implicit: book, variant: 'in-progress' }
+            "
+          ></ng-container>
+        }
+      </div>
+    </div>
+  }
+
+  @if (completedBooks().length > 0) {
+    <div class="book-group">
+      <h3>Already read</h3>
+      <div class="books">
+        @for (book of completedBooks(); track book.id) {
+          <ng-container
+            *ngTemplateOutlet="
+              bookCard;
+              context: { $implicit: book, variant: 'completed' }
+            "
+          ></ng-container>
+        }
+      </div>
+    </div>
+  }
+
+  @if (wantedBooks().length > 0) {
+    <div class="book-group">
+      <h3>Wanted list</h3>
+      <div class="books">
+        @for (book of wantedBooks(); track book.id) {
+          <ng-container
+            *ngTemplateOutlet="
+              bookCard;
+              context: { $implicit: book, variant: 'wanted' }
+            "
+          ></ng-container>
+        }
+      </div>
+    </div>
+  }
+
+  @if (addingBook()) {
+  <ng-container
+    *ngTemplateOutlet="bookForm; context: { mode: 'add' }"
+  ></ng-container>
+  } @else {
+  <button
+    mat-stroked-button
+    type="button"
+    class="add-button"
+    (click)="startAddingBook()"
+  >
+    Add book
+  </button>
+  }
+</section>
+
+<ng-template #bookCard let-book let-variant="variant">
+  @if (editingBookId() === book.id) {
+  <ng-container
+    *ngTemplateOutlet="bookForm; context: { mode: 'edit' }"
+  ></ng-container>
+  } @else {
+  <article
+    class="book"
+    [class.book--completed]="variant === 'completed'"
+    [class.book--wanted]="variant === 'wanted'"
+    [attr.aria-label]="
+      variant === 'completed' ? ariaForBook(book) + ', finished' : ariaForBook(book)
+    "
+  >
+    <header class="book-header">
+      <div class="book-meta">
+        <h4 class="book-title">{{ book.title }}</h4>
+        <p class="book-author">{{ book.author }}</p>
+      </div>
+      <div class="book-actions">
+        <button
+          mat-icon-button
+          type="button"
+          [attr.aria-label]="'Edit ' + book.title"
+          [disabled]="busy()"
+          (click)="startEditingBook(book)"
+        >
+          <mat-icon>edit</mat-icon>
+        </button>
         <button
           mat-icon-button
           type="button"
@@ -23,125 +110,108 @@
           (click)="deleteBook(book)"
         >
           <mat-icon>delete_outline</mat-icon>
-        </button>
-      </header>
-      <p class="book-stats">
-        {{ book.currentPage }} / {{ book.totalPages }} pages
-        @if (averageLabel(book); as label) {
-        <span>· {{ label }}</span>
-        }
-      </p>
-    </article>
-    } @for (book of completedBooks(); track book.id) {
-    <article
-      class="book book--completed"
-      [attr.aria-label]="ariaForBook(book) + ', finished'"
-    >
-      <header class="book-header">
-        <div class="book-meta">
-          <h3 class="book-title">{{ book.title }}</h3>
-          <p class="book-author">{{ book.author }}</p>
-        </div>
-        <button
-          mat-icon-button
-          type="button"
-          [attr.aria-label]="'Remove ' + book.title"
-          [disabled]="busy()"
-          (click)="deleteBook(book)"
-        >
-          <mat-icon>delete_outline</mat-icon>
-        </button>
-      </header>
-      <p class="book-stats">
-        Finished · {{ book.totalPages }} pages
-        @if (averageLabel(book); as label) {
-        <span>· {{ label }}</span>
-        }
-      </p>
-    </article>
-    } @if (addingBook()) {
-    <form
-      class="add-book"
-      aria-labelledby="add-book-heading"
-      (submit)="submitBook(); $event.preventDefault()"
-    >
-      <h3 id="add-book-heading">Add a book</h3>
-      <mat-form-field appearance="outline">
-        <mat-label>Title</mat-label>
-        <input
-          matInput
-          name="title"
-          [ngModel]="draft().title"
-          (ngModelChange)="updateDraft('title', $event)"
-          required
-        />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Author</mat-label>
-        <input
-          matInput
-          name="author"
-          [ngModel]="draft().author"
-          (ngModelChange)="updateDraft('author', $event)"
-          required
-        />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Total pages</mat-label>
-        <input
-          matInput
-          name="totalPages"
-          type="number"
-          min="1"
-          [ngModel]="draft().totalPages"
-          (ngModelChange)="updateDraft('totalPages', $event)"
-          required
-        />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Starting page</mat-label>
-        <input
-          matInput
-          name="startingPage"
-          type="number"
-          min="0"
-          [ngModel]="draft().startingPage"
-          (ngModelChange)="updateDraft('startingPage', $event)"
-        />
-        <mat-hint
-          >Pages already read before tracking. Does not affect reading
-          pace.</mat-hint
-        >
-      </mat-form-field>
-      <div class="actions">
-        <button
-          mat-stroked-button
-          type="button"
-          [disabled]="busy()"
-          (click)="cancelAddingBook()"
-        >
-          Cancel
-        </button>
-        <button
-          mat-flat-button
-          color="primary"
-          type="submit"
-          [disabled]="!canSubmit()"
-        >
-          Add book
         </button>
       </div>
-    </form>
+    </header>
+    @if (variant === 'in-progress') {
+    <p class="book-stats">
+      {{ book.currentPage }} / {{ book.totalPages }} pages
+      @if (averageLabel(book); as label) {
+      <span>· {{ label }}</span>
+      }
+    </p>
+    } @else if (variant === 'completed') {
+    <p class="book-stats">
+      Finished · {{ book.totalPages }} pages
+      @if (averageLabel(book); as label) {
+      <span>· {{ label }}</span>
+      }
+    </p>
     } @else {
-    <button
-      mat-stroked-button
-      type="button"
-      class="add-button"
-      (click)="startAddingBook()"
-    >
-      Add book
-    </button>
+    <p class="book-stats">Page count not set</p>
     }
-  </div>
-</section>
+  </article>
+  }
+</ng-template>
+
+<ng-template #bookForm let-mode="mode">
+  <form
+    class="add-book"
+    [attr.aria-labelledby]="mode === 'edit' ? 'edit-book-heading' : 'add-book-heading'"
+    (submit)="submitBook(); $event.preventDefault()"
+  >
+    @if (mode === 'edit') {
+    <h3 id="edit-book-heading">Edit book</h3>
+    } @else {
+    <h3 id="add-book-heading">Add a book</h3>
+    }
+    <mat-form-field appearance="outline">
+      <mat-label>Title</mat-label>
+      <input
+        matInput
+        name="title"
+        [ngModel]="draft().title"
+        (ngModelChange)="updateDraft('title', $event)"
+        required
+      />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Author</mat-label>
+      <input
+        matInput
+        name="author"
+        [ngModel]="draft().author"
+        (ngModelChange)="updateDraft('author', $event)"
+        required
+      />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Total pages</mat-label>
+      <input
+        matInput
+        name="totalPages"
+        type="number"
+        min="1"
+        [ngModel]="draft().totalPages"
+        (ngModelChange)="updateDraft('totalPages', $event)"
+      />
+      <mat-hint>Leave empty to add to your wanted list.</mat-hint>
+    </mat-form-field>
+    @if (draft().totalPages !== null) {
+    <mat-form-field appearance="outline">
+      <mat-label>Starting page</mat-label>
+      <input
+        matInput
+        name="startingPage"
+        type="number"
+        min="0"
+        [ngModel]="draft().startingPage"
+        (ngModelChange)="updateDraft('startingPage', $event)"
+      />
+      <mat-hint
+        >Pages already read before tracking. Does not affect reading
+        pace.</mat-hint
+      >
+    </mat-form-field>
+    }
+    <div class="actions">
+      <button
+        mat-stroked-button
+        type="button"
+        [disabled]="busy()"
+        (click)="cancelForm()"
+      >
+        Cancel
+      </button>
+      <button
+        mat-flat-button
+        color="primary"
+        type="submit"
+        [disabled]="!canSubmit()"
+      >
+        {{ mode === 'edit' ? 'Save book' : 'Add book' }}
+      </button>
+    </div>
+  </form>
+</ng-template>
 }

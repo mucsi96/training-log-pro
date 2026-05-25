@@ -28,8 +28,8 @@ public class BookEntity {
   @Column(nullable = false)
   private String author;
 
-  @Column(name = "total_pages", nullable = false)
-  private int totalPages;
+  @Column(name = "total_pages")
+  private Integer totalPages;
 
   @Column(name = "starting_page", nullable = false)
   private int startingPage;
