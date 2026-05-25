@@ -96,6 +96,14 @@
         <button
           mat-icon-button
           type="button"
+          [attr.aria-label]="'Copy ' + book.title"
+          (click)="copyBook(book)"
+        >
+          <mat-icon>content_copy</mat-icon>
+        </button>
+        <button
+          mat-icon-button
+          type="button"
           [attr.aria-label]="'Edit ' + book.title"
           [disabled]="busy()"
           (click)="startEditingBook(book)"

@@ -286,6 +286,26 @@ test.describe('Reading', () => {
     expect(await getReadingProgressRows()).toHaveLength(0);
   });
 
+  test('copies author and title to the clipboard from the settings page', async ({
+    page,
+    context,
+  }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    const bookId = randomUUID();
+    await insertBook(bookId, 'Deep Work', 'Cal Newport', 300, daysAgoAt(1, 8));
+
+    await page.goto('/settings');
+    const library = page.getByRole('region', { name: 'Books' });
+    await library.getByRole('button', { name: 'Copy Deep Work' }).click();
+
+    await expect(page.getByText('Copied to clipboard')).toBeVisible();
+
+    const clipboardText = await page.evaluate(() =>
+      navigator.clipboard.readText()
+    );
+    expect(clipboardText).toBe('Cal Newport - Deep Work');
+  });
+
   test('shows finished books only on the settings page', async ({ page }) => {
     const bookId = randomUUID();
     const finishedAt = daysAgoAt(1, 12);
