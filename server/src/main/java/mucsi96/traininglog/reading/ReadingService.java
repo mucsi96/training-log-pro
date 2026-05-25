@@ -57,9 +57,11 @@ public class ReadingService {
     BookEntity book = bookRepository.findById(bookId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Book not found"));
     validatePages(totalPages, startingPage);
-    int currentPage = progressRepository.findTopByBookIdOrderByCreatedAtDesc(bookId)
-        .map(ReadingProgressEntity::getCurrentPage)
-        .orElse(startingPage);
+    List<ReadingProgressEntity> progress = progressRepository
+        .findByBookId(bookId, Sort.by(Sort.Direction.ASC, "createdAt"));
+    int currentPage = progress.isEmpty()
+        ? startingPage
+        : progress.get(progress.size() - 1).getCurrentPage();
     if (currentPage < startingPage) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
           "startingPage cannot be greater than the latest recorded page " + currentPage);
@@ -79,8 +81,6 @@ public class ReadingService {
     } else if (currentPage < totalPages && book.getCompletedAt() != null) {
       book.setCompletedAt(null);
     }
-    List<ReadingProgressEntity> progress = progressRepository
-        .findByBookId(bookId, Sort.by(Sort.Direction.ASC, "createdAt"));
     return toSummary(bookRepository.save(book), progress);
   }
 

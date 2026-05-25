@@ -1,7 +1,6 @@
 package mucsi96.traininglog.reading;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Sort;
@@ -11,8 +10,6 @@ public interface ReadingProgressRepository extends JpaRepository<ReadingProgress
   List<ReadingProgressEntity> findAll(Sort sort);
 
   List<ReadingProgressEntity> findByBookId(UUID bookId, Sort sort);
-
-  Optional<ReadingProgressEntity> findTopByBookIdOrderByCreatedAtDesc(UUID bookId);
 
   void deleteByBookId(UUID bookId);
 }

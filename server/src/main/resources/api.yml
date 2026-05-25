@@ -410,6 +410,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Book'
+        '400':
+          description: Invalid request, e.g. startingPage or totalPages out of range
+        '404':
+          description: Book not found
     delete:
       responses:
         '204':

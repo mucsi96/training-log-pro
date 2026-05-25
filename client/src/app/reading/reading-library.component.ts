@@ -103,7 +103,13 @@ export class ReadingLibraryComponent {
   }
 
   updateDraft<K extends keyof BookDraft>(field: K, value: BookDraft[K]) {
-    this.draft.update((d) => ({ ...d, [field]: value }));
+    this.draft.update((d) => {
+      const next = { ...d, [field]: value };
+      if (field === 'totalPages' && value === null) {
+        next.startingPage = null;
+      }
+      return next;
+    });
   }
 
   async submitBook() {

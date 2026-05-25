@@ -442,6 +442,36 @@ test.describe('Reading', () => {
     expect(books[0].total_pages).toBe(300);
   });
 
+  test('moves a book to the wanted list when its page count is cleared', async ({
+    page,
+  }) => {
+    const bookId = randomUUID();
+    await insertBook(bookId, 'On The Fence', 'Author', 200, daysAgoAt(1, 8));
+
+    await page.goto('/settings');
+    const library = page.getByRole('region', { name: 'Books' });
+    await library.getByRole('button', { name: 'Edit On The Fence' }).click();
+    await library.getByLabel('Total pages').fill('');
+    await library.getByRole('button', { name: 'Save book' }).click();
+
+    await expect(
+      library.getByRole('heading', { name: 'Wanted list' })
+    ).toBeVisible();
+    await expect(
+      library.getByRole('heading', { name: 'Reading in progress' })
+    ).toBeHidden();
+
+    const books = await getBookRows();
+    expect(books[0].total_pages).toBeNull();
+    expect(books[0].starting_page).toBe(0);
+
+    await page.goto('/');
+    const section = page.getByRole('region', { name: 'Reading' });
+    await expect(
+      section.getByRole('heading', { name: 'On The Fence' })
+    ).toBeHidden();
+  });
+
   test('moves a wanted book to reading in progress when a page count is added', async ({
     page,
   }) => {
