@@ -1,0 +1,10 @@
+:host {
+  display: block;
+}
+
+.podium-map {
+  height: 200px;
+  width: 100%;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}

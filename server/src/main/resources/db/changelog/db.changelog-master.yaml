@@ -591,3 +591,43 @@ databaseChangeLog:
             tableName: book
             columnName: total_pages
             columnDataType: integer
+
+  - changeSet:
+      id: 23-create-segment-table
+      author: mucsi96
+      changes:
+        - createTable:
+            tableName: segment
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: latitudes
+                  type: jsonb
+                  constraints:
+                    nullable: false
+              - column:
+                  name: longitudes
+                  type: jsonb
+                  constraints:
+                    nullable: false
+              - column:
+                  name: distances
+                  type: jsonb
+                  constraints:
+                    nullable: false
+              - column:
+                  name: altitudes
+                  type: jsonb
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp(6)
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false

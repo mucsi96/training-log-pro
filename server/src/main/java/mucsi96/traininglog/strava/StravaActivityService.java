@@ -6,8 +6,11 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -18,13 +21,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.client.ClientAuthorizationRequiredException;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mucsi96.traininglog.rides.Ride;
+import mucsi96.traininglog.segments.Segment;
 import mucsi96.traininglog.segments.SegmentEffort;
+import mucsi96.traininglog.segments.SegmentRepository;
 import mucsi96.traininglog.strava.StravaSummaryActivity.SportTypeEnum;
 
 @Service
@@ -33,6 +39,7 @@ import mucsi96.traininglog.strava.StravaSummaryActivity.SportTypeEnum;
 public class StravaActivityService {
   private final StravaConfiguration configuration;
   private final Clock clock;
+  private final SegmentRepository segmentRepository;
 
   private String getActivitiesUrl(ZoneId zoneId) {
     long startTime = ZonedDateTime.now(clock).withZoneSameInstant(zoneId).truncatedTo(ChronoUnit.DAYS).toEpochSecond();
@@ -165,10 +172,78 @@ public class StravaActivityService {
       segmentEfforts.addAll(efforts);
     });
 
-    log.info("Strava sync prepared {} rides and {} segment efforts for persistence",
-        rides.size(), segmentEfforts.size());
+    List<Segment> newSegments = fetchMissingSegmentStreams(authorizedClient, segmentEfforts);
 
-    return StravaSyncResult.builder().rides(rides).segmentEfforts(segmentEfforts).build();
+    log.info("Strava sync prepared {} rides, {} segment efforts, and {} new segments for persistence",
+        rides.size(), segmentEfforts.size(), newSegments.size());
+
+    return StravaSyncResult.builder()
+        .rides(rides)
+        .segmentEfforts(segmentEfforts)
+        .segments(newSegments)
+        .build();
+  }
+
+  private List<Segment> fetchMissingSegmentStreams(OAuth2AuthorizedClient authorizedClient,
+      List<SegmentEffort> efforts) {
+    Set<Long> requestedIds = efforts.stream()
+        .map(SegmentEffort::getSegmentId)
+        .collect(Collectors.toSet());
+    if (requestedIds.isEmpty()) {
+      return List.of();
+    }
+    Set<Long> cachedIds = new HashSet<>();
+    segmentRepository.findAllById(requestedIds).forEach(segment -> cachedIds.add(segment.getId()));
+    return requestedIds.stream()
+        .filter(id -> !cachedIds.contains(id))
+        .map(id -> getSegmentStreams(authorizedClient, id).map(stream -> toSegment(id, stream)))
+        .flatMap(Optional::stream)
+        .toList();
+  }
+
+  private Optional<StravaStreamSet> getSegmentStreams(OAuth2AuthorizedClient authorizedClient, long segmentId) {
+    String url = UriComponentsBuilder
+        .fromUriString(configuration.getApiUri())
+        .path("/api/v3/segments/{id}/streams")
+        .queryParam("keys", "distance,altitude,latlng")
+        .queryParam("key_by_type", true)
+        .buildAndExpand(segmentId)
+        .encode()
+        .toUriString();
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.setBearerAuth(authorizedClient.getAccessToken().getTokenValue());
+    HttpEntity<String> request = new HttpEntity<>("", headers);
+    RestTemplate restTemplate = new RestTemplate();
+
+    try {
+      ResponseEntity<StravaStreamSet> response = restTemplate.exchange(url, HttpMethod.GET, request,
+          StravaStreamSet.class);
+      if (response.getStatusCode() != HttpStatusCode.valueOf(200)) {
+        log.warn("Strava streams returned status {} for segment {}", response.getStatusCode(), segmentId);
+        return Optional.empty();
+      }
+      return Optional.ofNullable(response.getBody());
+    } catch (RestClientException ex) {
+      log.warn("Failed to fetch Strava streams for segment {}: {}", segmentId, ex.getMessage());
+      return Optional.empty();
+    }
+  }
+
+  private Segment toSegment(long segmentId, StravaStreamSet stream) {
+    List<List<Float>> pairs = stream.getLatlng() != null ? stream.getLatlng().getData() : List.of();
+    List<Float> latitudes = pairs.stream().map(p -> p.get(0)).toList();
+    List<Float> longitudes = pairs.stream().map(p -> p.get(1)).toList();
+    List<Float> distances = stream.getDistance() != null ? stream.getDistance().getData() : List.of();
+    List<Float> altitudes = stream.getAltitude() != null ? stream.getAltitude().getData() : List.of();
+    return Segment.builder()
+        .id(segmentId)
+        .latitudes(latitudes)
+        .longitudes(longitudes)
+        .distances(distances)
+        .altitudes(altitudes)
+        .updatedAt(ZonedDateTime.now(clock))
+        .build();
   }
 
   private SegmentEffort toSegmentEffort(StravaSegmentEffort effort, ZonedDateTime rideCreatedAt) {

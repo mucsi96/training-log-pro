@@ -203,4 +203,50 @@ test.describe('Podium messages', () => {
     await expect(page.getByTestId('podium-gap-slower')).toContainText('3rd place');
     await expect(page.getByTestId('podium-gap-slower')).toContainText('+0:10');
   });
+
+  test('renders mini map and elevation chart when a podium is achieved', async ({
+    page,
+  }) => {
+    for (const [daysAgo, elapsed, effortId] of [
+      [3, 200, 4001],
+      [4, 220, 4002],
+      [5, 260, 4003],
+    ] as const) {
+      await insertSegmentEffort({
+        id: effortId,
+        segmentId: 42,
+        segmentName: 'UndAbflug',
+        segmentDistance: 1200,
+        segmentAverageGrade: 6,
+        elapsedTime: elapsed,
+        daysAgo,
+      });
+    }
+
+    await pushStravaActivity({
+      segmentEfforts: [
+        {
+          id: 9301,
+          segmentId: 42,
+          segmentName: 'UndAbflug',
+          segmentDistance: 1200,
+          segmentAverageGrade: 6,
+          elapsedTime: 210,
+        },
+      ],
+    });
+
+    await page.goto('/');
+
+    const banner = page.getByTestId('podium-banner');
+    await expect(banner).toBeVisible();
+    await expect(banner.getByTestId('podium-map')).toBeVisible();
+    await expect(banner.getByTestId('podium-elevation-chart')).toBeVisible();
+
+    const [maybePopup] = await Promise.all([
+      page.context().waitForEvent('page', { timeout: 500 }).catch(() => null),
+      banner.getByTestId('podium-map').click(),
+    ]);
+    expect(maybePopup).toBeNull();
+  });
 });

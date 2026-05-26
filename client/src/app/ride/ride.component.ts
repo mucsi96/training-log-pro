@@ -7,10 +7,19 @@ import { BarLoaderComponent } from '@mucsi96/angular-material-theme';
 import { map } from 'rxjs';
 import { RideService } from './ride.service';
 import { MeasurementWithUnitPipe } from '../utils/measurement-with-unit.pipe';
+import { PodiumElevationChartComponent } from './podium-elevation-chart.component';
+import { PodiumRouteMapComponent } from './podium-route-map.component';
 
 @Component({
   standalone: true,
-  imports: [DecimalPipe, MatIconModule, BarLoaderComponent, MeasurementWithUnitPipe],
+  imports: [
+    DecimalPipe,
+    MatIconModule,
+    BarLoaderComponent,
+    MeasurementWithUnitPipe,
+    PodiumRouteMapComponent,
+    PodiumElevationChartComponent,
+  ],
   selector: 'app-ride',
   templateUrl: './ride.component.html',
   styleUrl: './ride.component.css',

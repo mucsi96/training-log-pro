@@ -21,6 +21,7 @@ export async function query(text: string, params?: any[]) {
 export async function cleanupDb() {
   await query('DELETE FROM training_log.weight');
   await query('DELETE FROM training_log.segment_effort');
+  await query('DELETE FROM training_log.segment');
   await query('DELETE FROM training_log.ride');
   await query('DELETE FROM training_log.fitness');
   await query('DELETE FROM training_log.ftp');

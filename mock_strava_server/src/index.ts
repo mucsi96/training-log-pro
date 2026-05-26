@@ -8,6 +8,7 @@ import {
   resetActivities,
   updateActivity,
 } from './activities';
+import { getSegmentStreams } from './streams';
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.post('/strava/oauth/token', getAccessToken);
 // API endpoints
 app.get('/strava/api/v3/athlete/activities', getActivities);
 app.get('/strava/api/v3/activities/:id', getActivity);
+app.get('/strava/api/v3/segments/:id/streams', getSegmentStreams);
 
 // Test-only endpoints
 app.post('/strava/test/activities', pushActivity);

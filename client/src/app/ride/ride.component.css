@@ -158,3 +158,16 @@ h2 {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
+
+.podium-route {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media screen and (width > 740px) {
+  .podium-route {
+    grid-template-columns: 2fr 1fr;
+    align-items: stretch;
+  }
+}

@@ -55,6 +55,20 @@
     </div>
     }
   </dl>
+  @if (podium.latitudes && podium.longitudes && podium.latitudes.length > 0) {
+  <div class="podium-route">
+    <app-podium-route-map
+      [latitudes]="podium.latitudes"
+      [longitudes]="podium.longitudes"
+    />
+    @if (podium.distances && podium.altitudes && podium.distances.length > 0) {
+    <app-podium-elevation-chart
+      [distances]="podium.distances"
+      [altitudes]="podium.altitudes"
+    />
+    }
+  </div>
+  }
   @if (podium.gapToFaster != null || podium.gapToSlower != null) {
   <ul class="podium-gaps">
     @if (podium.gapToFaster != null && podium.fasterPosition) {

@@ -613,3 +613,23 @@ components:
         gapToSlower:
           type: integer
           format: int32
+        latitudes:
+          type: array
+          items:
+            type: number
+            format: float
+        longitudes:
+          type: array
+          items:
+            type: number
+            format: float
+        distances:
+          type: array
+          items:
+            type: number
+            format: float
+        altitudes:
+          type: array
+          items:
+            type: number
+            format: float

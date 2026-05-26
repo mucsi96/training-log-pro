@@ -30,6 +30,10 @@ export type PodiumMessage = {
   gapToFaster?: number;
   slowerPosition?: number;
   gapToSlower?: number;
+  latitudes?: number[];
+  longitudes?: number[];
+  distances?: number[];
+  altitudes?: number[];
 };
 
 @Injectable({ providedIn: 'root' })
