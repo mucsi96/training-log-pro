@@ -193,6 +193,18 @@ export async function getSegmentEffortRows() {
   return result.rows;
 }
 
+export async function getSegmentRows() {
+  const result = await query(
+    `SELECT id,
+            jsonb_array_length(latitudes)  AS lat_count,
+            jsonb_array_length(longitudes) AS lng_count,
+            jsonb_array_length(distances)  AS dist_count,
+            jsonb_array_length(altitudes)  AS alt_count
+     FROM training_log.segment ORDER BY id ASC`
+  );
+  return result.rows;
+}
+
 export async function getFitnessRows() {
   const result = await query(
     'SELECT created_at, pulled_at, fitness, fatigue, form FROM training_log.fitness ORDER BY created_at ASC'

@@ -2,6 +2,7 @@ import { test, expect } from '../fixtures';
 import {
   cleanupDb,
   getSegmentEffortRows,
+  getSegmentRows,
   insertSegmentEffort,
   populateOAuthClients,
   pushStravaActivity,
@@ -240,6 +241,18 @@ test.describe('Podium messages', () => {
 
     const banner = page.getByTestId('podium-banner');
     await expect(banner).toBeVisible();
+
+    // Verify the streams sync persisted a row in the segment cache for this
+    // segment_id. If this fails, the issue is server-side (Strava streams
+    // fetch / Hibernate jsonb persistence) rather than frontend rendering.
+    const segments = await getSegmentRows();
+    expect(segments.map((row) => Number(row.id))).toContain(42);
+    const row = segments.find((r) => Number(r.id) === 42)!;
+    expect(Number(row.lat_count)).toBeGreaterThan(0);
+    expect(Number(row.lng_count)).toBeGreaterThan(0);
+    expect(Number(row.dist_count)).toBeGreaterThan(0);
+    expect(Number(row.alt_count)).toBeGreaterThan(0);
+
     await expect(banner.getByTestId('podium-map')).toBeVisible();
     await expect(banner.getByTestId('podium-elevation-chart')).toBeVisible();
 

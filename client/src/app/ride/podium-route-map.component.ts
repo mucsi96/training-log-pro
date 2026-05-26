@@ -37,6 +37,10 @@ export class PodiumRouteMapComponent implements AfterViewInit, OnDestroy {
       attributionControl: { compact: true },
     });
 
+    this.map.on('error', (event) => {
+      console.warn('[podium-route-map] MapLibre error', event?.error?.message ?? event);
+    });
+
     this.map.on('load', () => {
       const map = this.map!;
       map.addSource('route', {

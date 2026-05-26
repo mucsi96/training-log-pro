@@ -50,13 +50,13 @@ export function getSegmentStreams(req: Request, res: Response) {
     },
     altitude: {
       data: altitude,
-      series_type: 'distance',
+      series_type: 'altitude',
       original_size: altitude.length,
       resolution: 'high',
     },
     latlng: {
       data: latlng,
-      series_type: 'distance',
+      series_type: 'latlng',
       original_size: latlng.length,
       resolution: 'high',
     },
