@@ -34,7 +34,7 @@ export class PodiumRouteMapComponent implements AfterViewInit, OnDestroy {
       style: 'https://tiles.openfreemap.org/styles/fiord',
       interactive: true,
       scrollZoom: false,
-      attributionControl: { compact: true },
+      attributionControl: false,
     });
 
     this.map.on('error', (event) => {
