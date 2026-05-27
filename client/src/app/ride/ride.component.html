@@ -57,6 +57,7 @@
   </dl>
   @if (podium.latitudes && podium.longitudes && podium.latitudes.length > 0) {
   <div class="podium-route">
+    @defer (on immediate) {
     <app-podium-route-map
       [latitudes]="podium.latitudes"
       [longitudes]="podium.longitudes"
@@ -66,6 +67,7 @@
       [distances]="podium.distances"
       [altitudes]="podium.altitudes"
     />
+    }
     }
   </div>
   }
