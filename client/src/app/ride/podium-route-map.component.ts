@@ -31,7 +31,7 @@ export class PodiumRouteMapComponent implements AfterViewInit, OnDestroy {
 
     this.map = new MapLibreMap({
       container: this.container().nativeElement,
-      style: 'https://tiles.openfreemap.org/styles/dark',
+      style: 'https://tiles.openfreemap.org/styles/fiord',
       interactive: true,
       scrollZoom: false,
       attributionControl: { compact: true },

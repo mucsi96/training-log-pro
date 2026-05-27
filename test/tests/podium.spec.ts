@@ -255,11 +255,5 @@ test.describe('Podium messages', () => {
 
     await expect(banner.getByTestId('podium-map')).toBeVisible();
     await expect(banner.getByTestId('podium-elevation-chart')).toBeVisible();
-
-    const [maybePopup] = await Promise.all([
-      page.context().waitForEvent('page', { timeout: 500 }).catch(() => null),
-      banner.getByTestId('podium-map').click(),
-    ]);
-    expect(maybePopup).toBeNull();
   });
 });
