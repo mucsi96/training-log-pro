@@ -29,6 +29,7 @@ import mucsi96.traininglog.fitness.FitnessService;
 import mucsi96.traininglog.ftp.FtpService;
 import mucsi96.traininglog.rides.RideService;
 import mucsi96.traininglog.segments.SegmentEffortService;
+import mucsi96.traininglog.segments.SegmentService;
 
 @RestController
 @RequestMapping("/strava")
@@ -38,6 +39,7 @@ public class StravaController {
 
   private final StravaActivityService stravaActivityService;
   private final RideService rideService;
+  private final SegmentService segmentService;
   private final SegmentEffortService segmentEffortService;
   private final FitnessService fitnessService;
   private final FtpService ftpService;
@@ -58,6 +60,7 @@ public class StravaController {
       OAuth2AuthorizedClient authorizedClient = getAuthorizedClient(principal, servletRequest, servletResponse);
       StravaSyncResult syncResult = stravaActivityService.getTodayRides(authorizedClient, zoneId);
       syncResult.getRides().forEach(rideService::saveRide);
+      segmentService.saveAll(syncResult.getSegments());
       segmentEffortService.saveAll(syncResult.getSegmentEfforts());
       fitnessService.recompute(zoneId);
       ftpService.recompute(zoneId);

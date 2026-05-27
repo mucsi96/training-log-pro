@@ -21,6 +21,7 @@ export async function query(text: string, params?: any[]) {
 export async function cleanupDb() {
   await query('DELETE FROM training_log.weight');
   await query('DELETE FROM training_log.segment_effort');
+  await query('DELETE FROM training_log.segment');
   await query('DELETE FROM training_log.ride');
   await query('DELETE FROM training_log.fitness');
   await query('DELETE FROM training_log.ftp');
@@ -188,6 +189,18 @@ export async function getSegmentEffortRows() {
     `SELECT id, segment_id, segment_name, segment_distance, segment_average_grade,
             elapsed_time, average_watts, start_date
      FROM training_log.segment_effort ORDER BY id ASC`
+  );
+  return result.rows;
+}
+
+export async function getSegmentRows() {
+  const result = await query(
+    `SELECT id,
+            jsonb_array_length(latitudes)  AS lat_count,
+            jsonb_array_length(longitudes) AS lng_count,
+            jsonb_array_length(distances)  AS dist_count,
+            jsonb_array_length(altitudes)  AS alt_count
+     FROM training_log.segment ORDER BY id ASC`
   );
   return result.rows;
 }

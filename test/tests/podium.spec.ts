@@ -2,6 +2,7 @@ import { test, expect } from '../fixtures';
 import {
   cleanupDb,
   getSegmentEffortRows,
+  getSegmentRows,
   insertSegmentEffort,
   populateOAuthClients,
   pushStravaActivity,
@@ -202,5 +203,57 @@ test.describe('Podium messages', () => {
     await expect(page.getByTestId('podium-gap-faster')).toContainText('-0:10');
     await expect(page.getByTestId('podium-gap-slower')).toContainText('3rd place');
     await expect(page.getByTestId('podium-gap-slower')).toContainText('+0:10');
+  });
+
+  test('renders mini map and elevation chart when a podium is achieved', async ({
+    page,
+  }) => {
+    for (const [daysAgo, elapsed, effortId] of [
+      [3, 200, 4001],
+      [4, 220, 4002],
+      [5, 260, 4003],
+    ] as const) {
+      await insertSegmentEffort({
+        id: effortId,
+        segmentId: 42,
+        segmentName: 'UndAbflug',
+        segmentDistance: 1200,
+        segmentAverageGrade: 6,
+        elapsedTime: elapsed,
+        daysAgo,
+      });
+    }
+
+    await pushStravaActivity({
+      segmentEfforts: [
+        {
+          id: 9301,
+          segmentId: 42,
+          segmentName: 'UndAbflug',
+          segmentDistance: 1200,
+          segmentAverageGrade: 6,
+          elapsedTime: 210,
+        },
+      ],
+    });
+
+    await page.goto('/');
+
+    const banner = page.getByTestId('podium-banner');
+    await expect(banner).toBeVisible();
+
+    // Verify the streams sync persisted a row in the segment cache for this
+    // segment_id. If this fails, the issue is server-side (Strava streams
+    // fetch / Hibernate jsonb persistence) rather than frontend rendering.
+    const segments = await getSegmentRows();
+    expect(segments.map((row) => Number(row.id))).toContain(42);
+    const row = segments.find((r) => Number(r.id) === 42)!;
+    expect(Number(row.lat_count)).toBeGreaterThan(0);
+    expect(Number(row.lng_count)).toBeGreaterThan(0);
+    expect(Number(row.dist_count)).toBeGreaterThan(0);
+    expect(Number(row.alt_count)).toBeGreaterThan(0);
+
+    await expect(banner.getByTestId('podium-map')).toBeVisible();
+    await expect(banner.getByTestId('podium-elevation-chart')).toBeVisible();
   });
 });

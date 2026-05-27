@@ -24,6 +24,7 @@ public class PodiumService {
   private static final int PODIUM_SIZE = 3;
 
   private final SegmentEffortRepository segmentEffortRepository;
+  private final SegmentRepository segmentRepository;
   private final WeightRepository weightRepository;
   private final StravaConfiguration stravaConfiguration;
   private final Clock clock;
@@ -122,7 +123,7 @@ public class PodiumService {
 
     String segmentUrl = stravaConfiguration.getApiUri() + "/segments/" + effort.getSegmentId();
 
-    return PodiumMessage.builder()
+    PodiumMessage.PodiumMessageBuilder builder = PodiumMessage.builder()
         .segmentName(effort.getSegmentName())
         .segmentUrl(segmentUrl)
         .period(placement.period())
@@ -137,8 +138,15 @@ public class PodiumService {
         .fasterPosition(faster != null ? position - 1 : null)
         .gapToFaster(faster != null ? effort.getElapsedTime() - faster.getElapsedTime() : null)
         .slowerPosition(slower != null ? position + 1 : null)
-        .gapToSlower(slower != null ? slower.getElapsedTime() - effort.getElapsedTime() : null)
-        .build();
+        .gapToSlower(slower != null ? slower.getElapsedTime() - effort.getElapsedTime() : null);
+
+    segmentRepository.findById(effort.getSegmentId()).ifPresent(segment -> builder
+        .latitudes(segment.getLatitudes())
+        .longitudes(segment.getLongitudes())
+        .distances(segment.getDistances())
+        .altitudes(segment.getAltitudes()));
+
+    return builder.build();
   }
 
   private Float wattsPerKg(SegmentEffort effort) {
