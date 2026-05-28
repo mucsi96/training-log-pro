@@ -69,7 +69,6 @@
             class="dice"
             [class.dice--rolling]="rolling()"
             [attr.data-face]="diceFace()"
-            [attr.aria-live]="rolling() ? 'off' : 'polite'"
             aria-label="Dice"
             role="img"
           >
@@ -110,7 +109,7 @@
           <div class="dice-result" aria-live="polite">
             @if (pickedBook(); as picked) {
               <p class="dice-result-label">You should read</p>
-              <p class="dice-result-title">{{ picked.title }}</p>
+              <h5 class="dice-result-title">{{ picked.title }}</h5>
               <p class="dice-result-author">{{ picked.author }}</p>
             } @else if (rolling()) {
               <p class="dice-result-label">Rolling…</p>
@@ -136,7 +135,7 @@
             mat-flat-button
             color="primary"
             type="button"
-            [disabled]="rolling() || wantedBooks().length === 0"
+            [disabled]="rolling()"
             (click)="rollWantedDice()"
           >
             {{ pickedBook() ? 'Roll again' : 'Roll the dice' }}

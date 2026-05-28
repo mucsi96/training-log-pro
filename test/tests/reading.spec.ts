@@ -535,7 +535,7 @@ test.describe('Reading', () => {
     const library = page.getByRole('region', { name: 'Books' });
     await expect(
       library.getByRole('heading', { name: 'Pick your next read' })
-    ).toBeHidden();
+    ).toHaveCount(0);
     await expect(
       library.getByRole('button', { name: 'Roll the dice' })
     ).toHaveCount(0);
@@ -544,9 +544,10 @@ test.describe('Reading', () => {
   test('rolls the dice and picks a book from the wanted list', async ({
     page,
   }) => {
-    await insertBook(randomUUID(), 'Wanted One', 'Author A', null, daysAgoAt(3, 8));
-    await insertBook(randomUUID(), 'Wanted Two', 'Author B', null, daysAgoAt(2, 8));
-    await insertBook(randomUUID(), 'Wanted Three', 'Author C', null, daysAgoAt(1, 8));
+    const wantedTitles = ['Wanted One', 'Wanted Two', 'Wanted Three'];
+    await insertBook(randomUUID(), wantedTitles[0], 'Author A', null, daysAgoAt(3, 8));
+    await insertBook(randomUUID(), wantedTitles[1], 'Author B', null, daysAgoAt(2, 8));
+    await insertBook(randomUUID(), wantedTitles[2], 'Author C', null, daysAgoAt(1, 8));
 
     await page.goto('/settings');
     const widget = page.getByRole('region', { name: 'Pick your next read' });
@@ -555,12 +556,13 @@ test.describe('Reading', () => {
 
     await widget.getByRole('button', { name: 'Roll the dice' }).click();
 
-    const pickedTitle = widget.locator('.dice-result-title');
-    await expect(pickedTitle).toBeVisible({ timeout: 5000 });
-    await expect(widget.getByText('You should read')).toBeVisible();
+    await expect(widget.getByText('You should read')).toBeVisible({
+      timeout: 5000,
+    });
 
+    const pickedTitle = widget.getByRole('heading', { level: 5 });
     const titleText = (await pickedTitle.textContent())?.trim();
-    expect(['Wanted One', 'Wanted Two', 'Wanted Three']).toContain(titleText);
+    expect(wantedTitles).toContain(titleText);
 
     await expect(
       widget.getByRole('button', { name: 'Roll again' })
@@ -585,7 +587,9 @@ test.describe('Reading', () => {
     await expect(widget.getByText('You should read')).toBeVisible({
       timeout: 5000,
     });
-    await expect(widget.locator('.dice-result-title')).toHaveText('Only Wanted');
+    await expect(
+      widget.getByRole('heading', { name: 'Only Wanted', level: 5 })
+    ).toBeVisible();
 
     await library.getByRole('button', { name: 'Edit Only Wanted' }).click();
     await library.getByLabel('Total pages').fill('220');
