@@ -31,7 +31,8 @@ public class SettingsController {
     SettingsEntity saved = settingsService.update(
         request.getPushupGoal(),
         request.getElevationGoal(),
-        request.getReadingPagesGoal());
+        request.getReadingPagesGoal(),
+        request.getDailyTaskGoal());
     return toResponse(saved);
   }
 
@@ -40,6 +41,7 @@ public class SettingsController {
         .pushupGoal(entity.getPushupGoal())
         .elevationGoal(entity.getElevationGoal())
         .readingPagesGoal(entity.getReadingPagesGoal())
+        .dailyTaskGoal(entity.getDailyTaskGoal())
         .build();
   }
 }

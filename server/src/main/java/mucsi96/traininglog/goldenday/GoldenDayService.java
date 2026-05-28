@@ -24,6 +24,7 @@ import mucsi96.traininglog.rides.Ride;
 import mucsi96.traininglog.rides.RideRepository;
 import mucsi96.traininglog.settings.SettingsEntity;
 import mucsi96.traininglog.settings.SettingsService;
+import mucsi96.traininglog.tasks.DailyTaskService;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +35,7 @@ public class GoldenDayService {
   private final GoldenDayRepository goldenDayRepository;
   private final SettingsService settingsService;
   private final ReadingService readingService;
+  private final DailyTaskService dailyTaskService;
   private final Clock clock;
 
   @Transactional
@@ -63,6 +65,12 @@ public class GoldenDayService {
     Set<LocalDate> candidates = new TreeSet<>(pushupsByDay.keySet());
     candidates.addAll(readingPagesByDay.keySet());
     candidates.add(today);
+
+    Map<LocalDate, Integer> taskCompletionsCountByDay = goal.getDailyTaskGoal() > 0
+        ? dailyTaskService.getCompletionsByDays(candidates).entrySet().stream()
+            .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().size(), (a, b) -> a, TreeMap::new))
+        : Map.of();
+
     for (LocalDate day : candidates) {
       if (persisted.containsKey(day)) {
         continue;
@@ -70,9 +78,11 @@ public class GoldenDayService {
       int pushups = pushupsByDay.getOrDefault(day, 0);
       double elevation = elevationByDay.getOrDefault(day, 0d);
       int readingPages = readingPagesByDay.getOrDefault(day, 0);
+      int tasksCompleted = taskCompletionsCountByDay.getOrDefault(day, 0);
       if (pushups >= goal.getPushupGoal()
           && elevation >= goal.getElevationGoal()
-          && (goal.getReadingPagesGoal() == 0 || readingPages >= goal.getReadingPagesGoal())) {
+          && (goal.getReadingPagesGoal() == 0 || readingPages >= goal.getReadingPagesGoal())
+          && (goal.getDailyTaskGoal() == 0 || tasksCompleted >= goal.getDailyTaskGoal())) {
         GoldenDayEntity saved = goldenDayRepository.save(GoldenDayEntity.builder().date(day).build());
         persisted.put(day, saved);
       }
@@ -98,6 +108,8 @@ public class GoldenDayService {
         .pushupGoal(goal.getPushupGoal())
         .elevationGoal(goal.getElevationGoal())
         .readingPagesGoal(goal.getReadingPagesGoal())
+        .todayTasksCompleted(taskCompletionsCountByDay.getOrDefault(today, 0))
+        .dailyTaskGoal(goal.getDailyTaskGoal())
         .goldenDates(goldenDates.stream().sorted().toList())
         .build();
   }

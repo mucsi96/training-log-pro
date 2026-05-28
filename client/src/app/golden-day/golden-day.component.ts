@@ -1,5 +1,6 @@
 import { Component, computed, effect, inject, resource, signal } from '@angular/core';
 import { GoldenDayService } from './golden-day.service';
+import { DailyTasksService } from '../daily-tasks/daily-tasks.service';
 import { ConfettiComponent } from './confetti/confetti.component';
 
 const CONFETTI_DURATION_MS = 5000;
@@ -13,12 +14,14 @@ const CONFETTI_DURATION_MS = 5000;
 })
 export class GoldenDayComponent {
   private readonly service = inject(GoldenDayService);
+  private readonly tasksService = inject(DailyTasksService);
 
   readonly stats = resource({
     params: () => ({
       version: this.service.version(),
       pushups: this.service.pushupsService.version(),
       reading: this.service.readingService.version(),
+      tasks: this.tasksService.version(),
     }),
     loader: () => this.service.getStats(),
   });
@@ -36,6 +39,8 @@ export class GoldenDayComponent {
   readonly elevationDisplay = computed(() => Math.round(this.elevation()));
   readonly readingPages = computed(() => this.stats.value()?.todayReadingPages ?? 0);
   readonly readingGoal = computed(() => this.stats.value()?.readingPagesGoal ?? 0);
+  readonly tasksCompleted = computed(() => this.stats.value()?.todayTasksCompleted ?? 0);
+  readonly tasksGoal = computed(() => this.stats.value()?.dailyTaskGoal ?? 0);
 
   constructor() {
     effect(() => {

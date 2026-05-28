@@ -1,0 +1,128 @@
+@if (tasks.isLoading()) {
+  <div class="page-loading"><bt-bar-loader /></div>
+} @else {
+  <section class="library" aria-labelledby="daily-tasks-library-heading">
+    <h2 id="daily-tasks-library-heading">Daily tasks</h2>
+
+    @if ((tasks.value()?.length ?? 0) === 0 && !addingTask()) {
+      <p class="empty">No tasks yet. Add things you want to do every day.</p>
+    }
+
+    @if ((tasks.value()?.length ?? 0) > 0) {
+      <ul class="tasks">
+        @for (task of tasks.value(); track task.id) {
+          @if (editingTaskId() === task.id) {
+            <li class="task task--editing">
+              <form
+                class="task-form"
+                aria-labelledby="edit-task-heading"
+                (submit)="submitTask(); $event.preventDefault()"
+              >
+                <h3 id="edit-task-heading" class="visually-hidden">Edit task</h3>
+                <mat-form-field appearance="outline">
+                  <mat-label>Task name</mat-label>
+                  <input
+                    matInput
+                    name="name"
+                    [ngModel]="draft()"
+                    (ngModelChange)="draft.set($event)"
+                    required
+                  />
+                </mat-form-field>
+                <div class="actions">
+                  <button
+                    mat-stroked-button
+                    type="button"
+                    [disabled]="busy()"
+                    (click)="cancelForm()"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    mat-flat-button
+                    color="primary"
+                    type="submit"
+                    [disabled]="!canSubmit()"
+                  >
+                    Save task
+                  </button>
+                </div>
+              </form>
+            </li>
+          } @else {
+            <li class="task" [attr.aria-label]="task.name">
+              <span class="task-name">{{ task.name }}</span>
+              <div class="task-actions">
+                <button
+                  mat-icon-button
+                  type="button"
+                  [attr.aria-label]="'Edit ' + task.name"
+                  [disabled]="busy()"
+                  (click)="startEditingTask(task)"
+                >
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  type="button"
+                  [attr.aria-label]="'Remove ' + task.name"
+                  [disabled]="busy()"
+                  (click)="deleteTask(task)"
+                >
+                  <mat-icon>delete_outline</mat-icon>
+                </button>
+              </div>
+            </li>
+          }
+        }
+      </ul>
+    }
+
+    @if (addingTask()) {
+      <form
+        class="task-form"
+        aria-labelledby="add-task-heading"
+        (submit)="submitTask(); $event.preventDefault()"
+      >
+        <h3 id="add-task-heading">Add a task</h3>
+        <mat-form-field appearance="outline">
+          <mat-label>Task name</mat-label>
+          <input
+            matInput
+            name="name"
+            [ngModel]="draft()"
+            (ngModelChange)="draft.set($event)"
+            required
+          />
+        </mat-form-field>
+        <div class="actions">
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="busy()"
+            (click)="cancelForm()"
+          >
+            Cancel
+          </button>
+          <button
+            mat-flat-button
+            color="primary"
+            type="submit"
+            [disabled]="!canSubmit()"
+          >
+            Add task
+          </button>
+        </div>
+      </form>
+    } @else {
+      <button
+        mat-stroked-button
+        type="button"
+        class="add-button"
+        (click)="startAddingTask()"
+      >
+        Add task
+      </button>
+    }
+  </section>
+}

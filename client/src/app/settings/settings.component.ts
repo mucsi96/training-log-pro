@@ -5,6 +5,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { BarLoaderComponent } from '@mucsi96/angular-material-theme';
 import { ReadingLibraryComponent } from '../reading/reading-library.component';
+import { DailyTasksLibraryComponent } from '../daily-tasks/daily-tasks-library.component';
 import { CoinsService } from '../coins/coins.service';
 import { Settings, SettingsService } from './settings.service';
 
@@ -19,6 +20,7 @@ import { Settings, SettingsService } from './settings.service';
     MatInputModule,
     BarLoaderComponent,
     ReadingLibraryComponent,
+    DailyTasksLibraryComponent,
   ],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css',
@@ -46,6 +48,7 @@ export class SettingsComponent {
     pushupGoal: 100,
     elevationGoal: 250,
     readingPagesGoal: 0,
+    dailyTaskGoal: 0,
   });
 
   readonly settingsForm = form(this.model, (path) => {
@@ -58,6 +61,9 @@ export class SettingsComponent {
     required(path.readingPagesGoal);
     min(path.readingPagesGoal, 0);
     max(path.readingPagesGoal, 10000);
+    required(path.dailyTaskGoal);
+    min(path.dailyTaskGoal, 0);
+    max(path.dailyTaskGoal, 100);
   });
 
   readonly saving = signal(false);

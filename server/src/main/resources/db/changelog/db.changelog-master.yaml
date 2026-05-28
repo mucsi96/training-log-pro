@@ -631,3 +631,77 @@ databaseChangeLog:
                   defaultValueComputed: CURRENT_TIMESTAMP
                   constraints:
                     nullable: false
+
+  - changeSet:
+      id: 24-create-daily-task-tables
+      author: mucsi96
+      changes:
+        - createTable:
+            tableName: daily_task
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp(6)
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: daily_task_completion
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: task_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_daily_task_completion_task
+                    references: training_log.daily_task(id)
+              - column:
+                  name: date
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: completed_at
+                  type: timestamp(6)
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: daily_task_completion
+            columnNames: task_id, date
+            constraintName: uq_daily_task_completion_task_date
+        - createIndex:
+            tableName: daily_task_completion
+            indexName: idx_daily_task_completion_date
+            columns:
+              - column:
+                  name: date
+
+  - changeSet:
+      id: 25-add-daily-task-goal-to-settings
+      author: mucsi96
+      changes:
+        - addColumn:
+            tableName: settings
+            columns:
+              - column:
+                  name: daily_task_goal
+                  type: integer
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false

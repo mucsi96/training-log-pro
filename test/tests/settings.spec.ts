@@ -50,6 +50,7 @@ test.describe('Settings', () => {
     await expect(page.getByLabel('Daily pushup goal')).toHaveValue('100');
     await expect(page.getByLabel('Daily ride elevation goal')).toHaveValue('250');
     await expect(page.getByLabel('Daily reading goal')).toHaveValue('0');
+    await expect(page.getByLabel('Daily task goal')).toHaveValue('0');
   });
 
   test('saves new golden day goals', async ({ page }) => {
@@ -58,6 +59,7 @@ test.describe('Settings', () => {
     await page.getByLabel('Daily pushup goal').fill('80');
     await page.getByLabel('Daily ride elevation goal').fill('200');
     await page.getByLabel('Daily reading goal').fill('20');
+    await page.getByLabel('Daily task goal').fill('3');
     await page.getByRole('button', { name: 'Save' }).click();
 
     await expect(page.getByText('Settings saved')).toBeVisible();
@@ -66,6 +68,7 @@ test.describe('Settings', () => {
     expect(goal.pushup_goal).toBe(80);
     expect(goal.elevation_goal).toBe(200);
     expect(goal.reading_pages_goal).toBe(20);
+    expect(goal.daily_task_goal).toBe(3);
   });
 
   test('keeps today golden after raising goals', async ({ page }) => {

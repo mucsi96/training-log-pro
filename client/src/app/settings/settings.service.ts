@@ -8,6 +8,7 @@ export type Settings = {
   pushupGoal: number;
   elevationGoal: number;
   readingPagesGoal: number;
+  dailyTaskGoal: number;
 };
 
 @Injectable({ providedIn: 'root' })
