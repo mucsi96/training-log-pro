@@ -8,6 +8,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import java.net.URI;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -48,9 +51,13 @@ public class DailyTaskController {
 
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
-  DailyTask addTask(@Valid @RequestBody TaskRequest request) {
+  ResponseEntity<DailyTask> addTask(@Valid @RequestBody TaskRequest request) {
     DailyTaskEntity saved = dailyTaskService.addTask(request.getName().trim());
-    return toResponse(saved);
+    DailyTask body = toResponse(saved);
+    return ResponseEntity
+        .status(HttpStatus.CREATED)
+        .location(URI.create("/tasks/" + saved.getId()))
+        .body(body);
   }
 
   @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)

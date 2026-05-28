@@ -59,9 +59,6 @@ public class GoldenDayService {
 
     Map<LocalDate, Integer> readingPagesByDay = readingService.getPagesReadByDay(zoneId);
 
-    Map<LocalDate, Integer> taskCompletionsCountByDay = dailyTaskService.getCompletionsByDay()
-        .entrySet().stream()
-        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().size(), (a, b) -> a, TreeMap::new));
     int totalTasks = dailyTaskService.listTasks().size();
 
     Map<LocalDate, GoldenDayEntity> persisted = goldenDayRepository.findAll().stream()
@@ -69,8 +66,12 @@ public class GoldenDayService {
 
     Set<LocalDate> candidates = new TreeSet<>(pushupsByDay.keySet());
     candidates.addAll(readingPagesByDay.keySet());
-    candidates.addAll(taskCompletionsCountByDay.keySet());
     candidates.add(today);
+
+    Map<LocalDate, Integer> taskCompletionsCountByDay = dailyTaskService
+        .getCompletionsByDays(candidates).entrySet().stream()
+        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().size(), (a, b) -> a, TreeMap::new));
+
     for (LocalDate day : candidates) {
       if (persisted.containsKey(day)) {
         continue;

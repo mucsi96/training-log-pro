@@ -457,8 +457,13 @@ paths:
                   minLength: 1
                   maxLength: 255
       responses:
-        '200':
-          description: OK
+        '201':
+          description: Created
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the created task
           content:
             application/json:
               schema:

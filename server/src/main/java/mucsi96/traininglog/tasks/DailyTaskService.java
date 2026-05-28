@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -12,6 +13,7 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -66,13 +68,18 @@ public class DailyTaskService {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found");
     }
     if (completed) {
-      if (completionRepository.findByTaskIdAndDate(taskId, date).isEmpty()) {
+      if (completionRepository.findByTaskIdAndDate(taskId, date).isPresent()) {
+        return;
+      }
+      try {
         completionRepository.save(DailyTaskCompletionEntity.builder()
             .id(UUID.randomUUID())
             .taskId(taskId)
             .date(date)
             .completedAt(now())
             .build());
+      } catch (DataIntegrityViolationException ignored) {
+        // Concurrent request already inserted the completion — treat as success.
       }
     } else {
       completionRepository.deleteByTaskIdAndDate(taskId, date);
@@ -85,8 +92,11 @@ public class DailyTaskService {
   }
 
   @Transactional(readOnly = true)
-  public Map<LocalDate, Set<UUID>> getCompletionsByDay() {
-    return completionRepository.findAll().stream()
+  public Map<LocalDate, Set<UUID>> getCompletionsByDays(Collection<LocalDate> dates) {
+    if (dates.isEmpty()) {
+      return Map.of();
+    }
+    return completionRepository.findByDateIn(dates).stream()
         .collect(Collectors.groupingBy(
             DailyTaskCompletionEntity::getDate,
             TreeMap::new,
