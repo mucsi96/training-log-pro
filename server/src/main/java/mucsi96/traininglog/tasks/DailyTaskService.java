@@ -63,12 +63,16 @@ public class DailyTaskService {
 
   @Transactional
   public void setCompletion(UUID taskId, LocalDate date, boolean completed) {
-    if (!taskRepository.existsById(taskId)) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found");
-    }
     if (completed) {
-      completionRepository.insertIfAbsent(UUID.randomUUID(), taskId, date, now());
+      int inserted = completionRepository.insertIfTaskExistsAndAbsent(
+          UUID.randomUUID(), taskId, date, now());
+      if (inserted == 0 && !taskRepository.existsById(taskId)) {
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found");
+      }
     } else {
+      if (!taskRepository.existsById(taskId)) {
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found");
+      }
       completionRepository.deleteByTaskIdAndDate(taskId, date);
     }
   }

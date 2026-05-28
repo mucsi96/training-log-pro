@@ -23,9 +23,10 @@ public interface DailyTaskCompletionRepository
 
   @Modifying
   @Query(value = "INSERT INTO training_log.daily_task_completion (id, task_id, date, completed_at) "
-      + "VALUES (:id, :taskId, :date, :completedAt) "
+      + "SELECT :id, dt.id, :date, :completedAt "
+      + "FROM training_log.daily_task dt WHERE dt.id = :taskId "
       + "ON CONFLICT (task_id, date) DO NOTHING", nativeQuery = true)
-  void insertIfAbsent(
+  int insertIfTaskExistsAndAbsent(
       @Param("id") UUID id,
       @Param("taskId") UUID taskId,
       @Param("date") LocalDate date,
