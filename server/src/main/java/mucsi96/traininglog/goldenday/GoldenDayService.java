@@ -70,7 +70,6 @@ public class GoldenDayService {
         ? dailyTaskService.getCompletionsByDays(candidates).entrySet().stream()
             .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().size(), (a, b) -> a, TreeMap::new))
         : Map.of();
-    int totalTasks = goal.getDailyTaskGoal() > 0 ? (int) dailyTaskService.countTasks() : 0;
 
     for (LocalDate day : candidates) {
       if (persisted.containsKey(day)) {
@@ -110,7 +109,6 @@ public class GoldenDayService {
         .elevationGoal(goal.getElevationGoal())
         .readingPagesGoal(goal.getReadingPagesGoal())
         .todayTasksCompleted(taskCompletionsCountByDay.getOrDefault(today, 0))
-        .todayTasksTotal(totalTasks)
         .dailyTaskGoal(goal.getDailyTaskGoal())
         .goldenDates(goldenDates.stream().sorted().toList())
         .build();

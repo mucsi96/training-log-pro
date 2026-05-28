@@ -126,7 +126,6 @@ paths:
                   - elevationGoal
                   - readingPagesGoal
                   - todayTasksCompleted
-                  - todayTasksTotal
                   - dailyTaskGoal
                   - goldenDates
                 properties:
@@ -159,9 +158,6 @@ paths:
                     type: integer
                     format: int32
                   todayTasksCompleted:
-                    type: integer
-                    format: int32
-                  todayTasksTotal:
                     type: integer
                     format: int32
                   dailyTaskGoal:

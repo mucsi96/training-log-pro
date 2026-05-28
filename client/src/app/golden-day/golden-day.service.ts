@@ -19,7 +19,6 @@ export type GoldenDayStats = {
   elevationGoal: number;
   readingPagesGoal: number;
   todayTasksCompleted: number;
-  todayTasksTotal: number;
   dailyTaskGoal: number;
   goldenDates: string[];
 };

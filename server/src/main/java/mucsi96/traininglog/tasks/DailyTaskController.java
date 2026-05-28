@@ -25,7 +25,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import mucsi96.traininglog.api.DailyTask;
 import mucsi96.traininglog.api.DailyTaskStatus;
@@ -49,7 +48,7 @@ public class DailyTaskController {
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
   ResponseEntity<DailyTask> addTask(@Valid @RequestBody TaskRequest request) {
-    DailyTaskEntity saved = dailyTaskService.addTask(request.getName().trim());
+    DailyTaskEntity saved = dailyTaskService.addTask(request.name().trim());
     DailyTask body = toResponse(saved);
     return ResponseEntity
         .status(HttpStatus.CREATED)
@@ -60,7 +59,7 @@ public class DailyTaskController {
   @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
   DailyTask renameTask(@PathVariable UUID id, @Valid @RequestBody TaskRequest request) {
-    DailyTaskEntity saved = dailyTaskService.renameTask(id, request.getName().trim());
+    DailyTaskEntity saved = dailyTaskService.renameTask(id, request.name().trim());
     return toResponse(saved);
   }
 
@@ -92,7 +91,7 @@ public class DailyTaskController {
       @Valid @RequestBody CompletionRequest request,
       @RequestHeader("X-Timezone") ZoneId zoneId) {
     LocalDate today = LocalDate.now(clock.withZone(zoneId));
-    dailyTaskService.setCompletion(id, today, request.getCompleted());
+    dailyTaskService.setCompletion(id, today, request.completed());
     return ResponseEntity.noContent().build();
   }
 
@@ -103,16 +102,9 @@ public class DailyTaskController {
         .build();
   }
 
-  @Data
-  public static class TaskRequest {
-    @NotBlank
-    @Size(max = 255)
-    private String name;
+  public record TaskRequest(@NotBlank @Size(max = 255) String name) {
   }
 
-  @Data
-  public static class CompletionRequest {
-    @NotNull
-    private Boolean completed;
+  public record CompletionRequest(@NotNull Boolean completed) {
   }
 }

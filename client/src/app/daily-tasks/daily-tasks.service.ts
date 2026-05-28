@@ -2,7 +2,6 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { NotificationsService } from '@mucsi96/angular-material-theme';
 import { fetchJson } from '../utils/fetchJson';
-import { GoldenDayService } from '../golden-day/golden-day.service';
 
 export type DailyTask = {
   id: string;
@@ -19,7 +18,6 @@ export type DailyTaskStatus = {
 export class DailyTasksService {
   private readonly http = inject(HttpClient);
   private readonly notifications = inject(NotificationsService);
-  private readonly goldenDayService = inject(GoldenDayService);
 
   readonly version = signal(0);
 
@@ -47,7 +45,7 @@ export class DailyTasksService {
         method: 'post',
         body: { name },
       });
-      this.bumpVersions();
+      this.version.update((v) => v + 1);
       return task;
     } catch (e) {
       this.notifications.error('Unable to add task');
@@ -61,7 +59,7 @@ export class DailyTasksService {
         method: 'put',
         body: { name },
       });
-      this.bumpVersions();
+      this.version.update((v) => v + 1);
       return task;
     } catch (e) {
       this.notifications.error('Unable to update task');
@@ -72,7 +70,7 @@ export class DailyTasksService {
   async deleteTask(id: string): Promise<void> {
     try {
       await fetchJson<void>(this.http, `/api/tasks/${id}`, { method: 'delete' });
-      this.bumpVersions();
+      this.version.update((v) => v + 1);
     } catch (e) {
       this.notifications.error('Unable to delete task');
       throw e;
@@ -85,15 +83,10 @@ export class DailyTasksService {
         method: 'put',
         body: { completed },
       });
-      this.bumpVersions();
+      this.version.update((v) => v + 1);
     } catch (e) {
       this.notifications.error('Unable to update task status');
       throw e;
     }
-  }
-
-  private bumpVersions() {
-    this.version.update((v) => v + 1);
-    this.goldenDayService.version.update((v) => v + 1);
   }
 }
