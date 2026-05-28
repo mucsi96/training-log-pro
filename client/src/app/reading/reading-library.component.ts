@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, computed, inject, resource, signal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, resource, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -10,6 +10,13 @@ import {
   NotificationsService,
 } from '@mucsi96/angular-material-theme';
 import { Book, ReadingService } from './reading.service';
+
+type DiceFace = 1 | 2 | 3 | 4 | 5 | 6;
+const DICE_FACES: readonly DiceFace[] = [1, 2, 3, 4, 5, 6];
+const randomFace = (): DiceFace =>
+  DICE_FACES[Math.floor(Math.random() * DICE_FACES.length)];
+const ROLL_DURATION_MS = 1500;
+const FACE_CYCLE_MS = 110;
 
 type BookDraft = {
   title: string;
@@ -43,11 +50,18 @@ const emptyDraft = (): BookDraft => ({
 export class ReadingLibraryComponent {
   private readonly readingService = inject(ReadingService);
   private readonly notifications = inject(NotificationsService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly busy = signal(false);
   readonly addingBook = signal(false);
   readonly editingBookId = signal<string | null>(null);
   readonly draft = signal<BookDraft>(emptyDraft());
+
+  readonly rolling = signal(false);
+  readonly diceFace = signal<DiceFace>(1);
+  readonly pickedBook = signal<Book | null>(null);
+  private faceCycleHandle: ReturnType<typeof setInterval> | null = null;
+  private rollTimeoutHandle: ReturnType<typeof setTimeout> | null = null;
 
   readonly books = resource({
     params: () => this.readingService.version(),
@@ -66,6 +80,18 @@ export class ReadingLibraryComponent {
   readonly wantedBooks = computed(
     () => this.books.value()?.filter((book) => book.totalPages === null) ?? []
   );
+
+  constructor() {
+    this.destroyRef.onDestroy(() => this.clearRollTimers());
+    effect(() => {
+      const picked = this.pickedBook();
+      if (!picked) return;
+      const stillWanted = this.wantedBooks().some((b) => b.id === picked.id);
+      if (!stillWanted) {
+        this.pickedBook.set(null);
+      }
+    });
+  }
 
   readonly canSubmit = computed(() => {
     const d = this.draft();
@@ -177,5 +203,46 @@ export class ReadingLibraryComponent {
       return null;
     }
     return `${book.averagePagesPerDay.toFixed(1)} pages/day avg`;
+  }
+
+  rollWantedDice() {
+    if (this.rolling()) return;
+    const candidates = this.wantedBooks();
+    if (candidates.length === 0) return;
+
+    this.pickedBook.set(null);
+    this.rolling.set(true);
+
+    this.faceCycleHandle = setInterval(() => {
+      this.diceFace.set(randomFace());
+    }, FACE_CYCLE_MS);
+
+    this.rollTimeoutHandle = setTimeout(() => {
+      this.clearRollTimers();
+      const pool = this.wantedBooks();
+      if (pool.length === 0) {
+        this.rolling.set(false);
+        return;
+      }
+      const winner = pool[Math.floor(Math.random() * pool.length)];
+      this.diceFace.set(randomFace());
+      this.pickedBook.set(winner);
+      this.rolling.set(false);
+    }, ROLL_DURATION_MS);
+  }
+
+  dismissPick() {
+    this.pickedBook.set(null);
+  }
+
+  private clearRollTimers() {
+    if (this.faceCycleHandle !== null) {
+      clearInterval(this.faceCycleHandle);
+      this.faceCycleHandle = null;
+    }
+    if (this.rollTimeoutHandle !== null) {
+      clearTimeout(this.rollTimeoutHandle);
+      this.rollTimeoutHandle = null;
+    }
   }
 }

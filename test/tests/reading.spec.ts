@@ -525,6 +525,82 @@ test.describe('Reading', () => {
     ).toBeVisible();
   });
 
+  test('does not show the wanted-list dice widget when there are no wanted books', async ({
+    page,
+  }) => {
+    const bookId = randomUUID();
+    await insertBook(bookId, 'In Progress Book', 'Author', 200, daysAgoAt(1, 8));
+
+    await page.goto('/settings');
+    const library = page.getByRole('region', { name: 'Books' });
+    await expect(
+      library.getByRole('heading', { name: 'Pick your next read' })
+    ).toHaveCount(0);
+    await expect(
+      library.getByRole('button', { name: 'Roll the dice' })
+    ).toHaveCount(0);
+  });
+
+  test('rolls the dice and picks a book from the wanted list', async ({
+    page,
+  }) => {
+    const wantedTitles = ['Wanted One', 'Wanted Two', 'Wanted Three'];
+    await insertBook(randomUUID(), wantedTitles[0], 'Author A', null, daysAgoAt(3, 8));
+    await insertBook(randomUUID(), wantedTitles[1], 'Author B', null, daysAgoAt(2, 8));
+    await insertBook(randomUUID(), wantedTitles[2], 'Author C', null, daysAgoAt(1, 8));
+
+    await page.goto('/settings');
+    const widget = page.getByRole('region', { name: 'Pick your next read' });
+    await expect(widget).toBeVisible();
+    await expect(widget.getByText('Ready when you are.')).toBeVisible();
+
+    await widget.getByRole('button', { name: 'Roll the dice' }).click();
+
+    await expect(widget.getByText('You should read')).toBeVisible({
+      timeout: 5000,
+    });
+
+    const pickedTitle = widget.getByRole('heading', { level: 5 });
+    const titleText = (await pickedTitle.textContent())?.trim();
+    expect(wantedTitles).toContain(titleText);
+
+    await expect(
+      widget.getByRole('button', { name: 'Roll again' })
+    ).toBeVisible();
+    await widget.getByRole('button', { name: 'Dismiss' }).click();
+    await expect(widget.getByText('You should read')).toBeHidden();
+    await expect(
+      widget.getByRole('button', { name: 'Roll the dice' })
+    ).toBeVisible();
+  });
+
+  test('clears the dice pick after the chosen book is moved to in progress', async ({
+    page,
+  }) => {
+    await insertBook(randomUUID(), 'Only Wanted', 'Author', null, daysAgoAt(1, 8));
+
+    await page.goto('/settings');
+    const library = page.getByRole('region', { name: 'Books' });
+    const widget = library.getByRole('region', { name: 'Pick your next read' });
+    await widget.getByRole('button', { name: 'Roll the dice' }).click();
+
+    await expect(widget.getByText('You should read')).toBeVisible({
+      timeout: 5000,
+    });
+    await expect(
+      widget.getByRole('heading', { name: 'Only Wanted', level: 5 })
+    ).toBeVisible();
+
+    await library.getByRole('button', { name: 'Edit Only Wanted' }).click();
+    await library.getByLabel('Total pages').fill('220');
+    await library.getByRole('button', { name: 'Save book' }).click();
+
+    await expect(
+      library.getByRole('heading', { name: 'Reading in progress' })
+    ).toBeVisible();
+    await expect(widget).toHaveCount(0);
+  });
+
   test('reflects the configured daily reading goal', async ({ page }) => {
     await setGoals(100, 250, 50);
     const bookId = randomUUID();

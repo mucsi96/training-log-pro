@@ -54,6 +54,94 @@
           ></ng-container>
         }
       </div>
+
+      <section
+        class="dice-widget"
+        aria-labelledby="dice-widget-heading"
+      >
+        <h4 id="dice-widget-heading">Pick your next read</h4>
+        <p class="dice-hint">
+          Roll the dice to pick a random book from your wanted list. Then edit
+          the book to set its page count and move it into Reading in progress.
+        </p>
+        <div class="dice-stage">
+          <div
+            class="dice"
+            [class.dice--rolling]="rolling()"
+            [attr.data-face]="diceFace()"
+            aria-label="Dice"
+            role="img"
+          >
+            <div class="dice-face dice-face--1">
+              <span class="pip pip-mm"></span>
+            </div>
+            <div class="dice-face dice-face--2">
+              <span class="pip pip-tl"></span>
+              <span class="pip pip-br"></span>
+            </div>
+            <div class="dice-face dice-face--3">
+              <span class="pip pip-tl"></span>
+              <span class="pip pip-mm"></span>
+              <span class="pip pip-br"></span>
+            </div>
+            <div class="dice-face dice-face--4">
+              <span class="pip pip-tl"></span>
+              <span class="pip pip-tr"></span>
+              <span class="pip pip-bl"></span>
+              <span class="pip pip-br"></span>
+            </div>
+            <div class="dice-face dice-face--5">
+              <span class="pip pip-tl"></span>
+              <span class="pip pip-tr"></span>
+              <span class="pip pip-mm"></span>
+              <span class="pip pip-bl"></span>
+              <span class="pip pip-br"></span>
+            </div>
+            <div class="dice-face dice-face--6">
+              <span class="pip pip-tl"></span>
+              <span class="pip pip-tr"></span>
+              <span class="pip pip-ml"></span>
+              <span class="pip pip-mr"></span>
+              <span class="pip pip-bl"></span>
+              <span class="pip pip-br"></span>
+            </div>
+          </div>
+          <div class="dice-result" aria-live="polite">
+            @if (pickedBook(); as picked) {
+              <p class="dice-result-label">You should read</p>
+              <h5 class="dice-result-title">{{ picked.title }}</h5>
+              <p class="dice-result-author">{{ picked.author }}</p>
+            } @else if (rolling()) {
+              <p class="dice-result-label">Rolling…</p>
+            } @else {
+              <p class="dice-result-label dice-result-label--idle">
+                Ready when you are.
+              </p>
+            }
+          </div>
+        </div>
+        <div class="dice-actions">
+          @if (pickedBook()) {
+            <button
+              mat-stroked-button
+              type="button"
+              [disabled]="rolling()"
+              (click)="dismissPick()"
+            >
+              Dismiss
+            </button>
+          }
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            [disabled]="rolling()"
+            (click)="rollWantedDice()"
+          >
+            {{ pickedBook() ? 'Roll again' : 'Roll the dice' }}
+          </button>
+        </div>
+      </section>
     </div>
   }
 
