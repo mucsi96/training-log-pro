@@ -1,14 +1,11 @@
 package mucsi96.traininglog.tasks;
 
+import java.net.URI;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
-
-import java.net.URI;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -78,14 +75,12 @@ public class DailyTaskController {
   @PreAuthorize("hasAuthority('APPROLE_WorkoutReader') and hasAuthority('SCOPE_readWorkouts')")
   List<DailyTaskStatus> listToday(@RequestHeader("X-Timezone") ZoneId zoneId) {
     LocalDate today = LocalDate.now(clock.withZone(zoneId));
-    Set<UUID> completedIds = dailyTaskService.getCompletionsForDay(today).stream()
-        .map(DailyTaskCompletionEntity::getTaskId)
-        .collect(Collectors.toSet());
-    return dailyTaskService.listTasks().stream()
+    DailyTaskService.TodayTasks snapshot = dailyTaskService.getTodayTasks(today);
+    return snapshot.tasks().stream()
         .map(task -> DailyTaskStatus.builder()
             .id(task.getId())
             .name(task.getName())
-            .completed(completedIds.contains(task.getId()))
+            .completed(snapshot.completedTaskIds().contains(task.getId()))
             .build())
         .toList();
   }

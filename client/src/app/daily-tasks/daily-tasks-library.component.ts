@@ -65,7 +65,7 @@ export class DailyTasksLibraryComponent {
     const editingId = this.editingTaskId();
     this.busy.set(true);
     try {
-      if (editingId) {
+      if (editingId !== null) {
         await this.tasksService.renameTask(editingId, name);
         this.editingTaskId.set(null);
       } else {

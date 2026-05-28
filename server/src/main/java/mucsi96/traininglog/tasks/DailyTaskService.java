@@ -13,7 +13,6 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -68,27 +67,24 @@ public class DailyTaskService {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found");
     }
     if (completed) {
-      if (completionRepository.findByTaskIdAndDate(taskId, date).isPresent()) {
-        return;
-      }
-      try {
-        completionRepository.save(DailyTaskCompletionEntity.builder()
-            .id(UUID.randomUUID())
-            .taskId(taskId)
-            .date(date)
-            .completedAt(now())
-            .build());
-      } catch (DataIntegrityViolationException ignored) {
-        // Concurrent request already inserted the completion — treat as success.
-      }
+      completionRepository.insertIfAbsent(UUID.randomUUID(), taskId, date, now());
     } else {
       completionRepository.deleteByTaskIdAndDate(taskId, date);
     }
   }
 
   @Transactional(readOnly = true)
-  public List<DailyTaskCompletionEntity> getCompletionsForDay(LocalDate date) {
-    return completionRepository.findByDate(date);
+  public TodayTasks getTodayTasks(LocalDate date) {
+    Set<UUID> completedIds = completionRepository.findByDate(date).stream()
+        .map(DailyTaskCompletionEntity::getTaskId)
+        .collect(Collectors.toSet());
+    List<DailyTaskEntity> tasks = listTasks();
+    return new TodayTasks(tasks, completedIds);
+  }
+
+  @Transactional(readOnly = true)
+  public long countTasks() {
+    return taskRepository.count();
   }
 
   @Transactional(readOnly = true)
@@ -101,6 +97,9 @@ public class DailyTaskService {
             DailyTaskCompletionEntity::getDate,
             TreeMap::new,
             Collectors.mapping(DailyTaskCompletionEntity::getTaskId, Collectors.toSet())));
+  }
+
+  public record TodayTasks(List<DailyTaskEntity> tasks, Set<UUID> completedTaskIds) {
   }
 
   private ZonedDateTime now() {
