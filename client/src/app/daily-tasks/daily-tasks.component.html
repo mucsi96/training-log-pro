@@ -1,0 +1,25 @@
+@if (tasks.isLoading()) {
+  <div class="page-loading"><bt-bar-loader /></div>
+} @else if (hasTasks()) {
+  <section class="daily-tasks" aria-labelledby="daily-tasks-heading">
+    <header class="header">
+      <h2 id="daily-tasks-heading">Daily tasks</h2>
+      <p class="status">
+        {{ completedCount() }} / {{ totalCount() }} done
+      </p>
+    </header>
+    <ul class="tasks">
+      @for (task of tasks.value(); track task.id) {
+        <li class="task">
+          <mat-checkbox
+            [checked]="task.completed"
+            [disabled]="togglingId() !== null"
+            (change)="toggle(task.id, $event.checked)"
+          >
+            {{ task.name }}
+          </mat-checkbox>
+        </li>
+      }
+    </ul>
+  </section>
+}

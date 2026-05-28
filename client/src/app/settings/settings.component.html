@@ -47,6 +47,16 @@
         <span matTextSuffix>pages</span>
       </mat-form-field>
 
+      <mat-form-field appearance="outline">
+        <mat-label>Daily task goal</mat-label>
+        <input
+          matInput
+          type="number"
+          [formField]="settingsForm.dailyTaskGoal"
+        />
+        <span matTextSuffix>tasks</span>
+      </mat-form-field>
+
       <div class="actions">
         <button
           mat-flat-button
@@ -84,6 +94,8 @@
       </button>
     </div>
   </section>
+
+  <app-daily-tasks-library></app-daily-tasks-library>
 
   <app-reading-library></app-reading-library>
 </section>

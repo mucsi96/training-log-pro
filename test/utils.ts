@@ -28,20 +28,23 @@ export async function cleanupDb() {
   await query('DELETE FROM training_log.pushup_set');
   await query('DELETE FROM training_log.reading_progress');
   await query('DELETE FROM training_log.book');
+  await query('DELETE FROM training_log.daily_task_completion');
+  await query('DELETE FROM training_log.daily_task');
   await query('DELETE FROM training_log.oauth2_authorized_client');
   await query('DELETE FROM training_log.golden_day');
   await query(
     `UPDATE training_log.settings
      SET pushup_goal = $1, elevation_goal = $2, reading_pages_goal = $3,
+         daily_task_goal = $4,
          coins_reset_at = TIMESTAMP '1970-01-01 00:00:00'
      WHERE id = 1`,
-    [100, 250, 0]
+    [100, 250, 0, 0]
   );
 }
 
 export async function getSettings() {
   const result = await query(
-    `SELECT pushup_goal, elevation_goal, reading_pages_goal
+    `SELECT pushup_goal, elevation_goal, reading_pages_goal, daily_task_goal
      FROM training_log.settings WHERE id = 1`
   );
   return result.rows[0];
@@ -50,11 +53,12 @@ export async function getSettings() {
 export async function setGoals(
   pushupGoal: number,
   elevationGoal: number,
-  readingPagesGoal: number = 0
+  readingPagesGoal: number = 0,
+  dailyTaskGoal: number = 0
 ) {
   await query(
-    `UPDATE training_log.settings SET pushup_goal = $1, elevation_goal = $2, reading_pages_goal = $3 WHERE id = 1`,
-    [pushupGoal, elevationGoal, readingPagesGoal]
+    `UPDATE training_log.settings SET pushup_goal = $1, elevation_goal = $2, reading_pages_goal = $3, daily_task_goal = $4 WHERE id = 1`,
+    [pushupGoal, elevationGoal, readingPagesGoal, dailyTaskGoal]
   );
 }
 
@@ -276,6 +280,43 @@ export async function insertReadingProgress(
 export async function getBookRows() {
   const result = await query(
     'SELECT id, title, author, total_pages, starting_page, completed_at FROM training_log.book ORDER BY created_at ASC'
+  );
+  return result.rows;
+}
+
+export async function insertDailyTask(
+  id: string,
+  name: string,
+  createdAt: Date = new Date()
+) {
+  await query(
+    'INSERT INTO training_log.daily_task (id, name, created_at) VALUES ($1, $2, $3)',
+    [id, name, createdAt]
+  );
+}
+
+export async function insertDailyTaskCompletion(
+  taskId: string,
+  date: Date | string,
+  completedAt: Date = new Date()
+) {
+  await query(
+    'INSERT INTO training_log.daily_task_completion (id, task_id, date, completed_at) VALUES ($1, $2, $3, $4)',
+    [randomUUID(), taskId, date, completedAt]
+  );
+}
+
+export async function getDailyTaskRows() {
+  const result = await query(
+    'SELECT id, name FROM training_log.daily_task ORDER BY created_at ASC'
+  );
+  return result.rows;
+}
+
+export async function getDailyTaskCompletionRows() {
+  const result = await query(
+    `SELECT id, task_id, to_char(date, 'YYYY-MM-DD') AS date, completed_at
+     FROM training_log.daily_task_completion ORDER BY completed_at ASC`
   );
   return result.rows;
 }

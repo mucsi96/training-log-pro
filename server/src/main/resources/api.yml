@@ -125,6 +125,9 @@ paths:
                   - pushupGoal
                   - elevationGoal
                   - readingPagesGoal
+                  - todayTasksCompleted
+                  - todayTasksTotal
+                  - dailyTaskGoal
                   - goldenDates
                 properties:
                   monthCount:
@@ -153,6 +156,15 @@ paths:
                     type: integer
                     format: int32
                   readingPagesGoal:
+                    type: integer
+                    format: int32
+                  todayTasksCompleted:
+                    type: integer
+                    format: int32
+                  todayTasksTotal:
+                    type: integer
+                    format: int32
+                  dailyTaskGoal:
                     type: integer
                     format: int32
                   goldenDates:
@@ -419,6 +431,115 @@ paths:
         '204':
           description: No Content
 
+  /tasks:
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DailyTask'
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailyTask'
+
+  /tasks/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailyTask'
+        '404':
+          description: Task not found
+    delete:
+      responses:
+        '204':
+          description: No Content
+        '404':
+          description: Task not found
+
+  /tasks/today:
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DailyTaskStatus'
+
+  /tasks/{id}/completion:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - completed
+              properties:
+                completed:
+                  type: boolean
+      responses:
+        '204':
+          description: No Content
+        '404':
+          description: Task not found
+
   /reading/stats:
     get:
       responses:
@@ -480,6 +601,7 @@ components:
         - pushupGoal
         - elevationGoal
         - readingPagesGoal
+        - dailyTaskGoal
       properties:
         pushupGoal:
           type: integer
@@ -496,6 +618,11 @@ components:
           format: int32
           minimum: 0
           maximum: 10000
+        dailyTaskGoal:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 100
     Book:
       type: object
       required:
@@ -553,6 +680,31 @@ components:
         pointsPerCoin:
           type: integer
           format: int32
+    DailyTask:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+    DailyTaskStatus:
+      type: object
+      required:
+        - id
+        - name
+        - completed
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        completed:
+          type: boolean
     PodiumMessage:
       type: object
       required:

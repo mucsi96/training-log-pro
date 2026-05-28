@@ -17,6 +17,10 @@
         ·
         {{ readingPages() }}/{{ readingGoal() }} pages
         }
+        @if (tasksGoal() > 0) {
+        ·
+        {{ tasksCompleted() }}/{{ tasksGoal() }} tasks
+        }
       </p>
     }
   </header>

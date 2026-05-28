@@ -6,12 +6,14 @@ import { FtpComponent } from '../ftp/ftp.component';
 import { PushupsComponent } from '../pushups/pushups.component';
 import { ReadingComponent } from '../reading/reading.component';
 import { GoldenDayComponent } from '../golden-day/golden-day.component';
+import { DailyTasksComponent } from '../daily-tasks/daily-tasks.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
   imports: [
     GoldenDayComponent,
+    DailyTasksComponent,
     RideComponent,
     WeightComponent,
     FitnessComponent,
