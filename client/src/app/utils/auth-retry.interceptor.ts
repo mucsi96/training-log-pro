@@ -5,6 +5,10 @@ import { catchError, switchMap, tap, throwError } from 'rxjs';
 
 const isApiRequest = (url: string): boolean => /\/api(\/|$)/.test(url);
 
+// A 401 with this link means "external provider needs authorization" - not an OIDC token issue.
+const isExternalOAuthChallenge = (error: HttpErrorResponse): boolean =>
+  !!error.error?._links?.oauth2Login?.href;
+
 // Refresh once on 401 (iOS PWA wakes with an expired access token) before surfacing the error.
 export const authRetryInterceptor: HttpInterceptorFn = (req, next) => {
   const oidcSecurityService = inject(OidcSecurityService);
@@ -13,7 +17,7 @@ export const authRetryInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error: unknown) => {
       const is401 = error instanceof HttpErrorResponse && error.status === 401;
 
-      if (!is401 || !isApiRequest(req.url)) {
+      if (!is401 || !isApiRequest(req.url) || isExternalOAuthChallenge(error)) {
         return throwError(() => error);
       }
 
