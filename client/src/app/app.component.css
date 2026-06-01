@@ -1,6 +1,8 @@
 .header {
   border-bottom: 1px solid var(--bt-outline);
   display: block;
+  /* Let the toolbar grow by the iOS status-bar inset instead of crushing the content under it. */
+  height: auto;
   padding: env(safe-area-inset-top) 0 0;
 
   nav {
@@ -10,7 +12,7 @@
     display: flex;
     align-items: center;
     gap: 1rem;
-    height: 100%;
+    min-height: var(--mat-toolbar-standard-height, 64px);
 
     a[mat-button] {
       font-size: 16px;
