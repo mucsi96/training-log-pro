@@ -6,6 +6,8 @@ set -e  # Exit immediately if a command exits with a non-zero status
 : "${DOCKERHUB_USERNAME:?Environment variable DOCKERHUB_USERNAME is required}"
 
 AZURE_KEYVAULT_ENDPOINT="https://${AZURE_KEYVAULT_NAME}.vault.azure.net/"
+SERVER_RELEASE_NAME=training-log-server
+CLIENT_RELEASE_NAME=training-log-client
 
 # Create a temporary file in /dev/shm (RAM) to avoid writing to disk
 KUBECONFIG=$(mktemp /dev/shm/kubeconfig.XXXXXX)
@@ -31,7 +33,7 @@ clientAppChartVersion=$(helm search repo mucsi96/client-app --output json | jq -
 
 echo "Deploying server: $DOCKERHUB_USERNAME/training-log-pro-server:$serverLatestTag using spring-app chart $springAppChartVersion"
 
-helm upgrade training-log-server mucsi96/spring-app \
+helm upgrade $SERVER_RELEASE_NAME mucsi96/spring-app \
     --install \
     --version $springAppChartVersion \
     --set image=$DOCKERHUB_USERNAME/training-log-pro-server:$serverLatestTag \
@@ -41,6 +43,7 @@ helm upgrade training-log-server mucsi96/spring-app \
     --set clientId=$API_CLIENT_ID \
     --set serviceAccountName=training-log-api-workload-identity \
     --set env.AZURE_KEYVAULT_ENDPOINT=$AZURE_KEYVAULT_ENDPOINT \
+    --set env.CLIENT_APP_NAME=$CLIENT_RELEASE_NAME \
     --set resources.requests.memory=512Mi \
     --set resources.requests.cpu=100m \
     --set resources.limits.memory=1Gi \
@@ -49,7 +52,7 @@ helm upgrade training-log-server mucsi96/spring-app \
 
 echo "Deploying client: $DOCKERHUB_USERNAME/training-log-pro-client:$clientLatestTag using client-app chart $clientAppChartVersion"
 
-helm upgrade training-log-client mucsi96/client-app \
+helm upgrade $CLIENT_RELEASE_NAME mucsi96/client-app \
     --install \
     --version $clientAppChartVersion \
     --set image=$DOCKERHUB_USERNAME/training-log-pro-client:$clientLatestTag \

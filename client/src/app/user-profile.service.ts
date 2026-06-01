@@ -1,5 +1,10 @@
-import { computed, Injectable, inject } from '@angular/core';
+import { Injectable, inject, linkedSignal } from '@angular/core';
 import { AuthService } from './auth.service';
+
+interface UserProfile {
+  name: string;
+  initials: string;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -7,27 +12,33 @@ import { AuthService } from './auth.service';
 export class UserProfileService {
   private readonly authService = inject(AuthService);
 
-  profile = computed(() => {
-    const userDataResult = this.authService.userData();
-    const userData = userDataResult?.userData;
-    const name = userData?.name ?? userData?.preferred_username;
+  // Keep last profile while userData is briefly empty during iOS PWA token renewal.
+  profile = linkedSignal<unknown, UserProfile | undefined>({
+    source: this.authService.userData,
+    computation: (userDataResult, previous) => {
+      const userData = (
+        userDataResult as
+          | { userData?: { name?: string; preferred_username?: string } }
+          | undefined
+      )?.userData;
+      const name = userData?.name ?? userData?.preferred_username;
 
-    if (!name) {
-      return undefined;
-    }
+      if (!name) {
+        return previous?.value;
+      }
 
-    return {
-      name,
-      initials: this.getInitials(name),
-    };
+      return {
+        name,
+        initials: this.getInitials(name),
+      };
+    },
   });
 
-  private getInitials(name: string | undefined): string {
-    if (!name) return '';
-    const initials = name
+  private getInitials(name: string): string {
+    return name
       .split(' ')
-      .map((n) => n[0])
-      .join('');
-    return initials.toUpperCase();
+      .map((part) => part[0])
+      .join('')
+      .toUpperCase();
   }
 }

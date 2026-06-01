@@ -33,6 +33,8 @@ function provideAzureAdOidcConfig(config: EnvironmentConfig): EnvironmentProvide
           renewTimeBeforeTokenExpiresInSeconds: 60,
           autoUserInfo: false,
           disableIatOffsetValidation: true,
+          // Refresh-token flow has no fresh nonce; validating fails after iOS PWA resume.
+          ignoreNonceAfterRefresh: true,
           logLevel: LogLevel.Warn,
           secureRoutes: ['/api'],
         },

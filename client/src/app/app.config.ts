@@ -1,4 +1,10 @@
-import { ApplicationConfig, Provider, provideZoneChangeDetection } from '@angular/core';
+import {
+  ApplicationConfig,
+  inject,
+  Provider,
+  provideAppInitializer,
+  provideZoneChangeDetection,
+} from '@angular/core';
 import { provideRouter } from '@angular/router';
 
 import {
@@ -15,7 +21,9 @@ import * as echarts from 'echarts';
 import { NGX_ECHARTS_CONFIG } from 'ngx-echarts';
 import { routes } from './app.routes';
 import { errorInterceptor } from './utils/error.interceptor';
+import { authRetryInterceptor } from './utils/auth-retry.interceptor';
 import { timezoneInterceptor } from './utils/timezone.interceptor';
+import { TokenRenewalService } from './utils/token-renewal.service';
 import { authInterceptor } from 'angular-auth-oidc-client';
 import { provideOidcAuth } from './auth.config';
 import {
@@ -40,7 +48,12 @@ export function getAppConfig(environment: EnvironmentConfig): ApplicationConfig 
       provideZoneChangeDetection({ eventCoalescing: true }),
       provideRouter(routes),
       provideHttpClient(
-        withInterceptors([authInterceptor(), timezoneInterceptor, errorInterceptor])
+        withInterceptors([
+          errorInterceptor,
+          authRetryInterceptor,
+          authInterceptor(),
+          timezoneInterceptor,
+        ])
       ),
       { provide: MAT_RIPPLE_GLOBAL_OPTIONS, useValue: globalRippleConfig },
       provideAnimationsAsync(),
@@ -48,6 +61,7 @@ export function getAppConfig(environment: EnvironmentConfig): ApplicationConfig 
       { provide: ENVIRONMENT_CONFIG, useValue: environment },
       provideECharts(),
       provideOidcAuth(environment),
+      provideAppInitializer(() => inject(TokenRenewalService).init()),
     ],
   };
 }
