@@ -15,13 +15,12 @@ export class UserProfileService {
   // Keep last profile while userData is briefly empty during iOS PWA token renewal.
   profile = linkedSignal<unknown, UserProfile | undefined>({
     source: this.authService.userData,
-    computation: (userDataResult, previous) => {
-      const userData = (
-        userDataResult as
-          | { userData?: { name?: string; preferred_username?: string } }
-          | undefined
-      )?.userData;
-      const name = userData?.name ?? userData?.preferred_username;
+    computation: (profile, previous) => {
+      const claims = profile as
+        | { name?: string; preferred_username?: string }
+        | null
+        | undefined;
+      const name = claims?.name ?? claims?.preferred_username;
 
       if (!name) {
         return previous?.value;
