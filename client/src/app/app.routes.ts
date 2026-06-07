@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { autoLoginPartialRoutesGuard } from 'angular-auth-oidc-client';
+import { authGuard } from './utils/auth.guard';
 
 export const routes: Routes = [
   {
@@ -8,32 +8,32 @@ export const routes: Routes = [
       import('./home/home.component').then((m) => m.HomeComponent),
     pathMatch: 'full',
     data: { period: 7 },
-    canActivate: [autoLoginPartialRoutesGuard],
+    canActivate: [authGuard],
   },
   {
     path: 'month',
     loadComponent: () =>
       import('./home/home.component').then((m) => m.HomeComponent),
     data: { period: 30 },
-    canActivate: [autoLoginPartialRoutesGuard],
+    canActivate: [authGuard],
   },
   {
     path: 'year',
     loadComponent: () =>
       import('./home/home.component').then((m) => m.HomeComponent),
     data: { period: 365 },
-    canActivate: [autoLoginPartialRoutesGuard],
+    canActivate: [authGuard],
   },
   {
     path: 'all-time',
     loadComponent: () =>
       import('./home/home.component').then((m) => m.HomeComponent),
-    canActivate: [autoLoginPartialRoutesGuard],
+    canActivate: [authGuard],
   },
   {
     path: 'settings',
     loadComponent: () =>
       import('./settings/settings.component').then((m) => m.SettingsComponent),
-    canActivate: [autoLoginPartialRoutesGuard],
+    canActivate: [authGuard],
   },
 ];
