@@ -51,12 +51,18 @@ export class AuthService {
   }
 
   login(): void {
+    // Preserve the deep-linked route across the authority round-trip: the
+    // redirect_uri is always the origin, so without this a `goto('/settings')`
+    // would come back authenticated but land on `/`. oidc-client-ts returns
+    // this `state` from signinRedirectCallback, where we restore the URL.
+    const returnUrl = window.location.pathname + window.location.search;
     console.info(
-      '[auth] Full re-authentication started (redirect to authority)'
+      '[auth] Full re-authentication started (redirect to authority)',
+      JSON.stringify({ returnUrl })
     );
     // Await pending logs reaching the backend before navigating away.
     flushFaro().finally(() => {
-      this.userManager.signinRedirect().catch((error) =>
+      this.userManager.signinRedirect({ state: { returnUrl } }).catch((error) =>
         console.error(
           '[auth] signinRedirect failed',
           JSON.stringify({ error: errorMessage(error) })
@@ -210,12 +216,25 @@ export class AuthService {
       url.searchParams.has('code') || url.searchParams.has('error');
 
     if (this.returnedFromAuthority) {
+      // Default to the current path; login() stashes the original deep link in
+      // the OIDC state so we can send the user back where they started.
+      let returnUrl = url.pathname;
       try {
         const user = await this.userManager.signinRedirectCallback();
         this.user.set(user);
+        const stateReturnUrl = (
+          user?.state as { returnUrl?: string } | undefined
+        )?.returnUrl;
+        if (stateReturnUrl?.startsWith('/')) {
+          returnUrl = stateReturnUrl;
+        }
         console.info(
           '[auth] Cold start - redirect callback processed',
-          JSON.stringify({ ...describeUser(user), storage: snapshotStorageKeys() })
+          JSON.stringify({
+            ...describeUser(user),
+            returnUrl,
+            storage: snapshotStorageKeys(),
+          })
         );
       } catch (error) {
         console.error(
@@ -223,8 +242,9 @@ export class AuthService {
           JSON.stringify({ error: errorMessage(error) })
         );
       }
-      // Strip the auth params so refreshes and deep links stay clean.
-      history.replaceState(history.state, '', url.origin + url.pathname);
+      // Restore the originally requested route and strip the auth params so the
+      // router's initial navigation lands on the deep link, not the callback URL.
+      history.replaceState(history.state, '', url.origin + returnUrl);
       return;
     }
 
