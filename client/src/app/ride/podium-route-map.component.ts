@@ -8,7 +8,30 @@ import {
   input,
   viewChild,
 } from '@angular/core';
-import { LngLatBounds, Map as MapLibreMap } from 'maplibre-gl';
+import {
+  LngLatBounds,
+  Map as MapLibreMap,
+  StyleSpecification,
+} from 'maplibre-gl';
+
+const cyclOsmStyle: StyleSpecification = {
+  version: 8,
+  sources: {
+    cyclosm: {
+      type: 'raster',
+      tiles: [
+        'https://a.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png',
+        'https://b.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png',
+        'https://c.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png',
+      ],
+      tileSize: 256,
+      maxzoom: 20,
+      attribution:
+        '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, tiles by <a href="https://www.cyclosm.org/">CyclOSM</a>',
+    },
+  },
+  layers: [{ id: 'cyclosm', type: 'raster', source: 'cyclosm' }],
+};
 
 @Component({
   standalone: true,
@@ -31,10 +54,10 @@ export class PodiumRouteMapComponent implements AfterViewInit, OnDestroy {
 
     this.map = new MapLibreMap({
       container: this.container().nativeElement,
-      style: 'https://tiles.openfreemap.org/styles/fiord',
+      style: cyclOsmStyle,
       interactive: true,
       scrollZoom: false,
-      attributionControl: false,
+      attributionControl: { compact: true },
     });
 
     this.map.on('error', (event) => {
@@ -52,9 +75,21 @@ export class PodiumRouteMapComponent implements AfterViewInit, OnDestroy {
         },
       });
       map.addLayer({
+        id: 'route-casing',
+        type: 'line',
+        source: 'route',
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: {
+          'line-color': '#1a1a1a',
+          'line-width': 5,
+          'line-opacity': 0.6,
+        },
+      });
+      map.addLayer({
         id: 'route-line',
         type: 'line',
         source: 'route',
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
         paint: {
           'line-color': '#ffd700',
           'line-width': 3,
