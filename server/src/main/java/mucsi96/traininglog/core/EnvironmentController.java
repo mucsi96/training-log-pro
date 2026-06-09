@@ -28,6 +28,9 @@ public class EnvironmentController {
   @Value("${client-app-name:}")
   private String clientAppName;
 
+  @Value("${thunderforest-api-key:}")
+  private String thunderforestApiKey;
+
   @GetMapping("/environment")
   public ConfigResponse getConfig() {
     return new ConfigResponse(
@@ -36,7 +39,8 @@ public class EnvironmentController {
         clientId,
         mockOAuth2ServerUri,
         clientLogUrl,
-        clientAppName);
+        clientAppName,
+        thunderforestApiKey);
   }
 
   public record ConfigResponse(
@@ -45,6 +49,7 @@ public class EnvironmentController {
       String apiClientId,
       String mockOAuth2ServerUri,
       String clientLogUrl,
-      String clientAppName) {
+      String clientAppName,
+      String thunderforestApiKey) {
   }
 }
