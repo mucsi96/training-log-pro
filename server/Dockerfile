@@ -16,7 +16,7 @@ RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar) \
     && rm -f target/dependency/META-INF/services/java.nio.file.spi.FileSystemProvider
 
 # Stage 2: Runtime image
-FROM docker.io/library/eclipse-temurin:25-jre
+FROM docker.io/library/eclipse-temurin:26-jre
 
 VOLUME /tmp
 
