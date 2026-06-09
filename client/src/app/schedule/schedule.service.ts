@@ -5,13 +5,14 @@ import { firstValueFrom } from 'rxjs';
 import { fetchJson } from '../utils/fetchJson';
 
 export type Meeting = {
+  date: string;
   title: string;
   startTime?: string;
   endTime?: string;
   location?: string;
 };
 
-export type ExtractedMeetings = {
+export type WeekMeetings = {
   meetings: Meeting[];
 };
 
@@ -34,6 +35,11 @@ export type DaySchedule = {
   blocks: ScheduleBlock[];
 };
 
+export type WeekSchedule = {
+  weekStart: string;
+  days: DaySchedule[];
+};
+
 @Injectable({ providedIn: 'root' })
 export class ScheduleService {
   private readonly http = inject(HttpClient);
@@ -41,21 +47,21 @@ export class ScheduleService {
 
   readonly version = signal(0);
 
-  async getToday(): Promise<DaySchedule | null> {
+  async getWeek(): Promise<WeekSchedule | null> {
     try {
-      return await fetchJson<DaySchedule | null>(this.http, '/api/schedule');
+      return await fetchJson<WeekSchedule | null>(this.http, '/api/schedule');
     } catch (e) {
-      this.notifications.error('Unable to load today\'s schedule');
+      this.notifications.error('Unable to load this week\'s schedule');
       throw e;
     }
   }
 
-  async extract(photo: File): Promise<ExtractedMeetings> {
+  async extract(photo: File): Promise<WeekMeetings> {
     const formData = new FormData();
     formData.append('photo', photo);
     try {
       return await firstValueFrom(
-        this.http.post<ExtractedMeetings>('/api/schedule/extract', formData)
+        this.http.post<WeekMeetings>('/api/schedule/extract', formData)
       );
     } catch (e) {
       this.notifications.error('Unable to read the calendar photo');
@@ -63,9 +69,9 @@ export class ScheduleService {
     }
   }
 
-  async plan(meetings: MeetingReview[]): Promise<DaySchedule> {
+  async plan(meetings: MeetingReview[]): Promise<WeekSchedule> {
     try {
-      const schedule = await fetchJson<DaySchedule>(
+      const schedule = await fetchJson<WeekSchedule>(
         this.http,
         '/api/schedule/plan',
         { method: 'post', body: { meetings } }

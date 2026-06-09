@@ -624,54 +624,135 @@ components:
           format: int32
           minimum: 0
           maximum: 100
-        homeLat:
-          type: number
-          format: double
-        homeLng:
-          type: number
-          format: double
-        officeAddress:
-          type: string
-        schoolAddress:
-          type: string
         workStartTime:
           type: string
         workEndTime:
           type: string
-        sonPickupTime:
-          type: string
-        commuteBikeMinutes:
-          type: integer
-          format: int32
-        commuteCarMinutes:
-          type: integer
-          format: int32
         rainThresholdMm:
           type: number
           format: double
-        pomodoroMinutes:
+    Location:
+      type: object
+      required:
+        - id
+        - name
+        - home
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        address:
+          type: string
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        home:
+          type: boolean
+        bikeMinutesFromHome:
           type: integer
           format: int32
-        trainingRideMinutes:
+        carMinutesFromHome:
           type: integer
           format: int32
-        germanCardsMinutes:
+    LocationRequest:
+      type: object
+      required:
+        - name
+        - home
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        home:
+          type: boolean
+        bikeMinutesFromHome:
           type: integer
           format: int32
-        readingMinutes:
+        carMinutesFromHome:
           type: integer
           format: int32
-        germanWithWifeMinutes:
+    Activity:
+      type: object
+      required:
+        - id
+        - name
+        - durationMinutes
+        - occurrencesPerWeek
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        durationMinutes:
           type: integer
           format: int32
-        flashcardCreationMinutes:
+        occurrencesPerWeek:
+          type: integer
+          format: int32
+        locationId:
+          type: string
+          format: uuid
+        earliestTime:
+          type: string
+        latestTime:
+          type: string
+        daysOfWeek:
+          type: string
+        constraintNote:
+          type: string
+        priority:
+          type: integer
+          format: int32
+    ActivityRequest:
+      type: object
+      required:
+        - name
+        - durationMinutes
+        - occurrencesPerWeek
+      properties:
+        name:
+          type: string
+        durationMinutes:
+          type: integer
+          format: int32
+        occurrencesPerWeek:
+          type: integer
+          format: int32
+        locationId:
+          type: string
+          format: uuid
+        earliestTime:
+          type: string
+        latestTime:
+          type: string
+        daysOfWeek:
+          type: string
+        constraintNote:
+          type: string
+        priority:
           type: integer
           format: int32
     Meeting:
       type: object
       required:
+        - date
         - title
       properties:
+        date:
+          type: string
         title:
           type: string
         startTime:
@@ -680,7 +761,7 @@ components:
           type: string
         location:
           type: string
-    ExtractedMeetings:
+    WeekMeetings:
       type: object
       required:
         - meetings
@@ -692,10 +773,13 @@ components:
     MeetingReview:
       type: object
       required:
+        - date
         - title
         - attend
         - requiresOffice
       properties:
+        date:
+          type: string
         title:
           type: string
         startTime:
@@ -708,7 +792,7 @@ components:
           type: boolean
         requiresOffice:
           type: boolean
-    PlanRequest:
+    PlanWeekRequest:
       type: object
       required:
         - meetings
@@ -750,6 +834,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ScheduleBlock'
+    WeekSchedule:
+      type: object
+      required:
+        - weekStart
+        - days
+      properties:
+        weekStart:
+          type: string
+        days:
+          type: array
+          items:
+            $ref: '#/components/schemas/DaySchedule'
     Book:
       type: object
       required:

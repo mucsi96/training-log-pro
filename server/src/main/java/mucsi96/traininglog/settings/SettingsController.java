@@ -38,22 +38,9 @@ public class SettingsController {
         .elevationGoal(entity.getElevationGoal())
         .readingPagesGoal(entity.getReadingPagesGoal())
         .dailyTaskGoal(entity.getDailyTaskGoal())
-        .homeLat(entity.getHomeLat())
-        .homeLng(entity.getHomeLng())
-        .officeAddress(entity.getOfficeAddress())
-        .schoolAddress(entity.getSchoolAddress())
         .workStartTime(entity.getWorkStartTime())
         .workEndTime(entity.getWorkEndTime())
-        .sonPickupTime(entity.getSonPickupTime())
-        .commuteBikeMinutes(entity.getCommuteBikeMinutes())
-        .commuteCarMinutes(entity.getCommuteCarMinutes())
         .rainThresholdMm(entity.getRainThresholdMm())
-        .pomodoroMinutes(entity.getPomodoroMinutes())
-        .trainingRideMinutes(entity.getTrainingRideMinutes())
-        .germanCardsMinutes(entity.getGermanCardsMinutes())
-        .readingMinutes(entity.getReadingMinutes())
-        .germanWithWifeMinutes(entity.getGermanWithWifeMinutes())
-        .flashcardCreationMinutes(entity.getFlashcardCreationMinutes())
         .build();
   }
 }

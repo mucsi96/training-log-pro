@@ -17,9 +17,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import mucsi96.traininglog.api.DaySchedule;
-import mucsi96.traininglog.api.ExtractedMeetings;
-import mucsi96.traininglog.api.PlanRequest;
+import mucsi96.traininglog.api.PlanWeekRequest;
+import mucsi96.traininglog.api.WeekMeetings;
+import mucsi96.traininglog.api.WeekSchedule;
 
 @RestController
 @RequestMapping(value = "/schedule", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -30,24 +30,25 @@ public class ScheduleController {
 
   @PostMapping(value = "/extract", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
-  ExtractedMeetings extract(@RequestParam("photo") MultipartFile photo) throws IOException {
+  WeekMeetings extract(@RequestParam("photo") MultipartFile photo,
+      @RequestHeader("X-Timezone") ZoneId zoneId) throws IOException {
     if (photo.isEmpty()) {
       throw new IllegalArgumentException("Photo is required");
     }
     String mediaType = photo.getContentType() == null ? MediaType.IMAGE_JPEG_VALUE : photo.getContentType();
-    return scheduleService.extractMeetings(photo.getBytes(), mediaType);
+    return scheduleService.extractWeek(photo.getBytes(), mediaType, zoneId);
   }
 
   @PostMapping(value = "/plan", consumes = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
-  DaySchedule plan(@Valid @RequestBody PlanRequest request, @RequestHeader("X-Timezone") ZoneId zoneId) {
-    return scheduleService.plan(request, zoneId);
+  WeekSchedule plan(@Valid @RequestBody PlanWeekRequest request, @RequestHeader("X-Timezone") ZoneId zoneId) {
+    return scheduleService.planWeek(request, zoneId);
   }
 
   @GetMapping
   @PreAuthorize("hasAuthority('APPROLE_WorkoutReader') and hasAuthority('SCOPE_readWorkouts')")
-  ResponseEntity<DaySchedule> getToday(@RequestHeader("X-Timezone") ZoneId zoneId) {
-    return scheduleService.getToday(zoneId)
+  ResponseEntity<WeekSchedule> getWeek(@RequestHeader("X-Timezone") ZoneId zoneId) {
+    return scheduleService.getWeek(zoneId)
         .map(ResponseEntity::ok)
         .orElseGet(() -> ResponseEntity.noContent().build());
   }

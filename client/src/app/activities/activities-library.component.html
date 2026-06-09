@@ -1,0 +1,166 @@
+@if (activities.isLoading()) {
+  <div class="page-loading"><bt-bar-loader /></div>
+} @else {
+  <section class="library" aria-labelledby="activities-library-heading">
+    <h2 id="activities-library-heading">Activities</h2>
+
+    @if ((activities.value()?.length ?? 0) === 0 && !showForm()) {
+      <p class="empty">
+        No activities yet. Add recurring things to fit into your week (pomodoro,
+        pushups, training ride, reading…).
+      </p>
+    }
+
+    @if ((activities.value()?.length ?? 0) > 0) {
+      <ul class="items">
+        @for (activity of activities.value(); track activity.id) {
+          <li class="item">
+            <div class="item-info">
+              <span class="item-name">{{ activity.name }}</span>
+              <span class="item-detail"
+                >{{ activity.durationMinutes }} min ·
+                {{ activity.occurrencesPerWeek }}/week@if (locationName(activity.locationId)) {
+                  · {{ locationName(activity.locationId) }}
+                }</span
+              >
+              @if (activity.constraintNote) {
+                <span class="item-detail">{{ activity.constraintNote }}</span>
+              }
+            </div>
+            <div class="item-actions">
+              <button
+                mat-icon-button
+                type="button"
+                [attr.aria-label]="'Edit ' + activity.name"
+                [disabled]="busy()"
+                (click)="startEditing(activity)"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                type="button"
+                [attr.aria-label]="'Remove ' + activity.name"
+                [disabled]="busy()"
+                (click)="remove(activity)"
+              >
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+
+    @if (showForm()) {
+      <form class="item-form" (submit)="submit(); $event.preventDefault()">
+        <mat-form-field appearance="outline">
+          <mat-label>Name</mat-label>
+          <input
+            matInput
+            name="name"
+            [ngModel]="draft().name"
+            (ngModelChange)="patch({ name: $event })"
+            required
+          />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Duration</mat-label>
+          <input
+            matInput
+            type="number"
+            name="durationMinutes"
+            [ngModel]="draft().durationMinutes"
+            (ngModelChange)="patch({ durationMinutes: $event })"
+          />
+          <span matTextSuffix>min</span>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Times per week</mat-label>
+          <input
+            matInput
+            type="number"
+            name="occurrencesPerWeek"
+            [ngModel]="draft().occurrencesPerWeek"
+            (ngModelChange)="patch({ occurrencesPerWeek: $event })"
+          />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Location</mat-label>
+          <mat-select
+            [ngModel]="draft().locationId"
+            name="locationId"
+            (ngModelChange)="patch({ locationId: $event })"
+          >
+            <mat-option [value]="null">Anywhere</mat-option>
+            @for (location of locations.value(); track location.id) {
+              <mat-option [value]="location.id">{{ location.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Earliest time</mat-label>
+          <input
+            matInput
+            type="time"
+            name="earliestTime"
+            [ngModel]="draft().earliestTime"
+            (ngModelChange)="patch({ earliestTime: $event })"
+          />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Latest time</mat-label>
+          <input
+            matInput
+            type="time"
+            name="latestTime"
+            [ngModel]="draft().latestTime"
+            (ngModelChange)="patch({ latestTime: $event })"
+          />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Days of week</mat-label>
+          <input
+            matInput
+            name="daysOfWeek"
+            placeholder="e.g. mon,tue,wed"
+            [ngModel]="draft().daysOfWeek"
+            (ngModelChange)="patch({ daysOfWeek: $event })"
+          />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Priority</mat-label>
+          <input
+            matInput
+            type="number"
+            name="priority"
+            [ngModel]="draft().priority"
+            (ngModelChange)="patch({ priority: $event })"
+          />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Constraint (free text for the AI)</mat-label>
+          <textarea
+            matInput
+            name="constraintNote"
+            placeholder="e.g. Only on days I don't cycle home from the office"
+            [ngModel]="draft().constraintNote"
+            (ngModelChange)="patch({ constraintNote: $event })"
+          ></textarea>
+        </mat-form-field>
+        <div class="actions">
+          <button mat-stroked-button type="button" [disabled]="busy()" (click)="cancel()">
+            Cancel
+          </button>
+          <button mat-flat-button color="primary" type="submit" [disabled]="!canSubmit()">
+            Save activity
+          </button>
+        </div>
+      </form>
+    } @else {
+      <button mat-stroked-button type="button" class="add-button" (click)="startAdding()">
+        Add activity
+      </button>
+    }
+  </section>
+}

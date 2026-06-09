@@ -4,5 +4,5 @@ import java.time.LocalDate;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ScheduleRepository extends JpaRepository<ScheduleEntity, LocalDate> {
+public interface WeekPlanRepository extends JpaRepository<WeekPlanEntity, LocalDate> {
 }

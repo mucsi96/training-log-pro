@@ -29,22 +29,9 @@ public class SettingsService {
     entity.setElevationGoal(request.getElevationGoal());
     entity.setReadingPagesGoal(request.getReadingPagesGoal());
     entity.setDailyTaskGoal(request.getDailyTaskGoal());
-    entity.setHomeLat(request.getHomeLat());
-    entity.setHomeLng(request.getHomeLng());
-    entity.setOfficeAddress(request.getOfficeAddress());
-    entity.setSchoolAddress(request.getSchoolAddress());
     entity.setWorkStartTime(request.getWorkStartTime());
     entity.setWorkEndTime(request.getWorkEndTime());
-    entity.setSonPickupTime(request.getSonPickupTime());
-    entity.setCommuteBikeMinutes(request.getCommuteBikeMinutes());
-    entity.setCommuteCarMinutes(request.getCommuteCarMinutes());
     entity.setRainThresholdMm(request.getRainThresholdMm());
-    entity.setPomodoroMinutes(request.getPomodoroMinutes());
-    entity.setTrainingRideMinutes(request.getTrainingRideMinutes());
-    entity.setGermanCardsMinutes(request.getGermanCardsMinutes());
-    entity.setReadingMinutes(request.getReadingMinutes());
-    entity.setGermanWithWifeMinutes(request.getGermanWithWifeMinutes());
-    entity.setFlashcardCreationMinutes(request.getFlashcardCreationMinutes());
     return repository.save(entity);
   }
 

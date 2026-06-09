@@ -81,9 +81,30 @@ h2 {
 }
 
 .review,
-.day-schedule {
+.week {
   display: grid;
   gap: 16px;
+}
+
+.day-group,
+.day {
+  display: grid;
+  gap: 8px;
+}
+
+.day-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.day-heading {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--bt-text-muted);
 }
 
 .meetings {
@@ -132,14 +153,13 @@ h2 {
 }
 
 .commute {
-  margin: 0;
-  padding: 12px 16px;
-  border-radius: 12px;
+  padding: 2px 10px;
+  border-radius: 999px;
   background: hsl(217, 28%, 16%);
   border: 1px solid hsl(217, 19%, 27%);
   color: var(--mat-sys-on-primary);
+  font-size: 12px;
   font-weight: 600;
-  text-align: center;
 }
 
 .timeline {

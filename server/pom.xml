@@ -184,6 +184,7 @@
             <library>native</library>
             <useJakartaEe>true</useJakartaEe>
             <supportUrlQuery>false</supportUrlQuery>
+            <booleanGetterPrefix>get</booleanGetterPrefix>
             <additionalModelTypeAnnotations>@lombok.Builder @lombok.AllArgsConstructor
               @SuppressWarnings("all")</additionalModelTypeAnnotations>
           </configOptions>

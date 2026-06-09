@@ -9,22 +9,9 @@ export type Settings = {
   elevationGoal: number;
   readingPagesGoal: number;
   dailyTaskGoal: number;
-  homeLat: number | null;
-  homeLng: number | null;
-  officeAddress: string;
-  schoolAddress: string;
   workStartTime: string;
   workEndTime: string;
-  sonPickupTime: string;
-  commuteBikeMinutes: number;
-  commuteCarMinutes: number;
   rainThresholdMm: number;
-  pomodoroMinutes: number;
-  trainingRideMinutes: number;
-  germanCardsMinutes: number;
-  readingMinutes: number;
-  germanWithWifeMinutes: number;
-  flashcardCreationMinutes: number;
 };
 
 @Injectable({ providedIn: 'root' })

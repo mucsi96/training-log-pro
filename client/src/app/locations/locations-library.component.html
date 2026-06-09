@@ -1,0 +1,129 @@
+@if (locations.isLoading()) {
+  <div class="page-loading"><bt-bar-loader /></div>
+} @else {
+  <section class="library" aria-labelledby="locations-library-heading">
+    <h2 id="locations-library-heading">Locations</h2>
+
+    @if ((locations.value()?.length ?? 0) === 0 && !showForm()) {
+      <p class="empty">No locations yet. Add home, office, school…</p>
+    }
+
+    @if ((locations.value()?.length ?? 0) > 0) {
+      <ul class="items">
+        @for (location of locations.value(); track location.id) {
+          <li class="item">
+            <div class="item-info">
+              <span class="item-name"
+                >{{ location.name }}@if (location.home) { <span class="badge">home</span> }</span
+              >
+              @if (location.address) {
+                <span class="item-detail">{{ location.address }}</span>
+              }
+            </div>
+            <div class="item-actions">
+              <button
+                mat-icon-button
+                type="button"
+                [attr.aria-label]="'Edit ' + location.name"
+                [disabled]="busy()"
+                (click)="startEditing(location)"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                type="button"
+                [attr.aria-label]="'Remove ' + location.name"
+                [disabled]="busy()"
+                (click)="remove(location)"
+              >
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+
+    @if (showForm()) {
+      <form class="item-form" (submit)="submit(); $event.preventDefault()">
+        <mat-form-field appearance="outline">
+          <mat-label>Name</mat-label>
+          <input
+            matInput
+            name="name"
+            [ngModel]="draft().name"
+            (ngModelChange)="patch({ name: $event })"
+            required
+          />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Address</mat-label>
+          <input
+            matInput
+            name="address"
+            [ngModel]="draft().address"
+            (ngModelChange)="patch({ address: $event })"
+          />
+        </mat-form-field>
+        <mat-checkbox
+          [checked]="draft().home"
+          (change)="patch({ home: $event.checked })"
+          >This is home (used for weather)</mat-checkbox
+        >
+        <mat-form-field appearance="outline">
+          <mat-label>Latitude</mat-label>
+          <input
+            matInput
+            type="number"
+            name="latitude"
+            [ngModel]="draft().latitude"
+            (ngModelChange)="patch({ latitude: $event })"
+          />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Longitude</mat-label>
+          <input
+            matInput
+            type="number"
+            name="longitude"
+            [ngModel]="draft().longitude"
+            (ngModelChange)="patch({ longitude: $event })"
+          />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Bike minutes from home</mat-label>
+          <input
+            matInput
+            type="number"
+            name="bikeMinutesFromHome"
+            [ngModel]="draft().bikeMinutesFromHome"
+            (ngModelChange)="patch({ bikeMinutesFromHome: $event })"
+          />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Car minutes from home</mat-label>
+          <input
+            matInput
+            type="number"
+            name="carMinutesFromHome"
+            [ngModel]="draft().carMinutesFromHome"
+            (ngModelChange)="patch({ carMinutesFromHome: $event })"
+          />
+        </mat-form-field>
+        <div class="actions">
+          <button mat-stroked-button type="button" [disabled]="busy()" (click)="cancel()">
+            Cancel
+          </button>
+          <button mat-flat-button color="primary" type="submit" [disabled]="!canSubmit()">
+            Save location
+          </button>
+        </div>
+      </form>
+    } @else {
+      <button mat-stroked-button type="button" class="add-button" (click)="startAdding()">
+        Add location
+      </button>
+    }
+  </section>
+}

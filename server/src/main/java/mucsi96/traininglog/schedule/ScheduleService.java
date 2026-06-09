@@ -3,7 +3,10 @@ package mucsi96.traininglog.schedule;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -14,11 +17,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import mucsi96.traininglog.activity.ActivityEntity;
+import mucsi96.traininglog.activity.ActivityService;
 import mucsi96.traininglog.api.DaySchedule;
-import mucsi96.traininglog.api.ExtractedMeetings;
 import mucsi96.traininglog.api.MeetingReview;
-import mucsi96.traininglog.api.PlanRequest;
+import mucsi96.traininglog.api.PlanWeekRequest;
 import mucsi96.traininglog.api.ScheduleBlock;
+import mucsi96.traininglog.api.WeekMeetings;
+import mucsi96.traininglog.api.WeekSchedule;
+import mucsi96.traininglog.location.LocationEntity;
+import mucsi96.traininglog.location.LocationService;
 import mucsi96.traininglog.settings.SettingsEntity;
 import mucsi96.traininglog.settings.SettingsService;
 
@@ -27,142 +35,203 @@ import mucsi96.traininglog.settings.SettingsService;
 @Slf4j
 public class ScheduleService {
 
-  private static final String TRAINING_RIDE_TYPE = "training-ride";
-
   private final AnthropicClient anthropicClient;
   private final WeatherClient weatherClient;
   private final SettingsService settingsService;
-  private final ScheduleRepository scheduleRepository;
+  private final ActivityService activityService;
+  private final LocationService locationService;
+  private final WeekPlanRepository weekPlanRepository;
   private final ObjectMapper objectMapper;
   private final Clock clock;
 
-  public ExtractedMeetings extractMeetings(byte[] photo, String mediaType) {
+  public WeekMeetings extractWeek(byte[] photo, String mediaType, ZoneId zoneId) {
+    LocalDate weekStart = weekStart(zoneId);
+    LocalDate weekEnd = weekStart.plusDays(6);
     String prompt = """
-        You are reading a photo of a work Outlook calendar for a single day.
-        Extract every meeting you can see into a JSON object with this exact shape:
-        {"meetings":[{"title":"...","startTime":"HH:mm","endTime":"HH:mm","location":"..."}]}
+        You are reading a photo of an Outlook work calendar shown in week view.
+        Extract every meeting into a JSON object with this exact shape:
+        {"meetings":[{"date":"YYYY-MM-DD","title":"...","startTime":"HH:mm","endTime":"HH:mm","location":"..."}]}
+        The week runs from %s (Monday) to %s (Sunday); every meeting date must fall in that range.
         Use 24-hour HH:mm times. If a field is unknown use an empty string.
-        Respond with ONLY the JSON, no prose and no markdown fences.""";
+        Respond with ONLY the JSON, no prose and no markdown fences."""
+        .formatted(weekStart, weekEnd);
 
     String output = anthropicClient.extractFromImage(prompt, photo, mediaType);
-    return parse(output, ExtractedMeetings.class);
+    return parse(output, WeekMeetings.class);
   }
 
   @Transactional
-  public DaySchedule plan(PlanRequest request, ZoneId zoneId) {
+  public WeekSchedule planWeek(PlanWeekRequest request, ZoneId zoneId) {
     LocalDate today = LocalDate.now(clock.withZone(zoneId));
-    SettingsEntity settings = settingsService.getCurrent();
+    LocalDate weekStart = weekStart(zoneId);
+    LocalDate weekEnd = weekStart.plusDays(6);
+    LocalDate planStart = today.isBefore(weekStart) ? weekStart : today;
 
-    List<MeetingReview> keptMeetings = request.getMeetings().stream()
+    List<LocalDate> planningDays = planStart.datesUntil(weekEnd.plusDays(1)).toList();
+
+    Map<LocalDate, List<MeetingReview>> keptByDate = request.getMeetings().stream()
         .filter(meeting -> Boolean.TRUE.equals(meeting.getAttend()))
-        .toList();
+        .filter(meeting -> meeting.getDate() != null && !meeting.getDate().isBlank())
+        .collect(Collectors.groupingBy(meeting -> LocalDate.parse(meeting.getDate())));
 
-    boolean goingToOffice = keptMeetings.stream()
-        .anyMatch(meeting -> Boolean.TRUE.equals(meeting.getRequiresOffice()));
+    SettingsEntity settings = settingsService.getCurrent();
+    List<ActivityEntity> activities = activityService.list();
+    List<LocationEntity> locations = locationService.list();
+    Optional<LocationEntity> home = locations.stream().filter(LocationEntity::isHome).findFirst();
 
-    String commuteMode = resolveCommuteMode(goingToOffice, settings);
+    Map<LocalDate, Double> precipitation = home
+        .filter(h -> h.getLatitude() != null && h.getLongitude() != null)
+        .map(h -> weatherClient.getDailyPrecipitation(h.getLatitude(), h.getLongitude()))
+        .orElseGet(Map::of);
 
-    String prompt = buildPlanningPrompt(keptMeetings, commuteMode, settings);
+    double threshold = settings.getRainThresholdMm() == null ? 1.0 : settings.getRainThresholdMm();
+
+    Map<LocalDate, String> commuteByDate = planningDays.stream().collect(Collectors.toMap(
+        day -> day,
+        day -> {
+          boolean office = keptByDate.getOrDefault(day, List.of()).stream()
+              .anyMatch(meeting -> Boolean.TRUE.equals(meeting.getRequiresOffice()));
+          if (!office) {
+            return "none";
+          }
+          return precipitation.getOrDefault(day, 0d) > threshold ? "car" : "bike";
+        }));
+
+    String prompt = buildWeekPrompt(planningDays, keptByDate, commuteByDate, activities, locations, settings);
     String output = anthropicClient.complete(prompt);
     PlanResult result = parse(output, PlanResult.class);
 
-    List<ScheduleBlock> blocks = Optional.ofNullable(result.blocks()).orElse(List.of());
-    if ("bike".equals(commuteMode)) {
-      // A training ride is only planned when the commute home is not already by bike.
-      blocks = blocks.stream()
-          .filter(block -> !TRAINING_RIDE_TYPE.equals(block.getType()))
-          .toList();
-    }
+    Map<LocalDate, List<ScheduleBlock>> blocksByDate = Optional.ofNullable(result.days()).orElse(List.of()).stream()
+        .filter(day -> day.getDate() != null && !day.getDate().isBlank())
+        .collect(Collectors.toMap(
+            day -> LocalDate.parse(day.getDate()),
+            day -> Optional.ofNullable(day.getBlocks()).orElse(List.of()),
+            (a, b) -> a));
 
-    scheduleRepository.save(ScheduleEntity.builder()
-        .date(today)
-        .commuteMode(commuteMode)
-        .blocks(blocks)
+    List<DaySchedule> plannedDays = planningDays.stream()
+        .map(day -> DaySchedule.builder()
+            .date(day.toString())
+            .commuteMode(commuteByDate.get(day))
+            .blocks(blocksByDate.getOrDefault(day, List.of()))
+            .build())
+        .toList();
+
+    List<DaySchedule> pastDays = weekPlanRepository.findById(weekStart)
+        .map(WeekPlanEntity::getDays)
+        .orElseGet(List::of).stream()
+        .filter(day -> LocalDate.parse(day.getDate()).isBefore(planStart))
+        .toList();
+
+    List<DaySchedule> merged = new ArrayList<>(pastDays);
+    merged.addAll(plannedDays);
+    merged.sort(Comparator.comparing(DaySchedule::getDate));
+
+    weekPlanRepository.save(WeekPlanEntity.builder()
+        .weekStart(weekStart)
+        .meetings(request.getMeetings())
+        .days(merged)
         .build());
 
-    return DaySchedule.builder()
-        .date(today.toString())
-        .commuteMode(commuteMode)
-        .blocks(blocks)
-        .build();
+    return WeekSchedule.builder().weekStart(weekStart.toString()).days(merged).build();
   }
 
   @Transactional(readOnly = true)
-  public Optional<DaySchedule> getToday(ZoneId zoneId) {
-    LocalDate today = LocalDate.now(clock.withZone(zoneId));
-    return scheduleRepository.findById(today)
-        .map(entity -> DaySchedule.builder()
-            .date(entity.getDate().toString())
-            .commuteMode(entity.getCommuteMode())
-            .blocks(entity.getBlocks())
+  public Optional<WeekSchedule> getWeek(ZoneId zoneId) {
+    LocalDate weekStart = weekStart(zoneId);
+    return weekPlanRepository.findById(weekStart)
+        .map(entity -> WeekSchedule.builder()
+            .weekStart(weekStart.toString())
+            .days(entity.getDays())
             .build());
   }
 
-  private String resolveCommuteMode(boolean goingToOffice, SettingsEntity settings) {
-    if (!goingToOffice) {
-      return "none";
-    }
-    if (settings.getHomeLat() == null || settings.getHomeLng() == null) {
-      throw new IllegalStateException("Home location must be configured to plan an office commute");
-    }
-    WeatherForecast forecast = weatherClient.getTodayForecast(settings.getHomeLat(), settings.getHomeLng());
-    double threshold = settings.getRainThresholdMm() == null ? 1.0 : settings.getRainThresholdMm();
-    return forecast.maxPrecipitationMm() > threshold ? "car" : "bike";
+  private LocalDate weekStart(ZoneId zoneId) {
+    LocalDate today = LocalDate.now(clock.withZone(zoneId));
+    return today.minusDays(today.getDayOfWeek().getValue() - 1L);
   }
 
-  private String buildPlanningPrompt(List<MeetingReview> meetings, String commuteMode, SettingsEntity settings) {
-    String meetingLines = meetings.isEmpty()
-        ? "(no meetings to attend)"
-        : meetings.stream()
-            .map(meeting -> "- %s %s-%s%s".formatted(
-                meeting.getTitle(),
-                nullToEmpty(meeting.getStartTime()),
-                nullToEmpty(meeting.getEndTime()),
-                Boolean.TRUE.equals(meeting.getRequiresOffice()) ? " (at office)" : ""))
+  private String buildWeekPrompt(
+      List<LocalDate> planningDays,
+      Map<LocalDate, List<MeetingReview>> keptByDate,
+      Map<LocalDate, String> commuteByDate,
+      List<ActivityEntity> activities,
+      List<LocationEntity> locations,
+      SettingsEntity settings) {
+
+    String dayLines = planningDays.stream().map(day -> {
+      String meetings = keptByDate.getOrDefault(day, List.of()).stream()
+          .map(meeting -> "    * %s %s-%s%s".formatted(
+              meeting.getTitle(),
+              nullToEmpty(meeting.getStartTime()),
+              nullToEmpty(meeting.getEndTime()),
+              Boolean.TRUE.equals(meeting.getRequiresOffice()) ? " (office)" : ""))
+          .collect(Collectors.joining("\n"));
+      return "  - %s (%s), commute: %s%s".formatted(
+          day, day.getDayOfWeek(), commuteByDate.get(day),
+          meetings.isEmpty() ? ", no meetings" : "\n" + meetings);
+    }).collect(Collectors.joining("\n"));
+
+    String activityLines = activities.isEmpty()
+        ? "  (none configured)"
+        : activities.stream().map(activity -> "  - %s: %d min, %d/week%s%s%s%s%s".formatted(
+            activity.getName(),
+            activity.getDurationMinutes(),
+            activity.getOccurrencesPerWeek(),
+            activity.getLocationId() != null ? ", location " + locationName(locations, activity.getLocationId()) : "",
+            (activity.getEarliestTime() != null || activity.getLatestTime() != null)
+                ? ", between " + nullToEmpty(activity.getEarliestTime()) + " and " + nullToEmpty(activity.getLatestTime())
+                : "",
+            activity.getDaysOfWeek() != null ? ", days " + activity.getDaysOfWeek() : "",
+            activity.getPriority() != null ? ", priority " + activity.getPriority() : "",
+            activity.getConstraintNote() != null && !activity.getConstraintNote().isBlank()
+                ? ", rule: " + activity.getConstraintNote()
+                : ""))
+            .collect(Collectors.joining("\n"));
+
+    String locationLines = locations.isEmpty()
+        ? "  (none configured)"
+        : locations.stream().map(location -> "  - %s%s%s%s".formatted(
+            location.getName(),
+            location.isHome() ? " (home)" : "",
+            location.getAddress() != null ? " @ " + location.getAddress() : "",
+            (location.getBikeMinutesFromHome() != null || location.getCarMinutesFromHome() != null)
+                ? " [bike " + location.getBikeMinutesFromHome() + " min, car " + location.getCarMinutesFromHome() + " min from home]"
+                : ""))
             .collect(Collectors.joining("\n"));
 
     return """
-        You are an assistant that builds a single day's personal schedule.
-        Lay out a realistic, non-overlapping timeline as a JSON object with this exact shape:
-        {"blocks":[{"startTime":"HH:mm","endTime":"HH:mm","title":"...","type":"...","details":"..."}]}
-        Use 24-hour HH:mm times. Respond with ONLY the JSON, no prose and no markdown fences.
+        You are planning a person's week, one day at a time, around fixed meetings.
+        Return a JSON object with this exact shape, covering EXACTLY these dates:
+        {"days":[{"date":"YYYY-MM-DD","commuteMode":"bike|car|none","blocks":[{"startTime":"HH:mm","endTime":"HH:mm","title":"...","type":"...","details":"..."}]}]}
+        Use 24-hour HH:mm times and non-overlapping blocks. Respond with ONLY the JSON, no prose, no markdown fences.
 
-        Use these block "type" values: meeting, commute, school-pickup, pomodoro, pushups,
-        training-ride, german-cards, reading, german-with-wife, flashcard-creation.
+        For each day the commute mode is already decided (see below) — use it as given. On office days
+        add commute blocks home<->office using the office location's bike/car minutes. Distribute each
+        activity's weekly occurrences across the days, honouring its location, time window, allowed days,
+        priority and free-text rule. Fit flexible work as needed within work hours %s-%s.
 
-        Today's commute to and from the office is by: %s
-        (If the commute mode is "none" the user is working from home and there is no commute block.
-        Only include a training-ride block when the user is NOT commuting home by bike.)
-
-        Meetings to attend:
+        Days to plan:
         %s
 
-        Constraints and preferences:
-        - Work hours: %s to %s
-        - Office address: %s
-        - Pick the son up from school at %s (address: %s); include the round trip.
-        - Bike commute one way: %s minutes. Car commute one way: %s minutes.
-        - Session durations (minutes): pomodoro %s, training ride %s, german cards %s,
-          reading %s, german with wife %s, flashcard creation %s.
-        - Daily goals to fit in: %s pushups total and at least %s reading pages.
-        - Fill remaining work time with pomodoro work sessions.""".formatted(
-        commuteMode,
-        meetingLines,
-        nullToEmpty(settings.getWorkStartTime()),
-        nullToEmpty(settings.getWorkEndTime()),
-        nullToEmpty(settings.getOfficeAddress()),
-        nullToEmpty(settings.getSonPickupTime()),
-        nullToEmpty(settings.getSchoolAddress()),
-        settings.getCommuteBikeMinutes(),
-        settings.getCommuteCarMinutes(),
-        settings.getPomodoroMinutes(),
-        settings.getTrainingRideMinutes(),
-        settings.getGermanCardsMinutes(),
-        settings.getReadingMinutes(),
-        settings.getGermanWithWifeMinutes(),
-        settings.getFlashcardCreationMinutes(),
-        settings.getPushupGoal(),
-        settings.getReadingPagesGoal());
+        Activities (recurring, schedule these across the week):
+        %s
+
+        Locations:
+        %s"""
+        .formatted(
+            nullToEmpty(settings.getWorkStartTime()),
+            nullToEmpty(settings.getWorkEndTime()),
+            dayLines,
+            activityLines,
+            locationLines);
+  }
+
+  private String locationName(List<LocationEntity> locations, java.util.UUID id) {
+    return locations.stream()
+        .filter(location -> location.getId().equals(id))
+        .map(LocationEntity::getName)
+        .findFirst()
+        .orElse("unknown");
   }
 
   private <T> T parse(String output, Class<T> type) {
@@ -192,6 +261,6 @@ public class ScheduleService {
     return value == null ? "" : value;
   }
 
-  private record PlanResult(List<ScheduleBlock> blocks) {
+  private record PlanResult(List<DaySchedule> days) {
   }
 }

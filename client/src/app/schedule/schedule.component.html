@@ -1,13 +1,14 @@
 <section class="schedule" aria-labelledby="schedule-heading">
   <header class="header">
-    <h1 id="schedule-heading">Plan my day</h1>
+    <h1 id="schedule-heading">Plan my week</h1>
     <p class="subtitle">
-      Take a photo of your Outlook calendar and let AI build a schedule that fits
-      your meetings, commute and goals.
+      Take a photo of your Outlook week and let AI build a schedule that fits your
+      meetings, commute and goals. Re-upload any time the calendar changes to
+      replan the rest of the week.
     </p>
   </header>
 
-  @if (loadingToday()) {
+  @if (loadingWeek()) {
     <div class="page-loading"><bt-bar-loader /></div>
   } @else {
     @switch (step()) {
@@ -24,7 +25,7 @@
                 capture="environment"
                 (change)="onPhotoSelected($event)"
               />
-              <span>Take or choose a calendar photo</span>
+              <span>Take or choose a week-view calendar photo</span>
             </label>
             @if (photoPreview()) {
               <img class="preview" [src]="photoPreview()" alt="Calendar photo" />
@@ -37,43 +38,46 @@
         <div class="review">
           <h2>Review meetings</h2>
           @if (hasMeetings()) {
-            <ul class="meetings">
-              @for (meeting of meetings(); track $index) {
-                <li class="meeting">
-                  <div class="meeting-info">
-                    <span class="meeting-title">{{ meeting.title }}</span>
-                    @if (meeting.startTime) {
-                      <span class="meeting-time"
-                        >{{ meeting.startTime }} – {{ meeting.endTime }}</span
-                      >
-                    }
-                    @if (meeting.location) {
-                      <span class="meeting-location">{{ meeting.location }}</span>
-                    }
-                  </div>
-                  <div class="meeting-toggles">
-                    <mat-slide-toggle
-                      [checked]="meeting.attend"
-                      (change)="toggleAttend($index, $event.checked)"
-                      >Attend</mat-slide-toggle
-                    >
-                    <mat-slide-toggle
-                      [checked]="meeting.requiresOffice"
-                      [disabled]="!meeting.attend"
-                      (change)="toggleOffice($index, $event.checked)"
-                      >At office</mat-slide-toggle
-                    >
-                  </div>
-                </li>
-              }
-            </ul>
+            @for (group of meetingGroups(); track group.date) {
+              <div class="day-group">
+                <h3 class="day-heading">{{ group.date }}</h3>
+                <ul class="meetings">
+                  @for (item of group.items; track item.index) {
+                    <li class="meeting">
+                      <div class="meeting-info">
+                        <span class="meeting-title">{{ item.meeting.title }}</span>
+                        @if (item.meeting.startTime) {
+                          <span class="meeting-time"
+                            >{{ item.meeting.startTime }} – {{ item.meeting.endTime }}</span
+                          >
+                        }
+                        @if (item.meeting.location) {
+                          <span class="meeting-location">{{ item.meeting.location }}</span>
+                        }
+                      </div>
+                      <div class="meeting-toggles">
+                        <mat-slide-toggle
+                          [checked]="item.meeting.attend"
+                          (change)="toggleAttend(item.index, $event.checked)"
+                          >Attend</mat-slide-toggle
+                        >
+                        <mat-slide-toggle
+                          [checked]="item.meeting.requiresOffice"
+                          [disabled]="!item.meeting.attend"
+                          (change)="toggleOffice(item.index, $event.checked)"
+                          >At office</mat-slide-toggle
+                        >
+                      </div>
+                    </li>
+                  }
+                </ul>
+              </div>
+            }
           } @else {
             <p class="status">No meetings were found in the photo.</p>
           }
           <div class="actions">
-            <button mat-stroked-button type="button" (click)="startOver()">
-              Back
-            </button>
+            <button mat-stroked-button type="button" (click)="replan()">Back</button>
             <button
               mat-flat-button
               color="primary"
@@ -81,7 +85,7 @@
               [disabled]="planning()"
               (click)="generate()"
             >
-              Generate schedule
+              Generate week
             </button>
           </div>
           @if (planning()) {
@@ -90,33 +94,44 @@
         </div>
       }
 
-      @case ('schedule') {
-        <div class="day-schedule">
-          @if (schedule(); as day) {
-            <p class="commute" [attr.data-mode]="day.commuteMode">
-              @switch (day.commuteMode) {
-                @case ('bike') { Commute today: by bike 🚲 }
-                @case ('car') { Commute today: by car 🚗 }
-                @default { Working from home today 🏠 }
-              }
-            </p>
-            <ol class="timeline">
-              @for (block of day.blocks; track $index) {
-                <li class="block" [attr.data-type]="block.type">
-                  <span class="block-time"
-                    >{{ block.startTime }} – {{ block.endTime }}</span
-                  >
-                  <span class="block-title">{{ block.title }}</span>
-                  @if (block.details) {
-                    <span class="block-details">{{ block.details }}</span>
-                  }
-                </li>
-              }
-            </ol>
+      @case ('week') {
+        <div class="week">
+          @if (week(); as plan) {
+            @for (day of plan.days; track day.date) {
+              <div class="day">
+                <div class="day-header">
+                  <h3 class="day-heading">{{ day.date }}</h3>
+                  <span class="commute" [attr.data-mode]="day.commuteMode">
+                    @switch (day.commuteMode) {
+                      @case ('bike') { bike 🚲 }
+                      @case ('car') { car 🚗 }
+                      @default { home 🏠 }
+                    }
+                  </span>
+                </div>
+                @if (day.blocks.length) {
+                  <ol class="timeline">
+                    @for (block of day.blocks; track $index) {
+                      <li class="block" [attr.data-type]="block.type">
+                        <span class="block-time"
+                          >{{ block.startTime }} – {{ block.endTime }}</span
+                        >
+                        <span class="block-title">{{ block.title }}</span>
+                        @if (block.details) {
+                          <span class="block-details">{{ block.details }}</span>
+                        }
+                      </li>
+                    }
+                  </ol>
+                } @else {
+                  <p class="status">Nothing planned.</p>
+                }
+              </div>
+            }
           }
           <div class="actions">
-            <button mat-stroked-button type="button" (click)="startOver()">
-              Plan again
+            <button mat-stroked-button type="button" (click)="replan()">
+              Upload new calendar / replan
             </button>
           </div>
         </div>

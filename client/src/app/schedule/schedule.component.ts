@@ -3,12 +3,17 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { BarLoaderComponent } from '@mucsi96/angular-material-theme';
 import {
-  DaySchedule,
   MeetingReview,
   ScheduleService,
+  WeekSchedule,
 } from './schedule.service';
 
-type Step = 'capture' | 'review' | 'schedule';
+type Step = 'capture' | 'review' | 'week';
+
+type MeetingGroup = {
+  date: string;
+  items: { meeting: MeetingReview; index: number }[];
+};
 
 @Component({
   standalone: true,
@@ -23,27 +28,37 @@ export class ScheduleComponent {
   readonly step = signal<Step>('capture');
   readonly photoPreview = signal<string | null>(null);
   readonly meetings = signal<MeetingReview[]>([]);
-  readonly schedule = signal<DaySchedule | null>(null);
+  readonly week = signal<WeekSchedule | null>(null);
 
-  readonly loadingToday = signal(true);
+  readonly loadingWeek = signal(true);
   readonly extracting = signal(false);
   readonly planning = signal(false);
+
+  readonly meetingGroups = computed<MeetingGroup[]>(() => {
+    const groups = new Map<string, MeetingGroup>();
+    this.meetings().forEach((meeting, index) => {
+      const group = groups.get(meeting.date) ?? { date: meeting.date, items: [] };
+      group.items.push({ meeting, index });
+      groups.set(meeting.date, group);
+    });
+    return [...groups.values()].sort((a, b) => a.date.localeCompare(b.date));
+  });
 
   readonly hasMeetings = computed(() => this.meetings().length > 0);
 
   constructor() {
-    this.loadToday();
+    this.loadWeek();
   }
 
-  private async loadToday() {
+  private async loadWeek() {
     try {
-      const schedule = await this.scheduleService.getToday();
-      if (schedule) {
-        this.schedule.set(schedule);
-        this.step.set('schedule');
+      const week = await this.scheduleService.getWeek();
+      if (week) {
+        this.week.set(week);
+        this.step.set('week');
       }
     } finally {
-      this.loadingToday.set(false);
+      this.loadingWeek.set(false);
     }
   }
 
@@ -72,9 +87,7 @@ export class ScheduleComponent {
 
   toggleAttend(index: number, attend: boolean) {
     this.meetings.update((meetings) =>
-      meetings.map((meeting, i) =>
-        i === index ? { ...meeting, attend } : meeting
-      )
+      meetings.map((meeting, i) => (i === index ? { ...meeting, attend } : meeting))
     );
   }
 
@@ -89,18 +102,17 @@ export class ScheduleComponent {
   async generate() {
     this.planning.set(true);
     try {
-      const schedule = await this.scheduleService.plan(this.meetings());
-      this.schedule.set(schedule);
-      this.step.set('schedule');
+      const week = await this.scheduleService.plan(this.meetings());
+      this.week.set(week);
+      this.step.set('week');
     } finally {
       this.planning.set(false);
     }
   }
 
-  startOver() {
+  replan() {
     this.photoPreview.set(null);
     this.meetings.set([]);
-    this.schedule.set(null);
     this.step.set('capture');
   }
 }

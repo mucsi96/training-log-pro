@@ -1,0 +1,88 @@
+.library {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, hsl(217, 28%, 18%), hsl(217, 28%, 14%));
+  border: 1px solid hsl(217, 19%, 27%);
+}
+
+h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mat-sys-on-primary);
+}
+
+.empty {
+  margin: 0;
+  color: var(--bt-text-muted);
+  font-size: 13px;
+}
+
+.items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: hsl(217, 28%, 16%);
+  border: 1px solid hsl(217, 19%, 27%);
+}
+
+.item-info {
+  display: grid;
+  gap: 2px;
+}
+
+.item-name {
+  color: var(--mat-sys-on-primary);
+  font-weight: 600;
+}
+
+.item-detail {
+  color: var(--bt-text-muted);
+  font-size: 12px;
+}
+
+.badge {
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: hsl(207, 90%, 54%);
+  color: white;
+}
+
+.item-form {
+  display: grid;
+  gap: 10px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.add-button {
+  justify-self: start;
+}
+
+.page-loading {
+  display: flex;
+  justify-content: center;
+  padding: 16px 0;
+}

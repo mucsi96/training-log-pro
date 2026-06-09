@@ -707,24 +707,12 @@ databaseChangeLog:
                     nullable: false
 
   - changeSet:
-      id: 26-add-schedule-config-to-settings
+      id: 26-add-planning-config-to-settings
       author: mucsi96
       changes:
         - addColumn:
             tableName: settings
             columns:
-              - column:
-                  name: home_lat
-                  type: double precision
-              - column:
-                  name: home_lng
-                  type: double precision
-              - column:
-                  name: office_address
-                  type: varchar(255)
-              - column:
-                  name: school_address
-                  type: varchar(255)
               - column:
                   name: work_start_time
                   type: varchar(5)
@@ -732,56 +720,128 @@ databaseChangeLog:
                   name: work_end_time
                   type: varchar(5)
               - column:
-                  name: son_pickup_time
-                  type: varchar(5)
-              - column:
-                  name: commute_bike_minutes
-                  type: integer
-              - column:
-                  name: commute_car_minutes
-                  type: integer
-              - column:
                   name: rain_threshold_mm
                   type: double precision
-              - column:
-                  name: pomodoro_minutes
-                  type: integer
-              - column:
-                  name: training_ride_minutes
-                  type: integer
-              - column:
-                  name: german_cards_minutes
-                  type: integer
-              - column:
-                  name: reading_minutes
-                  type: integer
-              - column:
-                  name: german_with_wife_minutes
-                  type: integer
-              - column:
-                  name: flashcard_creation_minutes
-                  type: integer
 
   - changeSet:
-      id: 27-create-schedule-table
+      id: 27-create-location-table
       author: mucsi96
       changes:
         - createTable:
-            tableName: schedule
+            tableName: location
             columns:
               - column:
-                  name: date
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: address
+                  type: varchar(500)
+              - column:
+                  name: latitude
+                  type: double precision
+              - column:
+                  name: longitude
+                  type: double precision
+              - column:
+                  name: home
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: bike_minutes_from_home
+                  type: integer
+              - column:
+                  name: car_minutes_from_home
+                  type: integer
+              - column:
+                  name: created_at
+                  type: timestamp(6)
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 28-create-activity-table
+      author: mucsi96
+      changes:
+        - createTable:
+            tableName: activity
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: duration_minutes
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: occurrences_per_week
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: location_id
+                  type: uuid
+              - column:
+                  name: earliest_time
+                  type: varchar(5)
+              - column:
+                  name: latest_time
+                  type: varchar(5)
+              - column:
+                  name: days_of_week
+                  type: varchar(100)
+              - column:
+                  name: constraint_note
+                  type: varchar(1000)
+              - column:
+                  name: priority
+                  type: integer
+              - column:
+                  name: created_at
+                  type: timestamp(6)
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 29-create-week-plan-table
+      author: mucsi96
+      changes:
+        - createTable:
+            tableName: week_plan
+            columns:
+              - column:
+                  name: week_start
                   type: date
                   constraints:
                     primaryKey: true
                     nullable: false
               - column:
-                  name: commute_mode
-                  type: varchar(20)
+                  name: meetings
+                  type: jsonb
                   constraints:
                     nullable: false
               - column:
-                  name: blocks
+                  name: days
                   type: jsonb
                   constraints:
                     nullable: false

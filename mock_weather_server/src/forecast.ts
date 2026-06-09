@@ -1,46 +1,32 @@
 import { Request, Response } from 'express';
 
-type Forecast = {
-  precipitationMm: number;
-  temperatureC: number;
-};
+let precipitationMm = 0;
 
-function defaultForecast(): Forecast {
-  // Dry and mild by default.
-  return { precipitationMm: 0, temperatureC: 18 };
+function isoDate(offsetDays: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + offsetDays);
+  return d.toISOString().slice(0, 10);
 }
 
-let forecast: Forecast = defaultForecast();
-
-// Mimics Open-Meteo GET /weather/v1/forecast. Returns 24 identical hourly points
-// derived from the configured single-value forecast.
+// Mimics Open-Meteo GET /weather/v1/forecast with daily=precipitation_sum.
+// Returns a wide window of days (so any planning date is covered), all carrying
+// the currently configured precipitation value.
 export function getForecast(_req: Request, res: Response) {
   const time: string[] = [];
-  const precipitation: number[] = [];
-  const temperature: number[] = [];
-  for (let hour = 0; hour < 24; hour++) {
-    time.push(`2026-06-09T${String(hour).padStart(2, '0')}:00`);
-    precipitation.push(forecast.precipitationMm);
-    temperature.push(forecast.temperatureC);
+  const precipitation_sum: number[] = [];
+  for (let offset = -2; offset <= 16; offset++) {
+    time.push(isoDate(offset));
+    precipitation_sum.push(precipitationMm);
   }
-  res.json({
-    hourly: {
-      time,
-      precipitation,
-      temperature_2m: temperature,
-    },
-  });
+  res.json({ daily: { time, precipitation_sum } });
 }
 
 export function setForecast(req: Request, res: Response) {
-  forecast = {
-    precipitationMm: req.body?.precipitationMm ?? 0,
-    temperatureC: req.body?.temperatureC ?? 18,
-  };
+  precipitationMm = req.body?.precipitationMm ?? 0;
   res.json({ status: 'ok' });
 }
 
 export function reset(_req: Request, res: Response) {
-  forecast = defaultForecast();
+  precipitationMm = 0;
   res.json({ status: 'ok' });
 }

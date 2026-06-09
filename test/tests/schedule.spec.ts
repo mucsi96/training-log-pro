@@ -1,11 +1,13 @@
 import { test, expect } from '../fixtures';
 import {
   cleanupDb,
-  getScheduleRows,
+  getWeekPlanRows,
+  insertActivity,
+  insertLocation,
   populateOAuthClients,
   setExtractedMeetings,
+  setPlanningSettings,
   setSchedulePlan,
-  setScheduleSettings,
   setWeatherForecast,
 } from '../utils';
 
@@ -16,40 +18,57 @@ const PNG_BUFFER = Buffer.from(
   'base64'
 );
 
-const planBlocks = [
-  { startTime: '08:00', endTime: '08:20', title: 'Commute to office', type: 'commute' },
-  { startTime: '10:00', endTime: '11:00', title: 'Sprint planning', type: 'meeting' },
-  { startTime: '11:15', endTime: '11:40', title: 'Focus work', type: 'pomodoro' },
-  { startTime: '15:30', endTime: '16:15', title: 'Pick up son from school', type: 'school-pickup' },
-  { startTime: '18:00', endTime: '19:00', title: 'Evening training ride', type: 'training-ride' },
-];
-
-async function configureSchedule() {
-  await setScheduleSettings({
-    homeLat: 47.5,
-    homeLng: 19.05,
-    officeAddress: '1 Office Street',
-    schoolAddress: '2 School Lane',
-    workStartTime: '09:00',
-    workEndTime: '17:00',
-    sonPickupTime: '16:00',
-    commuteBikeMinutes: 30,
-    commuteCarMinutes: 20,
-    rainThresholdMm: 1,
-    pomodoroMinutes: 25,
-    trainingRideMinutes: 60,
-    germanCardsMinutes: 20,
-    readingMinutes: 30,
-    germanWithWifeMinutes: 30,
-    flashcardCreationMinutes: 20,
-  });
-  await setExtractedMeetings([
-    { title: 'Sprint planning', startTime: '10:00', endTime: '11:00', location: 'Room A' },
-  ]);
-  await setSchedulePlan(planBlocks);
+// Local calendar date (matches the server's X-Timezone-based "today").
+function localIso(date = new Date()): string {
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 10);
 }
 
-async function uploadAndReview(page: import('@playwright/test').Page) {
+const today = localIso();
+
+async function configurePlanning() {
+  await setPlanningSettings({
+    workStartTime: '09:00',
+    workEndTime: '17:00',
+    rainThresholdMm: 1,
+  });
+  const home = await insertLocation({
+    name: 'Home',
+    home: true,
+    latitude: 47.5,
+    longitude: 19.05,
+  });
+  await insertLocation({
+    name: 'Office',
+    address: '1 Office Street',
+    bikeMinutesFromHome: 30,
+    carMinutesFromHome: 20,
+  });
+  await insertActivity({
+    name: 'Evening training ride',
+    durationMinutes: 60,
+    occurrencesPerWeek: 2,
+    constraintNote: "Only on days I don't cycle home from the office",
+  });
+  return home;
+}
+
+async function seedAiForToday() {
+  await setExtractedMeetings([
+    { date: today, title: 'Sprint planning', startTime: '10:00', endTime: '11:00', location: 'Room A' },
+  ]);
+  await setSchedulePlan([
+    {
+      date: today,
+      blocks: [
+        { startTime: '08:00', endTime: '08:20', title: 'Commute to office', type: 'commute' },
+        { startTime: '11:15', endTime: '11:40', title: 'Focus work', type: 'pomodoro' },
+      ],
+    },
+  ]);
+}
+
+async function uploadReviewGenerate(page: import('@playwright/test').Page) {
   await page.goto('/schedule');
   await page
     .locator('input[type="file"]')
@@ -58,46 +77,43 @@ async function uploadAndReview(page: import('@playwright/test').Page) {
   await expect(page.getByRole('heading', { name: 'Review meetings' })).toBeVisible();
   await expect(page.getByText('Sprint planning')).toBeVisible();
 
-  // Mark the meeting as requiring the office so a commute is planned.
   await page.getByRole('switch', { name: 'At office' }).click();
-  await page.getByRole('button', { name: 'Generate schedule' }).click();
+  await page.getByRole('button', { name: 'Generate week' }).click();
 }
 
-test.describe('Daily schedule planner', () => {
+test.describe('Weekly schedule planner', () => {
   test.beforeEach(async () => {
     await cleanupDb();
     await populateOAuthClients();
-    await configureSchedule();
+    await configurePlanning();
+    await seedAiForToday();
   });
 
-  test('plans a car commute and keeps the training ride when it rains', async ({ page }) => {
+  test('plans the week with a car commute when it rains on an office day', async ({ page }) => {
     await setWeatherForecast(5); // 5mm > 1mm threshold -> car
 
-    await uploadAndReview(page);
+    await uploadReviewGenerate(page);
 
-    await expect(page.getByText(/by car/)).toBeVisible();
     await expect(page.getByText('Focus work')).toBeVisible();
-    await expect(page.getByText('Pick up son from school')).toBeVisible();
-    await expect(page.getByText('Evening training ride')).toBeVisible();
+    await expect(page.getByText(/car/)).toBeVisible();
 
-    const rows = await getScheduleRows();
+    const rows = await getWeekPlanRows();
     expect(rows).toHaveLength(1);
-    expect(rows[0].commute_mode).toBe('car');
+    const day = rows[0].days.find((d: { date: string }) => d.date === today);
+    expect(day.commuteMode).toBe('car');
   });
 
-  test('plans a bike commute and drops the training ride when it is dry', async ({ page }) => {
+  test('plans the week with a bike commute when it is dry on an office day', async ({ page }) => {
     await setWeatherForecast(0); // dry -> bike
 
-    await uploadAndReview(page);
+    await uploadReviewGenerate(page);
 
-    await expect(page.getByText(/by bike/)).toBeVisible();
     await expect(page.getByText('Focus work')).toBeVisible();
-    // A training ride is not planned when commuting home by bike.
-    await expect(page.getByText('Evening training ride')).toHaveCount(0);
+    await expect(page.getByText(/bike/)).toBeVisible();
 
-    const rows = await getScheduleRows();
+    const rows = await getWeekPlanRows();
     expect(rows).toHaveLength(1);
-    expect(rows[0].commute_mode).toBe('bike');
-    expect(JSON.stringify(rows[0].blocks)).not.toContain('training-ride');
+    const day = rows[0].days.find((d: { date: string }) => d.date === today);
+    expect(day.commuteMode).toBe('bike');
   });
 });

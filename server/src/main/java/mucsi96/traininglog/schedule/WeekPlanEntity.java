@@ -15,25 +15,28 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import mucsi96.traininglog.api.ScheduleBlock;
+import mucsi96.traininglog.api.DaySchedule;
+import mucsi96.traininglog.api.MeetingReview;
 
 @Data
 @Entity
-@Table(name = "schedule", schema = "training_log")
+@Table(name = "week_plan", schema = "training_log")
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ScheduleEntity {
+public class WeekPlanEntity {
 
   @Id
-  private LocalDate date;
-
-  @Column(name = "commute_mode", nullable = false)
-  private String commuteMode;
+  @Column(name = "week_start")
+  private LocalDate weekStart;
 
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(columnDefinition = "jsonb", nullable = false)
-  private List<ScheduleBlock> blocks;
+  private List<MeetingReview> meetings;
+
+  @JdbcTypeCode(SqlTypes.JSON)
+  @Column(columnDefinition = "jsonb", nullable = false)
+  private List<DaySchedule> days;
 
   @Column(name = "updated_at", insertable = false)
   private ZonedDateTime updatedAt;

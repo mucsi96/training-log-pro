@@ -32,19 +32,15 @@ export async function cleanupDb() {
   await query('DELETE FROM training_log.daily_task');
   await query('DELETE FROM training_log.oauth2_authorized_client');
   await query('DELETE FROM training_log.golden_day');
-  await query('DELETE FROM training_log.schedule');
+  await query('DELETE FROM training_log.week_plan');
+  await query('DELETE FROM training_log.activity');
+  await query('DELETE FROM training_log.location');
   await query(
     `UPDATE training_log.settings
      SET pushup_goal = $1, elevation_goal = $2, reading_pages_goal = $3,
          daily_task_goal = $4,
          coins_reset_at = TIMESTAMP '1970-01-01 00:00:00',
-         home_lat = NULL, home_lng = NULL, office_address = NULL,
-         school_address = NULL, work_start_time = NULL, work_end_time = NULL,
-         son_pickup_time = NULL, commute_bike_minutes = NULL,
-         commute_car_minutes = NULL, rain_threshold_mm = NULL,
-         pomodoro_minutes = NULL, training_ride_minutes = NULL,
-         german_cards_minutes = NULL, reading_minutes = NULL,
-         german_with_wife_minutes = NULL, flashcard_creation_minutes = NULL
+         work_start_time = NULL, work_end_time = NULL, rain_threshold_mm = NULL
      WHERE id = 1`,
     [100, 250, 0, 0]
   );
@@ -444,58 +440,107 @@ export async function getWeightRows() {
   return result.rows;
 }
 
-export type ScheduleSettings = {
-  homeLat?: number;
-  homeLng?: number;
-  officeAddress?: string;
-  schoolAddress?: string;
+export type PlanningSettings = {
   workStartTime?: string;
   workEndTime?: string;
-  sonPickupTime?: string;
-  commuteBikeMinutes?: number;
-  commuteCarMinutes?: number;
   rainThresholdMm?: number;
-  pomodoroMinutes?: number;
-  trainingRideMinutes?: number;
-  germanCardsMinutes?: number;
-  readingMinutes?: number;
-  germanWithWifeMinutes?: number;
-  flashcardCreationMinutes?: number;
 };
 
-export async function setScheduleSettings(settings: ScheduleSettings) {
+export async function setPlanningSettings(settings: PlanningSettings) {
   await query(
     `UPDATE training_log.settings SET
-       home_lat = $1, home_lng = $2, office_address = $3, school_address = $4,
-       work_start_time = $5, work_end_time = $6, son_pickup_time = $7,
-       commute_bike_minutes = $8, commute_car_minutes = $9, rain_threshold_mm = $10,
-       pomodoro_minutes = $11, training_ride_minutes = $12, german_cards_minutes = $13,
-       reading_minutes = $14, german_with_wife_minutes = $15, flashcard_creation_minutes = $16
+       work_start_time = $1, work_end_time = $2, rain_threshold_mm = $3
      WHERE id = 1`,
     [
-      settings.homeLat ?? null,
-      settings.homeLng ?? null,
-      settings.officeAddress ?? null,
-      settings.schoolAddress ?? null,
       settings.workStartTime ?? null,
       settings.workEndTime ?? null,
-      settings.sonPickupTime ?? null,
-      settings.commuteBikeMinutes ?? null,
-      settings.commuteCarMinutes ?? null,
       settings.rainThresholdMm ?? null,
-      settings.pomodoroMinutes ?? null,
-      settings.trainingRideMinutes ?? null,
-      settings.germanCardsMinutes ?? null,
-      settings.readingMinutes ?? null,
-      settings.germanWithWifeMinutes ?? null,
-      settings.flashcardCreationMinutes ?? null,
     ]
   );
 }
 
-export async function getScheduleRows() {
+export type LocationSeed = {
+  name: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+  home?: boolean;
+  bikeMinutesFromHome?: number;
+  carMinutesFromHome?: number;
+};
+
+export async function insertLocation(location: LocationSeed): Promise<string> {
+  const id = randomUUID();
+  await query(
+    `INSERT INTO training_log.location
+       (id, name, address, latitude, longitude, home, bike_minutes_from_home, car_minutes_from_home, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now())`,
+    [
+      id,
+      location.name,
+      location.address ?? null,
+      location.latitude ?? null,
+      location.longitude ?? null,
+      location.home ?? false,
+      location.bikeMinutesFromHome ?? null,
+      location.carMinutesFromHome ?? null,
+    ]
+  );
+  return id;
+}
+
+export type ActivitySeed = {
+  name: string;
+  durationMinutes: number;
+  occurrencesPerWeek: number;
+  locationId?: string;
+  earliestTime?: string;
+  latestTime?: string;
+  daysOfWeek?: string;
+  constraintNote?: string;
+  priority?: number;
+};
+
+export async function insertActivity(activity: ActivitySeed): Promise<string> {
+  const id = randomUUID();
+  await query(
+    `INSERT INTO training_log.activity
+       (id, name, duration_minutes, occurrences_per_week, location_id, earliest_time,
+        latest_time, days_of_week, constraint_note, priority, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, now())`,
+    [
+      id,
+      activity.name,
+      activity.durationMinutes,
+      activity.occurrencesPerWeek,
+      activity.locationId ?? null,
+      activity.earliestTime ?? null,
+      activity.latestTime ?? null,
+      activity.daysOfWeek ?? null,
+      activity.constraintNote ?? null,
+      activity.priority ?? null,
+    ]
+  );
+  return id;
+}
+
+export async function getActivityRows() {
   const result = await query(
-    'SELECT to_char(date, \'YYYY-MM-DD\') AS date, commute_mode, blocks FROM training_log.schedule ORDER BY date ASC'
+    'SELECT id, name, duration_minutes, occurrences_per_week FROM training_log.activity ORDER BY created_at ASC'
+  );
+  return result.rows;
+}
+
+export async function getLocationRows() {
+  const result = await query(
+    'SELECT id, name, home FROM training_log.location ORDER BY created_at ASC'
+  );
+  return result.rows;
+}
+
+export async function getWeekPlanRows() {
+  const result = await query(
+    'SELECT to_char(week_start, \'YYYY-MM-DD\') AS week_start, meetings, days FROM training_log.week_plan ORDER BY week_start ASC'
   );
   return result.rows;
 }
@@ -511,11 +556,11 @@ export async function setExtractedMeetings(meetings: unknown[]) {
   }
 }
 
-export async function setSchedulePlan(blocks: unknown[]) {
+export async function setSchedulePlan(days: unknown[]) {
   const response = await fetch('http://localhost:8180/anthropic/test/plan', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ blocks }),
+    body: JSON.stringify({ days }),
   });
   if (!response.ok) {
     throw new Error(`Failed to set schedule plan: ${response.status}`);
@@ -531,11 +576,11 @@ export async function resetAnthropic() {
   }
 }
 
-export async function setWeatherForecast(precipitationMm: number, temperatureC = 18) {
+export async function setWeatherForecast(precipitationMm: number) {
   const response = await fetch('http://localhost:8180/weather/test/forecast', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ precipitationMm, temperatureC }),
+    body: JSON.stringify({ precipitationMm }),
   });
   if (!response.ok) {
     throw new Error(`Failed to set weather forecast: ${response.status}`);
