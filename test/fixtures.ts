@@ -1,5 +1,5 @@
 import { test as base, expect } from '@playwright/test';
-import { cleanupDb, populateOAuthClients, resetStravaActivities, resetWithingsMeasures } from './utils';
+import { cleanupDb, populateOAuthClients, resetAnthropic, resetStravaActivities, resetWeather, resetWithingsMeasures } from './utils';
 
 type ConsoleEntry = {
   timestamp: string;
@@ -15,6 +15,8 @@ export const test = base.extend<{ forEachTest: void }>({
       await populateOAuthClients();
       await resetStravaActivities();
       await resetWithingsMeasures();
+      await resetAnthropic();
+      await resetWeather();
 
       const consoleLogs: ConsoleEntry[] = [];
 

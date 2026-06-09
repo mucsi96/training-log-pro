@@ -1,0 +1,126 @@
+<section class="schedule" aria-labelledby="schedule-heading">
+  <header class="header">
+    <h1 id="schedule-heading">Plan my day</h1>
+    <p class="subtitle">
+      Take a photo of your Outlook calendar and let AI build a schedule that fits
+      your meetings, commute and goals.
+    </p>
+  </header>
+
+  @if (loadingToday()) {
+    <div class="page-loading"><bt-bar-loader /></div>
+  } @else {
+    @switch (step()) {
+      @case ('capture') {
+        <div class="capture">
+          @if (extracting()) {
+            <div class="page-loading"><bt-bar-loader /></div>
+            <p class="status">Reading your calendar…</p>
+          } @else {
+            <label class="photo-input">
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                (change)="onPhotoSelected($event)"
+              />
+              <span>Take or choose a calendar photo</span>
+            </label>
+            @if (photoPreview()) {
+              <img class="preview" [src]="photoPreview()" alt="Calendar photo" />
+            }
+          }
+        </div>
+      }
+
+      @case ('review') {
+        <div class="review">
+          <h2>Review meetings</h2>
+          @if (hasMeetings()) {
+            <ul class="meetings">
+              @for (meeting of meetings(); track $index) {
+                <li class="meeting">
+                  <div class="meeting-info">
+                    <span class="meeting-title">{{ meeting.title }}</span>
+                    @if (meeting.startTime) {
+                      <span class="meeting-time"
+                        >{{ meeting.startTime }} – {{ meeting.endTime }}</span
+                      >
+                    }
+                    @if (meeting.location) {
+                      <span class="meeting-location">{{ meeting.location }}</span>
+                    }
+                  </div>
+                  <div class="meeting-toggles">
+                    <mat-slide-toggle
+                      [checked]="meeting.attend"
+                      (change)="toggleAttend($index, $event.checked)"
+                      >Attend</mat-slide-toggle
+                    >
+                    <mat-slide-toggle
+                      [checked]="meeting.requiresOffice"
+                      [disabled]="!meeting.attend"
+                      (change)="toggleOffice($index, $event.checked)"
+                      >At office</mat-slide-toggle
+                    >
+                  </div>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="status">No meetings were found in the photo.</p>
+          }
+          <div class="actions">
+            <button mat-stroked-button type="button" (click)="startOver()">
+              Back
+            </button>
+            <button
+              mat-flat-button
+              color="primary"
+              type="button"
+              [disabled]="planning()"
+              (click)="generate()"
+            >
+              Generate schedule
+            </button>
+          </div>
+          @if (planning()) {
+            <div class="page-loading"><bt-bar-loader /></div>
+          }
+        </div>
+      }
+
+      @case ('schedule') {
+        <div class="day-schedule">
+          @if (schedule(); as day) {
+            <p class="commute" [attr.data-mode]="day.commuteMode">
+              @switch (day.commuteMode) {
+                @case ('bike') { Commute today: by bike 🚲 }
+                @case ('car') { Commute today: by car 🚗 }
+                @default { Working from home today 🏠 }
+              }
+            </p>
+            <ol class="timeline">
+              @for (block of day.blocks; track $index) {
+                <li class="block" [attr.data-type]="block.type">
+                  <span class="block-time"
+                    >{{ block.startTime }} – {{ block.endTime }}</span
+                  >
+                  <span class="block-title">{{ block.title }}</span>
+                  @if (block.details) {
+                    <span class="block-details">{{ block.details }}</span>
+                  }
+                </li>
+              }
+            </ol>
+          }
+          <div class="actions">
+            <button mat-stroked-button type="button" (click)="startOver()">
+              Plan again
+            </button>
+          </div>
+        </div>
+      }
+    }
+  }
+</section>

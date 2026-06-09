@@ -624,6 +624,132 @@ components:
           format: int32
           minimum: 0
           maximum: 100
+        homeLat:
+          type: number
+          format: double
+        homeLng:
+          type: number
+          format: double
+        officeAddress:
+          type: string
+        schoolAddress:
+          type: string
+        workStartTime:
+          type: string
+        workEndTime:
+          type: string
+        sonPickupTime:
+          type: string
+        commuteBikeMinutes:
+          type: integer
+          format: int32
+        commuteCarMinutes:
+          type: integer
+          format: int32
+        rainThresholdMm:
+          type: number
+          format: double
+        pomodoroMinutes:
+          type: integer
+          format: int32
+        trainingRideMinutes:
+          type: integer
+          format: int32
+        germanCardsMinutes:
+          type: integer
+          format: int32
+        readingMinutes:
+          type: integer
+          format: int32
+        germanWithWifeMinutes:
+          type: integer
+          format: int32
+        flashcardCreationMinutes:
+          type: integer
+          format: int32
+    Meeting:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+        startTime:
+          type: string
+        endTime:
+          type: string
+        location:
+          type: string
+    ExtractedMeetings:
+      type: object
+      required:
+        - meetings
+      properties:
+        meetings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Meeting'
+    MeetingReview:
+      type: object
+      required:
+        - title
+        - attend
+        - requiresOffice
+      properties:
+        title:
+          type: string
+        startTime:
+          type: string
+        endTime:
+          type: string
+        location:
+          type: string
+        attend:
+          type: boolean
+        requiresOffice:
+          type: boolean
+    PlanRequest:
+      type: object
+      required:
+        - meetings
+      properties:
+        meetings:
+          type: array
+          items:
+            $ref: '#/components/schemas/MeetingReview'
+    ScheduleBlock:
+      type: object
+      required:
+        - startTime
+        - endTime
+        - title
+        - type
+      properties:
+        startTime:
+          type: string
+        endTime:
+          type: string
+        title:
+          type: string
+        type:
+          type: string
+        details:
+          type: string
+    DaySchedule:
+      type: object
+      required:
+        - date
+        - commuteMode
+        - blocks
+      properties:
+        date:
+          type: string
+        commuteMode:
+          type: string
+        blocks:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScheduleBlock'
     Book:
       type: object
       required:

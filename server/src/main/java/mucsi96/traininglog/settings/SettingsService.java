@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
+import mucsi96.traininglog.api.Settings;
 
 @Service
 @RequiredArgsConstructor
@@ -22,13 +23,28 @@ public class SettingsService {
   }
 
   @Transactional
-  public SettingsEntity update(int pushupGoal, int elevationGoal, int readingPagesGoal,
-      int dailyTaskGoal) {
+  public SettingsEntity update(Settings request) {
     SettingsEntity entity = getCurrent();
-    entity.setPushupGoal(pushupGoal);
-    entity.setElevationGoal(elevationGoal);
-    entity.setReadingPagesGoal(readingPagesGoal);
-    entity.setDailyTaskGoal(dailyTaskGoal);
+    entity.setPushupGoal(request.getPushupGoal());
+    entity.setElevationGoal(request.getElevationGoal());
+    entity.setReadingPagesGoal(request.getReadingPagesGoal());
+    entity.setDailyTaskGoal(request.getDailyTaskGoal());
+    entity.setHomeLat(request.getHomeLat());
+    entity.setHomeLng(request.getHomeLng());
+    entity.setOfficeAddress(request.getOfficeAddress());
+    entity.setSchoolAddress(request.getSchoolAddress());
+    entity.setWorkStartTime(request.getWorkStartTime());
+    entity.setWorkEndTime(request.getWorkEndTime());
+    entity.setSonPickupTime(request.getSonPickupTime());
+    entity.setCommuteBikeMinutes(request.getCommuteBikeMinutes());
+    entity.setCommuteCarMinutes(request.getCommuteCarMinutes());
+    entity.setRainThresholdMm(request.getRainThresholdMm());
+    entity.setPomodoroMinutes(request.getPomodoroMinutes());
+    entity.setTrainingRideMinutes(request.getTrainingRideMinutes());
+    entity.setGermanCardsMinutes(request.getGermanCardsMinutes());
+    entity.setReadingMinutes(request.getReadingMinutes());
+    entity.setGermanWithWifeMinutes(request.getGermanWithWifeMinutes());
+    entity.setFlashcardCreationMinutes(request.getFlashcardCreationMinutes());
     return repository.save(entity);
   }
 

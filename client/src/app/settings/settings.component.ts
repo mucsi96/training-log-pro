@@ -49,6 +49,22 @@ export class SettingsComponent {
     elevationGoal: 250,
     readingPagesGoal: 0,
     dailyTaskGoal: 0,
+    homeLat: null,
+    homeLng: null,
+    officeAddress: '',
+    schoolAddress: '',
+    workStartTime: '09:00',
+    workEndTime: '17:00',
+    sonPickupTime: '16:00',
+    commuteBikeMinutes: 30,
+    commuteCarMinutes: 20,
+    rainThresholdMm: 1,
+    pomodoroMinutes: 25,
+    trainingRideMinutes: 60,
+    germanCardsMinutes: 20,
+    readingMinutes: 30,
+    germanWithWifeMinutes: 30,
+    flashcardCreationMinutes: 20,
   });
 
   readonly settingsForm = form(this.model, (path) => {

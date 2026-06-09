@@ -32,11 +32,19 @@ export async function cleanupDb() {
   await query('DELETE FROM training_log.daily_task');
   await query('DELETE FROM training_log.oauth2_authorized_client');
   await query('DELETE FROM training_log.golden_day');
+  await query('DELETE FROM training_log.schedule');
   await query(
     `UPDATE training_log.settings
      SET pushup_goal = $1, elevation_goal = $2, reading_pages_goal = $3,
          daily_task_goal = $4,
-         coins_reset_at = TIMESTAMP '1970-01-01 00:00:00'
+         coins_reset_at = TIMESTAMP '1970-01-01 00:00:00',
+         home_lat = NULL, home_lng = NULL, office_address = NULL,
+         school_address = NULL, work_start_time = NULL, work_end_time = NULL,
+         son_pickup_time = NULL, commute_bike_minutes = NULL,
+         commute_car_minutes = NULL, rain_threshold_mm = NULL,
+         pomodoro_minutes = NULL, training_ride_minutes = NULL,
+         german_cards_minutes = NULL, reading_minutes = NULL,
+         german_with_wife_minutes = NULL, flashcard_creation_minutes = NULL
      WHERE id = 1`,
     [100, 250, 0, 0]
   );
@@ -434,4 +442,111 @@ export async function getWeightRows() {
     'SELECT created_at, weight, fat_ratio, fat_mass_weight FROM training_log.weight ORDER BY created_at ASC'
   );
   return result.rows;
+}
+
+export type ScheduleSettings = {
+  homeLat?: number;
+  homeLng?: number;
+  officeAddress?: string;
+  schoolAddress?: string;
+  workStartTime?: string;
+  workEndTime?: string;
+  sonPickupTime?: string;
+  commuteBikeMinutes?: number;
+  commuteCarMinutes?: number;
+  rainThresholdMm?: number;
+  pomodoroMinutes?: number;
+  trainingRideMinutes?: number;
+  germanCardsMinutes?: number;
+  readingMinutes?: number;
+  germanWithWifeMinutes?: number;
+  flashcardCreationMinutes?: number;
+};
+
+export async function setScheduleSettings(settings: ScheduleSettings) {
+  await query(
+    `UPDATE training_log.settings SET
+       home_lat = $1, home_lng = $2, office_address = $3, school_address = $4,
+       work_start_time = $5, work_end_time = $6, son_pickup_time = $7,
+       commute_bike_minutes = $8, commute_car_minutes = $9, rain_threshold_mm = $10,
+       pomodoro_minutes = $11, training_ride_minutes = $12, german_cards_minutes = $13,
+       reading_minutes = $14, german_with_wife_minutes = $15, flashcard_creation_minutes = $16
+     WHERE id = 1`,
+    [
+      settings.homeLat ?? null,
+      settings.homeLng ?? null,
+      settings.officeAddress ?? null,
+      settings.schoolAddress ?? null,
+      settings.workStartTime ?? null,
+      settings.workEndTime ?? null,
+      settings.sonPickupTime ?? null,
+      settings.commuteBikeMinutes ?? null,
+      settings.commuteCarMinutes ?? null,
+      settings.rainThresholdMm ?? null,
+      settings.pomodoroMinutes ?? null,
+      settings.trainingRideMinutes ?? null,
+      settings.germanCardsMinutes ?? null,
+      settings.readingMinutes ?? null,
+      settings.germanWithWifeMinutes ?? null,
+      settings.flashcardCreationMinutes ?? null,
+    ]
+  );
+}
+
+export async function getScheduleRows() {
+  const result = await query(
+    'SELECT to_char(date, \'YYYY-MM-DD\') AS date, commute_mode, blocks FROM training_log.schedule ORDER BY date ASC'
+  );
+  return result.rows;
+}
+
+export async function setExtractedMeetings(meetings: unknown[]) {
+  const response = await fetch('http://localhost:8180/anthropic/test/extraction', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ meetings }),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to set extracted meetings: ${response.status}`);
+  }
+}
+
+export async function setSchedulePlan(blocks: unknown[]) {
+  const response = await fetch('http://localhost:8180/anthropic/test/plan', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ blocks }),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to set schedule plan: ${response.status}`);
+  }
+}
+
+export async function resetAnthropic() {
+  const response = await fetch('http://localhost:8180/anthropic/test/reset', {
+    method: 'POST',
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to reset Anthropic mock: ${response.status}`);
+  }
+}
+
+export async function setWeatherForecast(precipitationMm: number, temperatureC = 18) {
+  const response = await fetch('http://localhost:8180/weather/test/forecast', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ precipitationMm, temperatureC }),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to set weather forecast: ${response.status}`);
+  }
+}
+
+export async function resetWeather() {
+  const response = await fetch('http://localhost:8180/weather/test/reset', {
+    method: 'POST',
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to reset weather mock: ${response.status}`);
+  }
 }

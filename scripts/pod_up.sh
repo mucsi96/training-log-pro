@@ -13,6 +13,8 @@ else
   podman build -t localhost/training-log-pro-client:test "$PROJECT_DIR/client" &
   podman build -t localhost/training-log-pro-mock-withings:test "$PROJECT_DIR/mock_withings_server" &
   podman build -t localhost/training-log-pro-mock-strava:test "$PROJECT_DIR/mock_strava_server" &
+  podman build -t localhost/training-log-pro-mock-anthropic:test "$PROJECT_DIR/mock_anthropic_server" &
+  podman build -t localhost/training-log-pro-mock-weather:test "$PROJECT_DIR/mock_weather_server" &
   wait
 fi
 

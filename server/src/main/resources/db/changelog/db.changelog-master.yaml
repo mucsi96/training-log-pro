@@ -705,3 +705,89 @@ databaseChangeLog:
                   defaultValueNumeric: 0
                   constraints:
                     nullable: false
+
+  - changeSet:
+      id: 26-add-schedule-config-to-settings
+      author: mucsi96
+      changes:
+        - addColumn:
+            tableName: settings
+            columns:
+              - column:
+                  name: home_lat
+                  type: double precision
+              - column:
+                  name: home_lng
+                  type: double precision
+              - column:
+                  name: office_address
+                  type: varchar(255)
+              - column:
+                  name: school_address
+                  type: varchar(255)
+              - column:
+                  name: work_start_time
+                  type: varchar(5)
+              - column:
+                  name: work_end_time
+                  type: varchar(5)
+              - column:
+                  name: son_pickup_time
+                  type: varchar(5)
+              - column:
+                  name: commute_bike_minutes
+                  type: integer
+              - column:
+                  name: commute_car_minutes
+                  type: integer
+              - column:
+                  name: rain_threshold_mm
+                  type: double precision
+              - column:
+                  name: pomodoro_minutes
+                  type: integer
+              - column:
+                  name: training_ride_minutes
+                  type: integer
+              - column:
+                  name: german_cards_minutes
+                  type: integer
+              - column:
+                  name: reading_minutes
+                  type: integer
+              - column:
+                  name: german_with_wife_minutes
+                  type: integer
+              - column:
+                  name: flashcard_creation_minutes
+                  type: integer
+
+  - changeSet:
+      id: 27-create-schedule-table
+      author: mucsi96
+      changes:
+        - createTable:
+            tableName: schedule
+            columns:
+              - column:
+                  name: date
+                  type: date
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: commute_mode
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: blocks
+                  type: jsonb
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp(6)
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false

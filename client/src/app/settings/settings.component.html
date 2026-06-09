@@ -58,6 +58,133 @@
         <mat-hint>Complete at least this many of your daily tasks to earn a golden day. Set to 0 to ignore tasks.</mat-hint>
       </mat-form-field>
 
+      <h2>Day planning</h2>
+      <mat-form-field appearance="outline">
+        <mat-label>Home latitude</mat-label>
+        <input matInput type="number" [formField]="settingsForm.homeLat" />
+        <mat-hint>Used to fetch the weather for your commute.</mat-hint>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Home longitude</mat-label>
+        <input matInput type="number" [formField]="settingsForm.homeLng" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Office address</mat-label>
+        <input matInput type="text" [formField]="settingsForm.officeAddress" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>School address</mat-label>
+        <input matInput type="text" [formField]="settingsForm.schoolAddress" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Work start time</mat-label>
+        <input matInput type="time" [formField]="settingsForm.workStartTime" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Work end time</mat-label>
+        <input matInput type="time" [formField]="settingsForm.workEndTime" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Son pickup time</mat-label>
+        <input matInput type="time" [formField]="settingsForm.sonPickupTime" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Bike commute (one way)</mat-label>
+        <input
+          matInput
+          type="number"
+          [formField]="settingsForm.commuteBikeMinutes"
+        />
+        <span matTextSuffix>min</span>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Car commute (one way)</mat-label>
+        <input
+          matInput
+          type="number"
+          [formField]="settingsForm.commuteCarMinutes"
+        />
+        <span matTextSuffix>min</span>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Rain threshold for taking the car</mat-label>
+        <input
+          matInput
+          type="number"
+          [formField]="settingsForm.rainThresholdMm"
+        />
+        <span matTextSuffix>mm</span>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Pomodoro session length</mat-label>
+        <input
+          matInput
+          type="number"
+          [formField]="settingsForm.pomodoroMinutes"
+        />
+        <span matTextSuffix>min</span>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Training ride length</mat-label>
+        <input
+          matInput
+          type="number"
+          [formField]="settingsForm.trainingRideMinutes"
+        />
+        <span matTextSuffix>min</span>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>German cards study length</mat-label>
+        <input
+          matInput
+          type="number"
+          [formField]="settingsForm.germanCardsMinutes"
+        />
+        <span matTextSuffix>min</span>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Reading length</mat-label>
+        <input
+          matInput
+          type="number"
+          [formField]="settingsForm.readingMinutes"
+        />
+        <span matTextSuffix>min</span>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>German with wife length</mat-label>
+        <input
+          matInput
+          type="number"
+          [formField]="settingsForm.germanWithWifeMinutes"
+        />
+        <span matTextSuffix>min</span>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Flashcard creation length</mat-label>
+        <input
+          matInput
+          type="number"
+          [formField]="settingsForm.flashcardCreationMinutes"
+        />
+        <span matTextSuffix>min</span>
+      </mat-form-field>
+
       <div class="actions">
         <button
           mat-flat-button

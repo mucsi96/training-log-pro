@@ -18,6 +18,18 @@ http:
       service: mock-strava
       entryPoints:
         - web
+    anthropic:
+      rule: "PathPrefix(`/anthropic`)"
+      priority: 3
+      service: mock-anthropic
+      entryPoints:
+        - web
+    weather:
+      rule: "PathPrefix(`/weather`)"
+      priority: 3
+      service: mock-weather
+      entryPoints:
+        - web
     client:
       rule: "PathPrefix(`/`)"
       priority: 1
@@ -37,6 +49,14 @@ http:
       loadBalancer:
         servers:
           - url: "http://127.0.0.1:3081"
+    mock-anthropic:
+      loadBalancer:
+        servers:
+          - url: "http://127.0.0.1:3082"
+    mock-weather:
+      loadBalancer:
+        servers:
+          - url: "http://127.0.0.1:3083"
     client:
       loadBalancer:
         servers:
