@@ -87,8 +87,8 @@ public class StravaActivityService {
         activity.getId(), activity.getSportType(), activity.getStartDate(), activity.getName(),
         activity.getSufferScore()));
 
-    List<SportTypeEnum> rideSportTypes = List.of(SportTypeEnum.RIDE, SportTypeEnum.GRAVELRIDE,
-        SportTypeEnum.MOUNTAINBIKERIDE, SportTypeEnum.VIRTUALRIDE);
+    List<SportTypeEnum> rideSportTypes = List.of(SportTypeEnum.RIDE, SportTypeEnum.GRAVEL_RIDE,
+        SportTypeEnum.MOUNTAIN_BIKE_RIDE, SportTypeEnum.VIRTUAL_RIDE);
 
     List<StravaSummaryActivity> rides = activities.stream()
         .filter(activity -> rideSportTypes.contains(activity.getSportType()))
