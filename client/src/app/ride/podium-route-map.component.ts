@@ -5,10 +5,12 @@ import {
   ElementRef,
   HostListener,
   OnDestroy,
+  inject,
   input,
   viewChild,
 } from '@angular/core';
-import { LngLatBounds, Map as MapLibreMap } from 'maplibre-gl';
+import { LngLatBounds, Map as MapLibreMap, StyleSpecification } from 'maplibre-gl';
+import { ENVIRONMENT_CONFIG } from '../environment/environment.config';
 
 @Component({
   standalone: true,
@@ -22,6 +24,7 @@ export class PodiumRouteMapComponent implements AfterViewInit, OnDestroy {
   readonly longitudes = input.required<number[]>();
 
   private readonly container = viewChild.required<ElementRef<HTMLDivElement>>('mapContainer');
+  private readonly environment = inject(ENVIRONMENT_CONFIG);
   private map?: MapLibreMap;
 
   ngAfterViewInit(): void {
@@ -31,7 +34,7 @@ export class PodiumRouteMapComponent implements AfterViewInit, OnDestroy {
 
     this.map = new MapLibreMap({
       container: this.container().nativeElement,
-      style: 'https://tiles.openfreemap.org/styles/fiord',
+      style: this.outdoorStyle(),
       interactive: true,
       scrollZoom: false,
       attributionControl: false,
@@ -73,6 +76,31 @@ export class PodiumRouteMapComponent implements AfterViewInit, OnDestroy {
   @HostListener('touchstart', ['$event'])
   onPointer(event: Event): void {
     event.stopPropagation();
+  }
+
+  private outdoorStyle(): StyleSpecification {
+    const apiKey = this.environment.thunderforestApiKey;
+    return {
+      version: 8,
+      sources: {
+        'thunderforest-outdoors': {
+          type: 'raster',
+          tiles: [
+            `https://tile.thunderforest.com/outdoors/{z}/{x}/{y}.png?apikey=${apiKey}`,
+          ],
+          tileSize: 256,
+          attribution:
+            '&copy; <a href="https://www.thunderforest.com/">Thunderforest</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        },
+      },
+      layers: [
+        {
+          id: 'thunderforest-outdoors',
+          type: 'raster',
+          source: 'thunderforest-outdoors',
+        },
+      ],
+    };
   }
 
   ngOnDestroy(): void {

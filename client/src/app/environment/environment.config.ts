@@ -7,6 +7,7 @@ export interface EnvironmentConfig {
   mockOAuth2ServerUri: string;
   clientLogUrl: string;
   clientAppName: string;
+  thunderforestApiKey: string;
 }
 
 export const ENVIRONMENT_CONFIG = new InjectionToken<EnvironmentConfig>('ENVIRONMENT_CONFIG');
