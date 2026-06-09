@@ -9,7 +9,6 @@ import {
   input,
   viewChild,
 } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
 import {
   LngLatBounds,
   Map as MapLibreMap,
@@ -20,7 +19,6 @@ import { ENVIRONMENT_CONFIG } from '../environment/environment.config';
 @Component({
   standalone: true,
   selector: 'app-podium-route-map',
-  imports: [MatIconModule],
   templateUrl: './podium-route-map.component.html',
   styleUrl: './podium-route-map.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -57,8 +55,7 @@ export class PodiumRouteMapComponent implements AfterViewInit, OnDestroy {
     this.map = new MapLibreMap({
       container: this.container().nativeElement,
       style: darkOutdoorsStyle(this.environment.thunderforestApiKey),
-      interactive: true,
-      scrollZoom: false,
+      interactive: false,
       attributionControl: false,
     });
 
