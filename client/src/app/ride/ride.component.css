@@ -148,13 +148,10 @@ h2 {
 
 .podium-route {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
 }
 
-@media screen and (width > 740px) {
-  .podium-route {
-    grid-template-columns: 2fr 1fr;
-    align-items: stretch;
-  }
+.podium-route > * {
+  min-width: 0;
 }
