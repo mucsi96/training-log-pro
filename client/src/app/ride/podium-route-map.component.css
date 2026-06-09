@@ -2,9 +2,39 @@
   display: block;
 }
 
+.podium-map-wrap {
+  position: relative;
+}
+
 .podium-map {
   height: 200px;
   width: 100%;
   border-radius: 0.5rem;
   overflow: hidden;
+}
+
+.podium-map-link {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  color: #e6edf3;
+  background: rgba(14, 17, 22, 0.78);
+  border: 1px solid rgba(230, 237, 243, 0.18);
+  text-decoration: none;
+}
+
+.podium-map-link:hover {
+  background: rgba(14, 17, 22, 0.92);
+}
+
+.podium-map-link mat-icon {
+  font-size: 1.125rem;
+  width: 1.125rem;
+  height: 1.125rem;
 }
