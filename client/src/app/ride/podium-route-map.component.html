@@ -1,18 +1,15 @@
-<div class="podium-map-wrap">
+<a
+  class="podium-map-link"
+  data-testid="podium-map-link"
+  [href]="externalMapUrl()"
+  target="_blank"
+  rel="noopener noreferrer"
+  aria-label="Open segment in geojson.io"
+>
   <div
     #mapContainer
     class="podium-map"
     data-testid="podium-map"
     aria-label="Segment route mini map"
   ></div>
-  <a
-    class="podium-map-link"
-    data-testid="podium-map-link"
-    [href]="externalMapUrl()"
-    target="_blank"
-    rel="noopener noreferrer"
-    aria-label="Open segment in geojson.io"
-  >
-    <mat-icon aria-hidden="true">open_in_new</mat-icon>
-  </a>
-</div>
+</a>

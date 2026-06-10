@@ -3,6 +3,7 @@
 }
 
 .podium-elevation {
-  height: 120px;
+  height: 140px;
   width: 100%;
+  overflow: hidden;
 }
