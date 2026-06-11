@@ -68,6 +68,7 @@ export class ScheduleComponent {
     if (!file) {
       return;
     }
+    this.revokePreview();
     this.photoPreview.set(URL.createObjectURL(file));
     this.extracting.set(true);
     try {
@@ -111,8 +112,16 @@ export class ScheduleComponent {
   }
 
   replan() {
-    this.photoPreview.set(null);
+    this.revokePreview();
     this.meetings.set([]);
     this.step.set('capture');
+  }
+
+  private revokePreview() {
+    const previous = this.photoPreview();
+    if (previous) {
+      URL.revokeObjectURL(previous);
+      this.photoPreview.set(null);
+    }
   }
 }

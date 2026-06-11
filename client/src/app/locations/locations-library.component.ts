@@ -33,7 +33,7 @@ function emptyDraft(): LocationRequest {
     BarLoaderComponent,
   ],
   templateUrl: './locations-library.component.html',
-  styleUrl: './locations-library.component.css',
+  styleUrl: '../shared/entity-library.component.css',
 })
 export class LocationsLibraryComponent {
   private readonly locationsService = inject(LocationsService);

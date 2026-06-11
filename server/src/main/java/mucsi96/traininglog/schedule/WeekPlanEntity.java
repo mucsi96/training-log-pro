@@ -38,6 +38,6 @@ public class WeekPlanEntity {
   @Column(columnDefinition = "jsonb", nullable = false)
   private List<DaySchedule> days;
 
-  @Column(name = "updated_at", insertable = false)
+  @Column(name = "updated_at", nullable = false)
   private ZonedDateTime updatedAt;
 }

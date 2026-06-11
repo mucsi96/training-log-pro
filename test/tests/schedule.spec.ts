@@ -68,8 +68,7 @@ async function seedAiForToday() {
   ]);
 }
 
-async function uploadReviewGenerate(page: import('@playwright/test').Page) {
-  await page.goto('/schedule');
+async function reviewAndGenerate(page: import('@playwright/test').Page) {
   await page
     .locator('input[type="file"]')
     .setInputFiles({ name: 'calendar.png', mimeType: 'image/png', buffer: PNG_BUFFER });
@@ -79,6 +78,11 @@ async function uploadReviewGenerate(page: import('@playwright/test').Page) {
 
   await page.getByRole('switch', { name: 'At office' }).click();
   await page.getByRole('button', { name: 'Generate week' }).click();
+}
+
+async function uploadReviewGenerate(page: import('@playwright/test').Page) {
+  await page.goto('/schedule');
+  await reviewAndGenerate(page);
 }
 
 test.describe('Weekly schedule planner', () => {
@@ -101,6 +105,21 @@ test.describe('Weekly schedule planner', () => {
     expect(rows).toHaveLength(1);
     const day = rows[0].days.find((d: { date: string }) => d.date === today);
     expect(day.commuteMode).toBe('car');
+  });
+
+  test('replans the week by uploading a new calendar photo', async ({ page }) => {
+    await setWeatherForecast(5);
+
+    await uploadReviewGenerate(page);
+    await expect(page.getByText('Focus work')).toBeVisible();
+
+    // Replanning updates the stored week instead of creating a second one.
+    await page.getByRole('button', { name: 'Upload new calendar / replan' }).click();
+    await reviewAndGenerate(page);
+
+    await expect(page.getByText('Focus work')).toBeVisible();
+    const rows = await getWeekPlanRows();
+    expect(rows).toHaveLength(1);
   });
 
   test('plans the week with a bike commute when it is dry on an office day', async ({ page }) => {

@@ -3,6 +3,9 @@ package mucsi96.traininglog.schedule;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -60,7 +63,9 @@ public class ScheduleService {
     return parse(output, WeekMeetings.class);
   }
 
-  @Transactional
+  // Deliberately not @Transactional: the Anthropic and weather HTTP calls can
+  // take seconds and must not hold a DB transaction open. Each repository call
+  // runs in its own short transaction.
   public WeekSchedule planWeek(PlanWeekRequest request, ZoneId zoneId) {
     LocalDate today = LocalDate.now(clock.withZone(zoneId));
     LocalDate weekStart = weekStart(zoneId);
@@ -130,6 +135,7 @@ public class ScheduleService {
         .weekStart(weekStart)
         .meetings(request.getMeetings())
         .days(merged)
+        .updatedAt(now())
         .build());
 
     return WeekSchedule.builder().weekStart(weekStart.toString()).days(merged).build();
@@ -148,6 +154,10 @@ public class ScheduleService {
   private LocalDate weekStart(ZoneId zoneId) {
     LocalDate today = LocalDate.now(clock.withZone(zoneId));
     return today.minusDays(today.getDayOfWeek().getValue() - 1L);
+  }
+
+  private ZonedDateTime now() {
+    return ZonedDateTime.now(clock).withZoneSameInstant(ZoneOffset.UTC).truncatedTo(ChronoUnit.MILLIS);
   }
 
   private String buildWeekPrompt(

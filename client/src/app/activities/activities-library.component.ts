@@ -36,7 +36,7 @@ function emptyDraft(): ActivityRequest {
     BarLoaderComponent,
   ],
   templateUrl: './activities-library.component.html',
-  styleUrl: './activities-library.component.css',
+  styleUrl: '../shared/entity-library.component.css',
 })
 export class ActivitiesLibraryComponent {
   private readonly activitiesService = inject(ActivitiesService);
