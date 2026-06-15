@@ -32,7 +32,7 @@ async function configurePlanning() {
     workEndTime: '17:00',
     rainThresholdMm: 1,
   });
-  const home = await insertLocation({
+  await insertLocation({
     name: 'Home',
     home: true,
     latitude: 47.5,
@@ -50,7 +50,6 @@ async function configurePlanning() {
     occurrencesPerWeek: 2,
     constraintNote: "Only on days I don't cycle home from the office",
   });
-  return home;
 }
 
 async function seedAiForToday() {
@@ -70,7 +69,7 @@ async function seedAiForToday() {
 
 async function reviewAndGenerate(page: import('@playwright/test').Page) {
   await page
-    .locator('input[type="file"]')
+    .getByLabel('Upload calendar photo')
     .setInputFiles({ name: 'calendar.png', mimeType: 'image/png', buffer: PNG_BUFFER });
 
   await expect(page.getByRole('heading', { name: 'Review meetings' })).toBeVisible();

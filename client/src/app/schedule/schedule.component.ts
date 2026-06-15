@@ -47,7 +47,9 @@ export class ScheduleComponent {
   readonly hasMeetings = computed(() => this.meetings().length > 0);
 
   constructor() {
-    this.loadWeek();
+    // getWeek already surfaces failures via the notifications service; catch here
+    // so the discarded promise never becomes an unhandled rejection.
+    this.loadWeek().catch(() => {});
   }
 
   private async loadWeek() {

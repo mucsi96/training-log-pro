@@ -53,7 +53,9 @@ public class AnthropicClient {
             "media_type", mediaType,
             "data", base64));
     Map<String, Object> textBlock = Map.of("type", "text", "text", prompt);
-    return send(List.of(textBlock, imageBlock));
+    // Image first: Anthropic recommends placing the image before the instruction
+    // for vision tasks so the model reads the picture before what to do with it.
+    return send(List.of(imageBlock, textBlock));
   }
 
   /** Sends a text-only instruction and returns the model's text output. */

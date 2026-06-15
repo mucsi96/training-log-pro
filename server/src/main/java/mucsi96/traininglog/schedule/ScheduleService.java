@@ -204,9 +204,7 @@ public class ScheduleService {
             location.getName(),
             location.isHome() ? " (home)" : "",
             location.getAddress() != null ? " @ " + location.getAddress() : "",
-            (location.getBikeMinutesFromHome() != null || location.getCarMinutesFromHome() != null)
-                ? " [bike " + location.getBikeMinutesFromHome() + " min, car " + location.getCarMinutesFromHome() + " min from home]"
-                : ""))
+            travelFromHome(location)))
             .collect(Collectors.joining("\n"));
 
     return """
@@ -234,6 +232,17 @@ public class ScheduleService {
             dayLines,
             activityLines,
             locationLines);
+  }
+
+  private String travelFromHome(LocationEntity location) {
+    List<String> parts = new ArrayList<>();
+    if (location.getBikeMinutesFromHome() != null) {
+      parts.add("bike " + location.getBikeMinutesFromHome() + " min");
+    }
+    if (location.getCarMinutesFromHome() != null) {
+      parts.add("car " + location.getCarMinutesFromHome() + " min");
+    }
+    return parts.isEmpty() ? "" : " [" + String.join(", ", parts) + " from home]";
   }
 
   private String locationName(List<LocationEntity> locations, java.util.UUID id) {

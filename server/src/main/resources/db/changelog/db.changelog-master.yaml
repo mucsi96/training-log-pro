@@ -821,6 +821,13 @@ databaseChangeLog:
                   defaultValueComputed: CURRENT_TIMESTAMP
                   constraints:
                     nullable: false
+        - addForeignKeyConstraint:
+            constraintName: fk_activity_location
+            baseTableName: activity
+            baseColumnNames: location_id
+            referencedTableName: location
+            referencedColumnNames: id
+            onDelete: SET NULL
 
   - changeSet:
       id: 29-create-week-plan-table

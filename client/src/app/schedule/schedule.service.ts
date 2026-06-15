@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable, signal } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { NotificationsService } from '@mucsi96/angular-material-theme';
 import { firstValueFrom } from 'rxjs';
 import { fetchJson } from '../utils/fetchJson';
@@ -45,8 +45,6 @@ export class ScheduleService {
   private readonly http = inject(HttpClient);
   private readonly notifications = inject(NotificationsService);
 
-  readonly version = signal(0);
-
   async getWeek(): Promise<WeekSchedule | null> {
     try {
       return await fetchJson<WeekSchedule | null>(this.http, '/api/schedule');
@@ -76,7 +74,6 @@ export class ScheduleService {
         '/api/schedule/plan',
         { method: 'post', body: { meetings } }
       );
-      this.version.update((v) => v + 1);
       return schedule;
     } catch (e) {
       this.notifications.error('Unable to generate the schedule');
