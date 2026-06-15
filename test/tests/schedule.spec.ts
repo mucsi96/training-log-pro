@@ -98,7 +98,7 @@ test.describe('Weekly schedule planner', () => {
     await uploadReviewGenerate(page);
 
     await expect(page.getByText('Focus work')).toBeVisible();
-    await expect(page.getByText(/car/)).toBeVisible();
+    await expect(page.locator('[data-mode="car"]')).toBeVisible();
 
     const rows = await getWeekPlanRows();
     expect(rows).toHaveLength(1);
@@ -127,7 +127,7 @@ test.describe('Weekly schedule planner', () => {
     await uploadReviewGenerate(page);
 
     await expect(page.getByText('Focus work')).toBeVisible();
-    await expect(page.getByText(/bike/)).toBeVisible();
+    await expect(page.locator('[data-mode="bike"]')).toBeVisible();
 
     const rows = await getWeekPlanRows();
     expect(rows).toHaveLength(1);

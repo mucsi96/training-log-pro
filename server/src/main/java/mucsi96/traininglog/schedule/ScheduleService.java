@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -13,8 +14,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -77,7 +80,7 @@ public class ScheduleService {
     Map<LocalDate, List<MeetingReview>> keptByDate = request.getMeetings().stream()
         .filter(meeting -> Boolean.TRUE.equals(meeting.getAttend()))
         .filter(meeting -> meeting.getDate() != null && !meeting.getDate().isBlank())
-        .collect(Collectors.groupingBy(meeting -> LocalDate.parse(meeting.getDate())));
+        .collect(Collectors.groupingBy(meeting -> parseDate(meeting.getDate())));
 
     SettingsEntity settings = settingsService.getCurrent();
     List<ActivityEntity> activities = activityService.list();
@@ -154,6 +157,14 @@ public class ScheduleService {
   private LocalDate weekStart(ZoneId zoneId) {
     LocalDate today = LocalDate.now(clock.withZone(zoneId));
     return today.minusDays(today.getDayOfWeek().getValue() - 1L);
+  }
+
+  private LocalDate parseDate(String value) {
+    try {
+      return LocalDate.parse(value);
+    } catch (DateTimeParseException e) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid meeting date: " + value);
+    }
   }
 
   private ZonedDateTime now() {

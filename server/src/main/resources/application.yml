@@ -6,6 +6,10 @@ spring:
     driver-class-name: org.postgresql.Driver
     hikari:
       connection-init-sql: CREATE SCHEMA IF NOT EXISTS training_log; SET search_path TO training_log, public
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
   jpa:
     hibernate:
       ddl-auto: none
@@ -76,7 +80,7 @@ strava:
   api-uri: https://www.strava.com
 anthropic:
   api-uri: https://api.anthropic.com
-  api-key: ${anthropic-api-key:}
+  api-key: ${anthropic-api-key}
   model: claude-opus-4-8
 weather:
   api-uri: https://api.open-meteo.com
