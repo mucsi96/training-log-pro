@@ -114,7 +114,7 @@ public class ScheduleService {
     PlanResult result = parse(output, PlanResult.class);
 
     Map<LocalDate, List<ScheduleBlock>> blocksByDate = Optional.ofNullable(result.days()).orElse(List.of()).stream()
-        .filter(day -> day.getDate() != null && !day.getDate().isBlank())
+        .filter(day -> isIsoDate(day.getDate()))
         .collect(Collectors.toMap(
             day -> LocalDate.parse(day.getDate()),
             day -> Optional.ofNullable(day.getBlocks()).orElse(List.of()),
@@ -168,6 +168,20 @@ public class ScheduleService {
       return LocalDate.parse(value);
     } catch (DateTimeParseException e) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid meeting date: " + value);
+    }
+  }
+
+  // The AI is instructed to return ISO dates, but guard the parse so a stray
+  // value just drops that day's blocks instead of failing the whole request.
+  private boolean isIsoDate(String value) {
+    if (value == null || value.isBlank()) {
+      return false;
+    }
+    try {
+      LocalDate.parse(value);
+      return true;
+    } catch (DateTimeParseException e) {
+      return false;
     }
   }
 
