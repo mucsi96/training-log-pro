@@ -1,10 +1,7 @@
 import { test, expect } from '../fixtures';
 import { cleanupDb, populateOAuthClients, insertWeight } from '../utils';
 
-// Build a regex that matches the literal value anywhere in the chart's
-// aria-label. echarts redraws the SVG when the data changes, so the
-// aria-label is briefly absent mid-render; asserting with toHaveAttribute
-// (which auto-retries) avoids racing a one-shot getAttribute read.
+// Escape value into a regex; toHaveAttribute auto-retries, avoiding a one-shot read that races echarts clearing aria-label mid-redraw.
 const chartLabel = (value: string) =>
   new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
 
