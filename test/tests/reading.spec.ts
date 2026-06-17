@@ -378,6 +378,9 @@ test.describe('Reading', () => {
     const library = page.getByRole('region', { name: 'Books' });
     await library.getByRole('button', { name: 'Edit Old Title' }).click();
 
+    await expect(
+      library.getByRole('heading', { name: 'Edit book' })
+    ).toBeVisible();
     await library.getByLabel('Title').fill('New Title');
     await library.getByLabel('Author').fill('New Author');
     await library.getByLabel('Total pages').fill('250');
