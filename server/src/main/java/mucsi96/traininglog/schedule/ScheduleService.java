@@ -77,6 +77,10 @@ public class ScheduleService {
 
     List<LocalDate> planningDays = planStart.datesUntil(weekEnd.plusDays(1)).toList();
 
+    if (request.getMeetings() == null) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "meetings is required");
+    }
+
     Map<LocalDate, List<MeetingReview>> keptByDate = request.getMeetings().stream()
         .filter(meeting -> Boolean.TRUE.equals(meeting.getAttend()))
         .filter(meeting -> meeting.getDate() != null && !meeting.getDate().isBlank())
@@ -285,7 +289,7 @@ public class ScheduleService {
     } catch (Exception e) {
       String preview = output == null ? "" : output.substring(0, Math.min(200, output.length()));
       log.error("Failed to parse AI response (first 200 chars): {}", preview);
-      throw new IllegalStateException("Could not parse AI response", e);
+      throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Could not parse AI response", e);
     }
   }
 

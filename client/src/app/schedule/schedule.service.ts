@@ -58,6 +58,8 @@ export class ScheduleService {
     const formData = new FormData();
     formData.append('photo', photo);
     try {
+      // Bypasses fetchJson: this is a multipart upload, whereas fetchJson always
+      // sends Content-Type: application/json.
       return await firstValueFrom(
         this.http.post<WeekMeetings>('/api/schedule/extract', formData)
       );

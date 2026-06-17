@@ -1,11 +1,13 @@
 package mucsi96.traininglog.schedule;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -26,7 +28,10 @@ public class WeatherClient {
   private final RestClient restClient;
 
   public WeatherClient(@Value("${weather.api-uri}") String apiUri) {
-    this.restClient = RestClient.builder().baseUrl(apiUri).build();
+    SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+    factory.setConnectTimeout(Duration.ofSeconds(10));
+    factory.setReadTimeout(Duration.ofSeconds(15));
+    this.restClient = RestClient.builder().baseUrl(apiUri).requestFactory(factory).build();
   }
 
   /** Returns precipitation (mm) keyed by date for the upcoming days. */

@@ -103,9 +103,15 @@
                   <h3 class="day-heading">{{ day.date }}</h3>
                   <span class="commute" [attr.data-mode]="day.commuteMode">
                     @switch (day.commuteMode) {
-                      @case ('bike') { bike 🚲 }
-                      @case ('car') { car 🚗 }
-                      @default { home 🏠 }
+                      @case ('bike') {
+                        <mat-icon>directions_bike</mat-icon> bike
+                      }
+                      @case ('car') {
+                        <mat-icon>directions_car</mat-icon> car
+                      }
+                      @default {
+                        <mat-icon>home</mat-icon> home
+                      }
                     }
                   </span>
                 </div>

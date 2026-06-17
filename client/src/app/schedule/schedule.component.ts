@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { BarLoaderComponent } from '@mucsi96/angular-material-theme';
 import {
@@ -18,7 +19,7 @@ type MeetingGroup = {
 @Component({
   standalone: true,
   selector: 'app-schedule',
-  imports: [MatButtonModule, MatSlideToggleModule, BarLoaderComponent],
+  imports: [MatButtonModule, MatIconModule, MatSlideToggleModule, BarLoaderComponent],
   templateUrl: './schedule.component.html',
   styleUrl: './schedule.component.css',
 })
