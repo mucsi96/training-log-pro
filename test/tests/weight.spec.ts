@@ -1,6 +1,13 @@
 import { test, expect } from '../fixtures';
 import { cleanupDb, populateOAuthClients, insertWeight } from '../utils';
 
+// Build a regex that matches the literal value anywhere in the chart's
+// aria-label. echarts redraws the SVG when the data changes, so the
+// aria-label is briefly absent mid-render; asserting with toHaveAttribute
+// (which auto-retries) avoids racing a one-shot getAttribute read.
+const chartLabel = (value: string) =>
+  new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+
 test.describe('Weight', () => {
   test.beforeEach(async () => {
     await cleanupDb();
@@ -50,14 +57,13 @@ test.describe('Weight', () => {
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
     const chart = page.locator('section:has-text("Weight") [role="img"]');
     await expect(chart).toHaveAttribute('aria-label', /This is a chart with type Line chart/);
-    const label = await chart.getAttribute('aria-label');
-    expect(label).toContain('89.4,');
-    expect(label).toContain('88.3,');
-    expect(label).toContain('87.7,');
-    expect(label).toContain('87.5,');
-    expect(label).toContain('87.2.');
-    expect(label).not.toContain('108.9,');
-    expect(label).not.toContain('98,');
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('89.4,'));
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('88.3,'));
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('87.7,'));
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('87.5,'));
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('87.2.'));
+    await expect(chart).not.toHaveAttribute('aria-label', chartLabel('108.9,'));
+    await expect(chart).not.toHaveAttribute('aria-label', chartLabel('98,'));
   });
 
   test('should display weight diff for month', async ({ page }) => {
@@ -75,14 +81,13 @@ test.describe('Weight', () => {
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
     const chart = page.locator('section:has-text("Weight") [role="img"]');
     await expect(chart).toHaveAttribute('aria-label', /This is a chart with type Line chart/);
-    const label = await chart.getAttribute('aria-label');
-    expect(label).toContain('98,');
-    expect(label).toContain('89.4,');
-    expect(label).toContain('88.3,');
-    expect(label).toContain('87.7,');
-    expect(label).toContain('87.5,');
-    expect(label).toContain('87.2.');
-    expect(label).not.toContain('108.9,');
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('98,'));
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('89.4,'));
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('88.3,'));
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('87.7,'));
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('87.5,'));
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('87.2.'));
+    await expect(chart).not.toHaveAttribute('aria-label', chartLabel('108.9,'));
   });
 
   test('should display weight diff for year', async ({ page }) => {
@@ -100,14 +105,13 @@ test.describe('Weight', () => {
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
     const chart = page.locator('section:has-text("Weight") [role="img"]');
     await expect(chart).toHaveAttribute('aria-label', /This is a chart with type Line chart/);
-    const label = await chart.getAttribute('aria-label');
-    expect(label).toContain('108.9,');
-    expect(label).toContain('98,');
-    expect(label).toContain('89.4,');
-    expect(label).toContain('88.3,');
-    expect(label).toContain('87.7,');
-    expect(label).toContain('87.5,');
-    expect(label).toContain('87.2.');
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('108.9,'));
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('98,'));
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('89.4,'));
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('88.3,'));
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('87.7,'));
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('87.5,'));
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('87.2.'));
   });
 
   test('should display weight diff for all time', async ({ page }) => {
@@ -125,14 +129,13 @@ test.describe('Weight', () => {
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
     const chart = page.locator('section:has-text("Weight") [role="img"]');
     await expect(chart).toHaveAttribute('aria-label', /This is a chart with type Line chart/);
-    const label = await chart.getAttribute('aria-label');
-    expect(label).toContain('108.9,');
-    expect(label).toContain('98,');
-    expect(label).toContain('89.4,');
-    expect(label).toContain('88.3,');
-    expect(label).toContain('87.7,');
-    expect(label).toContain('87.5,');
-    expect(label).toContain('87.2.');
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('108.9,'));
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('98,'));
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('89.4,'));
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('88.3,'));
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('87.7,'));
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('87.5,'));
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('87.2.'));
   });
 });
 
@@ -150,10 +153,9 @@ test.describe('Weight without a measurement today', () => {
     await page.goto('/');
     const chart = page.locator('section:has-text("Weight") [role="img"]').first();
     await expect(chart).toHaveAttribute('aria-label', /This is a chart with type Line chart/);
-    const label = await chart.getAttribute('aria-label');
-    expect(label).toContain('89.4,');
-    expect(label).toContain('88.3,');
-    expect(label).toContain('87.7,');
-    expect(label).toContain('87.5');
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('89.4,'));
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('88.3,'));
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('87.7,'));
+    await expect(chart).toHaveAttribute('aria-label', chartLabel('87.5'));
   });
 });
