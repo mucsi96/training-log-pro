@@ -199,14 +199,10 @@ public class ScheduleService {
             activity.getDurationMinutes(),
             activity.getOccurrencesPerWeek(),
             activity.getLocationId() != null ? ", location " + locationName(locations, activity.getLocationId()) : "",
-            (activity.getEarliestTime() != null || activity.getLatestTime() != null)
-                ? ", between " + nullToEmpty(activity.getEarliestTime()) + " and " + nullToEmpty(activity.getLatestTime())
-                : "",
-            activity.getDaysOfWeek() != null ? ", days " + activity.getDaysOfWeek() : "",
+            timeWindow(activity.getEarliestTime(), activity.getLatestTime()),
+            isBlank(activity.getDaysOfWeek()) ? "" : ", days " + activity.getDaysOfWeek(),
             activity.getPriority() != null ? ", priority " + activity.getPriority() : "",
-            activity.getConstraintNote() != null && !activity.getConstraintNote().isBlank()
-                ? ", rule: " + activity.getConstraintNote()
-                : ""))
+            isBlank(activity.getConstraintNote()) ? "" : ", rule: " + activity.getConstraintNote()))
             .collect(Collectors.joining("\n"));
 
     String locationLines = locations.isEmpty()
@@ -256,6 +252,25 @@ public class ScheduleService {
     return parts.isEmpty() ? "" : " [" + String.join(", ", parts) + " from home]";
   }
 
+  private String timeWindow(String earliest, String latest) {
+    boolean hasEarliest = !isBlank(earliest);
+    boolean hasLatest = !isBlank(latest);
+    if (hasEarliest && hasLatest) {
+      return ", between " + earliest + " and " + latest;
+    }
+    if (hasEarliest) {
+      return ", from " + earliest;
+    }
+    if (hasLatest) {
+      return ", until " + latest;
+    }
+    return "";
+  }
+
+  private boolean isBlank(String value) {
+    return value == null || value.isBlank();
+  }
+
   private String locationName(List<LocationEntity> locations, java.util.UUID id) {
     return locations.stream()
         .filter(location -> location.getId().equals(id))
@@ -268,7 +283,8 @@ public class ScheduleService {
     try {
       return objectMapper.readValue(stripFences(output), type);
     } catch (Exception e) {
-      log.error("Failed to parse AI response: {}", output);
+      String preview = output == null ? "" : output.substring(0, Math.min(200, output.length()));
+      log.error("Failed to parse AI response (first 200 chars): {}", preview);
       throw new IllegalStateException("Could not parse AI response", e);
     }
   }

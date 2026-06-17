@@ -59,11 +59,15 @@ public class ActivityService {
     activity.setDurationMinutes(request.getDurationMinutes());
     activity.setOccurrencesPerWeek(request.getOccurrencesPerWeek());
     activity.setLocationId(request.getLocationId());
-    activity.setEarliestTime(request.getEarliestTime());
-    activity.setLatestTime(request.getLatestTime());
-    activity.setDaysOfWeek(request.getDaysOfWeek());
-    activity.setConstraintNote(request.getConstraintNote());
+    activity.setEarliestTime(blankToNull(request.getEarliestTime()));
+    activity.setLatestTime(blankToNull(request.getLatestTime()));
+    activity.setDaysOfWeek(blankToNull(request.getDaysOfWeek()));
+    activity.setConstraintNote(blankToNull(request.getConstraintNote()));
     activity.setPriority(request.getPriority());
+  }
+
+  private String blankToNull(String value) {
+    return value == null || value.isBlank() ? null : value;
   }
 
   private ZonedDateTime now() {
