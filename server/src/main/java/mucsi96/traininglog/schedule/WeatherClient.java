@@ -1,5 +1,6 @@
 package mucsi96.traininglog.schedule;
 
+import java.net.http.HttpClient;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -7,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -28,8 +29,8 @@ public class WeatherClient {
   private final RestClient restClient;
 
   public WeatherClient(@Value("${weather.api-uri}") String apiUri) {
-    SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-    factory.setConnectTimeout(Duration.ofSeconds(10));
+    HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
+    JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(httpClient);
     factory.setReadTimeout(Duration.ofSeconds(15));
     this.restClient = RestClient.builder().baseUrl(apiUri).requestFactory(factory).build();
   }

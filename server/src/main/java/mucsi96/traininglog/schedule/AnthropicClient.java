@@ -1,13 +1,15 @@
 package mucsi96.traininglog.schedule;
 
+import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -37,8 +39,8 @@ public class AnthropicClient {
       @Value("${anthropic.max-tokens:4000}") int maxTokens) {
     this.model = model;
     this.maxTokens = maxTokens;
-    SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-    factory.setConnectTimeout(Duration.ofSeconds(10));
+    HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
+    JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(httpClient);
     factory.setReadTimeout(Duration.ofSeconds(120));
     this.restClient = RestClient.builder()
         .baseUrl(apiUri)
@@ -89,7 +91,7 @@ public class AnthropicClient {
     return response.content().stream()
         .filter(block -> "text".equals(block.type()) && block.text() != null)
         .map(ContentBlock::text)
-        .reduce("", String::concat);
+        .collect(Collectors.joining());
   }
 
   @JsonIgnoreProperties(ignoreUnknown = true)

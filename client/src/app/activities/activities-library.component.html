@@ -70,6 +70,8 @@
             matInput
             type="number"
             name="durationMinutes"
+            min="1"
+            required
             [ngModel]="draft().durationMinutes"
             (ngModelChange)="patch({ durationMinutes: $event })"
           />
@@ -81,6 +83,8 @@
             matInput
             type="number"
             name="occurrencesPerWeek"
+            min="1"
+            required
             [ngModel]="draft().occurrencesPerWeek"
             (ngModelChange)="patch({ occurrencesPerWeek: $event })"
           />

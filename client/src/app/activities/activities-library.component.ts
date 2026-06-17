@@ -58,9 +58,15 @@ export class ActivitiesLibraryComponent {
   });
 
   readonly showForm = computed(() => this.adding() || this.editingId() !== null);
-  readonly canSubmit = computed(
-    () => !this.busy() && this.draft().name.trim().length > 0
-  );
+  readonly canSubmit = computed(() => {
+    const draft = this.draft();
+    return (
+      !this.busy() &&
+      draft.name.trim().length > 0 &&
+      draft.durationMinutes > 0 &&
+      draft.occurrencesPerWeek > 0
+    );
+  });
 
   locationName(id?: string | null): string {
     return this.locations.value()?.find((location) => location.id === id)?.name ?? '';
