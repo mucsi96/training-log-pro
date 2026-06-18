@@ -127,6 +127,8 @@ paths:
                   - readingPagesGoal
                   - todayTasksCompleted
                   - dailyTaskGoal
+                  - todayLearningPathsActive
+                  - learningPathGoal
                   - goldenDates
                 properties:
                   monthCount:
@@ -161,6 +163,12 @@ paths:
                     type: integer
                     format: int32
                   dailyTaskGoal:
+                    type: integer
+                    format: int32
+                  todayLearningPathsActive:
+                    type: integer
+                    format: int32
+                  learningPathGoal:
                     type: integer
                     format: int32
                   goldenDates:
@@ -565,6 +573,191 @@ paths:
                   goalReached:
                     type: boolean
 
+  /learning-paths:
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LearningPath'
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - content
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                content:
+                  $ref: '#/components/schemas/LearningPathContent'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearningPath'
+
+  /learning-paths/generate:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - prompt
+              properties:
+                prompt:
+                  type: string
+                  minLength: 1
+                  maxLength: 4000
+                content:
+                  $ref: '#/components/schemas/LearningPathContent'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearningPathContent'
+
+  /learning-paths/today:
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LearningPathStatus'
+
+  /learning-paths/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearningPath'
+        '404':
+          description: Learning path not found
+    put:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - content
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                content:
+                  $ref: '#/components/schemas/LearningPathContent'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearningPath'
+        '404':
+          description: Learning path not found
+    delete:
+      responses:
+        '204':
+          description: No Content
+        '404':
+          description: Learning path not found
+
+  /learning-paths/{id}/blocks/{blockId}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: blockId
+        required: true
+        schema:
+          type: string
+    put:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - completed
+              properties:
+                completed:
+                  type: boolean
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearningPath'
+        '404':
+          description: Learning path or block not found
+
+  /learning-paths/{id}/activity:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - active
+              properties:
+                active:
+                  type: boolean
+      responses:
+        '204':
+          description: No Content
+        '404':
+          description: Learning path not found
+
 components:
   schemas:
     WeightMeasurement:
@@ -603,6 +796,7 @@ components:
         - elevationGoal
         - readingPagesGoal
         - dailyTaskGoal
+        - learningPathGoal
       properties:
         pushupGoal:
           type: integer
@@ -620,6 +814,11 @@ components:
           minimum: 0
           maximum: 10000
         dailyTaskGoal:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 100
+        learningPathGoal:
           type: integer
           format: int32
           minimum: 0
@@ -705,6 +904,85 @@ components:
         name:
           type: string
         completed:
+          type: boolean
+    LearningPath:
+      type: object
+      required:
+        - id
+        - title
+        - content
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        content:
+          $ref: '#/components/schemas/LearningPathContent'
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+    LearningPathContent:
+      type: object
+      required:
+        - summary
+        - topics
+      properties:
+        summary:
+          type: string
+        topics:
+          type: array
+          items:
+            $ref: '#/components/schemas/LearningPathTopic'
+    LearningPathTopic:
+      type: object
+      required:
+        - title
+        - blocks
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        blocks:
+          type: array
+          items:
+            $ref: '#/components/schemas/LearningPathBlock'
+    LearningPathBlock:
+      type: object
+      required:
+        - type
+        - title
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        url:
+          type: string
+        completed:
+          type: boolean
+    LearningPathStatus:
+      type: object
+      required:
+        - id
+        - title
+        - active
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        active:
           type: boolean
     PodiumMessage:
       type: object

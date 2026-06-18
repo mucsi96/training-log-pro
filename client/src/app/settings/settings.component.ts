@@ -6,6 +6,7 @@ import { MatInputModule } from '@angular/material/input';
 import { BarLoaderComponent } from '@mucsi96/angular-material-theme';
 import { ReadingLibraryComponent } from '../reading/reading-library.component';
 import { DailyTasksLibraryComponent } from '../daily-tasks/daily-tasks-library.component';
+import { LearningPathLibraryComponent } from '../learning/learning-path-library.component';
 import { CoinsService } from '../coins/coins.service';
 import { Settings, SettingsService } from './settings.service';
 
@@ -21,6 +22,7 @@ import { Settings, SettingsService } from './settings.service';
     BarLoaderComponent,
     ReadingLibraryComponent,
     DailyTasksLibraryComponent,
+    LearningPathLibraryComponent,
   ],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css',
@@ -49,6 +51,7 @@ export class SettingsComponent {
     elevationGoal: 250,
     readingPagesGoal: 0,
     dailyTaskGoal: 0,
+    learningPathGoal: 0,
   });
 
   readonly settingsForm = form(this.model, (path) => {
@@ -64,6 +67,9 @@ export class SettingsComponent {
     required(path.dailyTaskGoal);
     min(path.dailyTaskGoal, 0);
     max(path.dailyTaskGoal, 100);
+    required(path.learningPathGoal);
+    min(path.learningPathGoal, 0);
+    max(path.learningPathGoal, 100);
   });
 
   readonly saving = signal(false);

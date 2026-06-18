@@ -1,0 +1,152 @@
+@if (paths.isLoading()) {
+  <div class="page-loading"><bt-bar-loader /></div>
+} @else {
+  <section class="library" aria-labelledby="learning-paths-library-heading">
+    <h2 id="learning-paths-library-heading">Learning paths</h2>
+
+    @if (!editing()) {
+      @if ((paths.value()?.length ?? 0) === 0) {
+        <p class="empty">No learning paths yet. Generate one with AI.</p>
+      } @else {
+        <ul class="paths">
+          @for (path of paths.value(); track path.id) {
+            <li class="path" [attr.aria-label]="path.title">
+              <span class="path-title">{{ path.title }}</span>
+              <div class="path-actions">
+                <button
+                  mat-icon-button
+                  type="button"
+                  [attr.aria-label]="'Edit ' + path.title"
+                  [disabled]="busy()"
+                  (click)="startEdit(path)"
+                >
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  type="button"
+                  [attr.aria-label]="'Remove ' + path.title"
+                  [disabled]="busy()"
+                  (click)="deletePath(path)"
+                >
+                  <mat-icon>delete_outline</mat-icon>
+                </button>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+      <button
+        mat-stroked-button
+        type="button"
+        class="add-button"
+        (click)="startCreate()"
+      >
+        Add learning path
+      </button>
+    } @else {
+      <form
+        class="path-form"
+        aria-labelledby="path-form-heading"
+        (submit)="$event.preventDefault()"
+      >
+        <h3 id="path-form-heading">
+          {{ editingId() ? 'Edit learning path' : 'New learning path' }}
+        </h3>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Title</mat-label>
+          <input
+            matInput
+            name="title"
+            [ngModel]="title()"
+            (ngModelChange)="title.set($event)"
+            required
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>
+            {{ preview() ? 'Refinement instruction' : 'What do you want to learn?' }}
+          </mat-label>
+          <textarea
+            matInput
+            name="prompt"
+            rows="3"
+            [ngModel]="prompt()"
+            (ngModelChange)="prompt.set($event)"
+          ></textarea>
+        </mat-form-field>
+
+        <div class="actions">
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="!canGenerate()"
+            (click)="generate()"
+          >
+            {{ generateLabel() }}
+          </button>
+        </div>
+
+        @if (generating()) {
+          <div class="page-loading"><bt-bar-loader /></div>
+        }
+
+        @if (preview(); as content) {
+          <section class="preview" aria-label="Learning path preview">
+            <p class="summary">{{ content.summary }}</p>
+            @for (topic of content.topics; track topic.id) {
+              <div class="topic">
+                <h4 class="topic-title">{{ topic.title }}</h4>
+                <ul class="blocks">
+                  @for (block of topic.blocks; track block.id) {
+                    <li class="block">
+                      <mat-icon class="block-icon">{{ blockIcon(block.type) }}</mat-icon>
+                      <span class="block-body">
+                        @if (block.url) {
+                          <a
+                            [href]="block.url"
+                            target="_blank"
+                            rel="noopener"
+                            class="block-title"
+                            >{{ block.title }}</a
+                          >
+                        } @else {
+                          <span class="block-title">{{ block.title }}</span>
+                        }
+                        @if (block.description) {
+                          <span class="block-description">{{ block.description }}</span>
+                        }
+                      </span>
+                    </li>
+                  }
+                </ul>
+              </div>
+            }
+          </section>
+        }
+
+        <div class="actions">
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="busy()"
+            (click)="cancel()"
+          >
+            Cancel
+          </button>
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            [disabled]="!canSave()"
+            (click)="save()"
+          >
+            Save learning path
+          </button>
+        </div>
+      </form>
+    }
+  </section>
+}

@@ -1,6 +1,7 @@
 import { Component, computed, effect, inject, resource, signal } from '@angular/core';
 import { GoldenDayService } from './golden-day.service';
 import { DailyTasksService } from '../daily-tasks/daily-tasks.service';
+import { LearningPathService } from '../learning/learning-path.service';
 import { ConfettiComponent } from './confetti/confetti.component';
 
 const CONFETTI_DURATION_MS = 5000;
@@ -15,6 +16,7 @@ const CONFETTI_DURATION_MS = 5000;
 export class GoldenDayComponent {
   private readonly service = inject(GoldenDayService);
   private readonly tasksService = inject(DailyTasksService);
+  private readonly learningService = inject(LearningPathService);
 
   readonly stats = resource({
     params: () => ({
@@ -22,6 +24,7 @@ export class GoldenDayComponent {
       pushups: this.service.pushupsService.version(),
       reading: this.service.readingService.version(),
       tasks: this.tasksService.version(),
+      learning: this.learningService.version(),
     }),
     loader: () => this.service.getStats(),
   });
@@ -41,6 +44,8 @@ export class GoldenDayComponent {
   readonly readingGoal = computed(() => this.stats.value()?.readingPagesGoal ?? 0);
   readonly tasksCompleted = computed(() => this.stats.value()?.todayTasksCompleted ?? 0);
   readonly tasksGoal = computed(() => this.stats.value()?.dailyTaskGoal ?? 0);
+  readonly learningActive = computed(() => this.stats.value()?.todayLearningPathsActive ?? 0);
+  readonly learningGoal = computed(() => this.stats.value()?.learningPathGoal ?? 0);
 
   constructor() {
     effect(() => {

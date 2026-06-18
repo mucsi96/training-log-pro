@@ -70,6 +70,19 @@ spec:
         periodSeconds: 2
         failureThreshold: 5
 
+    - name: mock-anthropic
+      image: localhost/training-log-pro-mock-anthropic:test
+      env:
+        - name: PORT
+          value: "3082"
+      livenessProbe:
+        httpGet:
+          path: /health
+          port: 3082
+        initialDelaySeconds: 5
+        periodSeconds: 2
+        failureThreshold: 5
+
     - name: mock-oauth2
       image: docker.io/mucsi96/mock-oidc-provider:latest
       ports:
