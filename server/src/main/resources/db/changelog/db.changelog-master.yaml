@@ -705,3 +705,87 @@ databaseChangeLog:
                   defaultValueNumeric: 0
                   constraints:
                     nullable: false
+
+  - changeSet:
+      id: 26-create-learning-path-tables
+      author: mucsi96
+      changes:
+        - createTable:
+            tableName: learning_path
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: title
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content
+                  type: jsonb
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp(6)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: completed_at
+                  type: timestamp(6)
+                  constraints:
+                    nullable: true
+        - createTable:
+            tableName: learning_path_activity
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: path_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_learning_path_activity_path
+                    references: training_log.learning_path(id)
+              - column:
+                  name: date
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp(6)
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: learning_path_activity
+            columnNames: path_id, date
+            constraintName: uq_learning_path_activity_path_date
+        - createIndex:
+            tableName: learning_path_activity
+            indexName: idx_learning_path_activity_date
+            columns:
+              - column:
+                  name: date
+
+  - changeSet:
+      id: 27-add-learning-path-goal-to-settings
+      author: mucsi96
+      changes:
+        - addColumn:
+            tableName: settings
+            columns:
+              - column:
+                  name: learning_path_goal
+                  type: integer
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false

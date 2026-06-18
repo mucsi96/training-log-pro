@@ -58,6 +58,17 @@
         <mat-hint>Complete at least this many of your daily tasks to earn a golden day. Set to 0 to ignore tasks.</mat-hint>
       </mat-form-field>
 
+      <mat-form-field appearance="outline">
+        <mat-label>Daily learning path goal</mat-label>
+        <input
+          matInput
+          type="number"
+          [formField]="settingsForm.learningPathGoal"
+        />
+        <span matTextSuffix>paths</span>
+        <mat-hint>Do something for at least this many learning paths to earn a golden day. Set to 0 to ignore learning paths.</mat-hint>
+      </mat-form-field>
+
       <div class="actions">
         <button
           mat-flat-button
@@ -99,4 +110,6 @@
   <app-daily-tasks-library></app-daily-tasks-library>
 
   <app-reading-library></app-reading-library>
+
+  <app-learning-path-library></app-learning-path-library>
 </section>

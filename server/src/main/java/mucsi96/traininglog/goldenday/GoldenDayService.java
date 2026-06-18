@@ -22,6 +22,7 @@ import mucsi96.traininglog.pushups.PushupSetRepository;
 import mucsi96.traininglog.reading.ReadingService;
 import mucsi96.traininglog.rides.Ride;
 import mucsi96.traininglog.rides.RideRepository;
+import mucsi96.traininglog.learning.LearningPathService;
 import mucsi96.traininglog.settings.SettingsEntity;
 import mucsi96.traininglog.settings.SettingsService;
 import mucsi96.traininglog.tasks.DailyTaskService;
@@ -36,6 +37,7 @@ public class GoldenDayService {
   private final SettingsService settingsService;
   private final ReadingService readingService;
   private final DailyTaskService dailyTaskService;
+  private final LearningPathService learningPathService;
   private final Clock clock;
 
   @Transactional
@@ -71,6 +73,11 @@ public class GoldenDayService {
             .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().size(), (a, b) -> a, TreeMap::new))
         : Map.of();
 
+    Map<LocalDate, Integer> learningPathActiveCountByDay = goal.getLearningPathGoal() > 0
+        ? learningPathService.getActivityByDays(candidates).entrySet().stream()
+            .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().size(), (a, b) -> a, TreeMap::new))
+        : Map.of();
+
     for (LocalDate day : candidates) {
       if (persisted.containsKey(day)) {
         continue;
@@ -79,10 +86,12 @@ public class GoldenDayService {
       double elevation = elevationByDay.getOrDefault(day, 0d);
       int readingPages = readingPagesByDay.getOrDefault(day, 0);
       int tasksCompleted = taskCompletionsCountByDay.getOrDefault(day, 0);
+      int learningPathsActive = learningPathActiveCountByDay.getOrDefault(day, 0);
       if (pushups >= goal.getPushupGoal()
           && elevation >= goal.getElevationGoal()
           && (goal.getReadingPagesGoal() == 0 || readingPages >= goal.getReadingPagesGoal())
-          && (goal.getDailyTaskGoal() == 0 || tasksCompleted >= goal.getDailyTaskGoal())) {
+          && (goal.getDailyTaskGoal() == 0 || tasksCompleted >= goal.getDailyTaskGoal())
+          && (goal.getLearningPathGoal() == 0 || learningPathsActive >= goal.getLearningPathGoal())) {
         GoldenDayEntity saved = goldenDayRepository.save(GoldenDayEntity.builder().date(day).build());
         persisted.put(day, saved);
       }
@@ -110,6 +119,8 @@ public class GoldenDayService {
         .readingPagesGoal(goal.getReadingPagesGoal())
         .todayTasksCompleted(taskCompletionsCountByDay.getOrDefault(today, 0))
         .dailyTaskGoal(goal.getDailyTaskGoal())
+        .todayLearningPathsActive(learningPathActiveCountByDay.getOrDefault(today, 0))
+        .learningPathGoal(goal.getLearningPathGoal())
         .goldenDates(goldenDates.stream().sorted().toList())
         .build();
   }

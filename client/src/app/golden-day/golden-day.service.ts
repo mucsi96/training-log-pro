@@ -20,6 +20,8 @@ export type GoldenDayStats = {
   readingPagesGoal: number;
   todayTasksCompleted: number;
   dailyTaskGoal: number;
+  todayLearningPathsActive: number;
+  learningPathGoal: number;
   goldenDates: string[];
 };
 

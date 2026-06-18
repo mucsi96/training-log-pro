@@ -7,6 +7,7 @@ import { PushupsComponent } from '../pushups/pushups.component';
 import { ReadingComponent } from '../reading/reading.component';
 import { GoldenDayComponent } from '../golden-day/golden-day.component';
 import { DailyTasksComponent } from '../daily-tasks/daily-tasks.component';
+import { LearningComponent } from '../learning/learning.component';
 
 @Component({
   selector: 'app-home',
@@ -20,6 +21,7 @@ import { DailyTasksComponent } from '../daily-tasks/daily-tasks.component';
     FtpComponent,
     PushupsComponent,
     ReadingComponent,
+    LearningComponent,
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',

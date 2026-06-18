@@ -8,3 +8,5 @@ spring:
 management:
   server:
     port: 8182
+anthropic:
+  api-key: ${ANTHROPIC_API_KEY:}

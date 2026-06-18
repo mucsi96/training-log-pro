@@ -1,0 +1,183 @@
+package mucsi96.traininglog.learning;
+
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+import lombok.RequiredArgsConstructor;
+import mucsi96.traininglog.api.LearningPathBlock;
+import mucsi96.traininglog.api.LearningPathContent;
+import mucsi96.traininglog.api.LearningPathTopic;
+
+@Service
+@RequiredArgsConstructor
+public class LearningPathService {
+
+  private final LearningPathRepository pathRepository;
+  private final LearningPathActivityRepository activityRepository;
+  private final LearningPathGenerationService generationService;
+  private final Clock clock;
+
+  @Transactional(readOnly = true)
+  public List<LearningPathEntity> list() {
+    return pathRepository.findAll(Sort.by(Sort.Direction.ASC, "createdAt"));
+  }
+
+  @Transactional(readOnly = true)
+  public LearningPathEntity get(UUID id) {
+    return pathRepository.findById(id)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Learning path not found"));
+  }
+
+  public LearningPathContent generate(String prompt, LearningPathContent current) {
+    LearningPathContent content = generationService.generate(prompt, current);
+    assignIds(content);
+    return content;
+  }
+
+  @Transactional
+  public LearningPathEntity create(String title, LearningPathContent content) {
+    assignIds(content);
+    LearningPathEntity path = LearningPathEntity.builder()
+        .id(UUID.randomUUID())
+        .title(title)
+        .content(content)
+        .createdAt(now())
+        .build();
+    refreshCompletion(path);
+    return pathRepository.save(path);
+  }
+
+  @Transactional
+  public LearningPathEntity update(UUID id, String title, LearningPathContent content) {
+    LearningPathEntity path = get(id);
+    assignIds(content);
+    path.setTitle(title);
+    path.setContent(content);
+    refreshCompletion(path);
+    return pathRepository.save(path);
+  }
+
+  @Transactional
+  public void delete(UUID id) {
+    if (!pathRepository.existsById(id)) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Learning path not found");
+    }
+    activityRepository.deleteByPathId(id);
+    pathRepository.deleteById(id);
+  }
+
+  @Transactional
+  public LearningPathEntity setBlockCompleted(UUID id, String blockId, boolean completed) {
+    LearningPathEntity path = get(id);
+    LearningPathContent content = path.getContent();
+    boolean found = false;
+    for (LearningPathTopic topic : content.getTopics()) {
+      if (topic.getBlocks() == null) {
+        continue;
+      }
+      for (LearningPathBlock block : topic.getBlocks()) {
+        if (blockId.equals(block.getId())) {
+          block.setCompleted(completed);
+          found = true;
+        }
+      }
+    }
+    if (!found) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Block not found");
+    }
+    path.setContent(content);
+    refreshCompletion(path);
+    return pathRepository.save(path);
+  }
+
+  @Transactional
+  public void setActivity(UUID pathId, LocalDate date, boolean active) {
+    if (!pathRepository.existsById(pathId)) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Learning path not found");
+    }
+    if (active) {
+      activityRepository.insertIfAbsent(UUID.randomUUID(), pathId, date, now());
+    } else {
+      activityRepository.deleteByPathIdAndDate(pathId, date);
+    }
+  }
+
+  @Transactional(readOnly = true)
+  public TodayPaths getTodayPaths(LocalDate date) {
+    Set<UUID> activeIds = activityRepository.findByDate(date).stream()
+        .map(LearningPathActivityEntity::getPathId)
+        .collect(Collectors.toSet());
+    return new TodayPaths(list(), activeIds);
+  }
+
+  @Transactional(readOnly = true)
+  public Map<LocalDate, Set<UUID>> getActivityByDays(Collection<LocalDate> dates) {
+    if (dates.isEmpty()) {
+      return Map.of();
+    }
+    return activityRepository.findByDateIn(dates).stream()
+        .collect(Collectors.groupingBy(
+            LearningPathActivityEntity::getDate,
+            TreeMap::new,
+            Collectors.mapping(LearningPathActivityEntity::getPathId, Collectors.toSet())));
+  }
+
+  public record TodayPaths(List<LearningPathEntity> paths, Set<UUID> activePathIds) {
+  }
+
+  private void refreshCompletion(LearningPathEntity path) {
+    List<LearningPathBlock> blocks = path.getContent().getTopics().stream()
+        .filter(topic -> topic.getBlocks() != null)
+        .flatMap(topic -> topic.getBlocks().stream())
+        .toList();
+    boolean allDone = !blocks.isEmpty()
+        && blocks.stream().allMatch(block -> Boolean.TRUE.equals(block.getCompleted()));
+    if (allDone && path.getCompletedAt() == null) {
+      path.setCompletedAt(now());
+    } else if (!allDone && path.getCompletedAt() != null) {
+      path.setCompletedAt(null);
+    }
+  }
+
+  private void assignIds(LearningPathContent content) {
+    if (content == null || content.getTopics() == null) {
+      return;
+    }
+    for (LearningPathTopic topic : content.getTopics()) {
+      if (topic.getId() == null || topic.getId().isBlank()) {
+        topic.setId(UUID.randomUUID().toString());
+      }
+      if (topic.getBlocks() == null) {
+        continue;
+      }
+      for (LearningPathBlock block : topic.getBlocks()) {
+        if (block.getId() == null || block.getId().isBlank()) {
+          block.setId(UUID.randomUUID().toString());
+        }
+        if (block.getCompleted() == null) {
+          block.setCompleted(false);
+        }
+      }
+    }
+  }
+
+  private ZonedDateTime now() {
+    return ZonedDateTime.now(clock).withZoneSameInstant(ZoneOffset.UTC).truncatedTo(ChronoUnit.MILLIS);
+  }
+}

@@ -31,3 +31,7 @@ withings:
   api-uri: http://localhost:3080/withings
 strava:
   api-uri: http://localhost:3081/strava
+anthropic:
+  api-uri: http://localhost:3082/anthropic
+  api-key: test-anthropic-key
+  model: claude-opus-4-8
