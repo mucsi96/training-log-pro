@@ -1,10 +1,6 @@
 .learning {
   display: grid;
   gap: 12px;
-  padding: 16px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, hsl(217, 28%, 18%), hsl(217, 28%, 14%));
-  border: 1px solid hsl(217, 19%, 27%);
 }
 
 .header {
@@ -13,13 +9,17 @@
   justify-content: space-between;
 }
 
-h2 {
+h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--mat-sys-on-primary);
+}
+
+.empty {
   margin: 0;
   font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--mat-sys-on-primary);
+  color: var(--bt-text-muted);
 }
 
 .paths {
@@ -30,13 +30,20 @@ h2 {
   gap: 12px;
 }
 
-.path {
+.path-link {
   display: grid;
   gap: 8px;
-  padding: 12px;
-  border-radius: 12px;
-  background: hsl(217, 28%, 16%);
-  border: 1px solid hsl(217, 19%, 24%);
+  padding: 16px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, hsl(217, 28%, 18%), hsl(217, 28%, 14%));
+  border: 1px solid hsl(217, 19%, 27%);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.2s ease;
+}
+
+.path-link:hover {
+  border-color: var(--mat-sys-primary);
 }
 
 .path-header {
@@ -48,7 +55,7 @@ h2 {
 
 .path-title {
   margin: 0;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--mat-sys-on-primary);
 }
@@ -57,61 +64,11 @@ h2 {
   margin: 0;
   font-size: 12px;
   color: var(--bt-text-muted);
+  white-space: nowrap;
 }
 
 .path-summary {
   margin: 0;
   font-size: 13px;
   color: var(--bt-text-muted);
-}
-
-.topic {
-  display: grid;
-  gap: 4px;
-}
-
-.topic-title {
-  margin: 4px 0 0;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--mat-sys-on-primary);
-}
-
-.blocks {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 2px;
-}
-
-.block {
-  display: grid;
-  gap: 2px;
-}
-
-.block-main {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.block-icon {
-  flex: none;
-  color: var(--bt-text-muted);
-  font-size: 18px;
-  width: 18px;
-  height: 18px;
-}
-
-.block-description {
-  margin-left: 34px;
-  color: var(--bt-text-muted);
-  font-size: 12px;
-}
-
-.path-activity {
-  margin-top: 4px;
-  padding-top: 8px;
-  border-top: 1px solid hsl(217, 19%, 24%);
 }
