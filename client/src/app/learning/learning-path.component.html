@@ -11,6 +11,26 @@
     </header>
     <p class="path-summary">{{ path.content.summary }}</p>
 
+    @if (latestProgress(); as latest) {
+      @if (latest.comment) {
+        <section class="continue-banner" aria-labelledby="continue-heading">
+          <h2 id="continue-heading" class="continue-title">Continue from</h2>
+          <p class="continue-comment">{{ latest.comment }}</p>
+        </section>
+      }
+    }
+
+    <button
+      mat-flat-button
+      color="primary"
+      type="button"
+      class="log-button"
+      [disabled]="logging()"
+      (click)="openLogDialog(path)"
+    >
+      Log progress
+    </button>
+
     @for (topic of path.content.topics; track topic.id) {
       <div class="topic">
         <h2 class="topic-title">{{ topic.title }}</h2>
@@ -44,6 +64,28 @@
           }
         </ul>
       </div>
+    }
+
+    @if ((progress.value()?.length ?? 0) > 0) {
+      <section class="progress-log" aria-labelledby="progress-log-heading">
+        <h2 id="progress-log-heading" class="progress-log-title">Progress log</h2>
+        <ul class="progress-entries">
+          @for (entry of progress.value(); track entry.id) {
+            <li class="progress-entry">
+              <div class="entry-header">
+                <span class="entry-description">{{ entry.description }}</span>
+                <span class="entry-meta">
+                  {{ entry.durationMinutes }} min &middot;
+                  {{ entry.createdAt | date: 'mediumDate' }}
+                </span>
+              </div>
+              @if (entry.comment) {
+                <p class="entry-comment">{{ entry.comment }}</p>
+              }
+            </li>
+          }
+        </ul>
+      </section>
     }
   </section>
 }

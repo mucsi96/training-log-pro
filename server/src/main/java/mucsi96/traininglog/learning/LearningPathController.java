@@ -22,12 +22,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import mucsi96.traininglog.api.LearningPath;
 import mucsi96.traininglog.api.LearningPathContent;
+import mucsi96.traininglog.api.LearningPathProgress;
 import mucsi96.traininglog.api.LearningPathStatus;
 
 @RestController
@@ -115,6 +117,26 @@ public class LearningPathController {
     return ResponseEntity.noContent().build();
   }
 
+  @GetMapping("/{id}/progress")
+  @PreAuthorize("hasAuthority('APPROLE_WorkoutReader') and hasAuthority('SCOPE_readWorkouts')")
+  List<LearningPathProgress> listProgress(@PathVariable UUID id) {
+    return learningPathService.getProgress(id).stream()
+        .map(this::toResponse)
+        .toList();
+  }
+
+  @PostMapping(value = "/{id}/progress", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
+  ResponseEntity<LearningPathProgress> logProgress(
+      @PathVariable UUID id,
+      @Valid @RequestBody ProgressRequest request) {
+    String comment = request.comment() == null ? null : request.comment().trim();
+    LearningPathProgressEntity saved = learningPathService.logProgress(
+        id, request.durationMinutes(), request.description().trim(),
+        comment == null || comment.isEmpty() ? null : comment);
+    return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(saved));
+  }
+
   private LearningPath toResponse(LearningPathEntity entity) {
     return LearningPath.builder()
         .id(entity.getId())
@@ -139,5 +161,21 @@ public class LearningPathController {
   }
 
   public record ActivityRequest(@NotNull Boolean active) {
+  }
+
+  public record ProgressRequest(
+      @NotNull @Min(1) Integer durationMinutes,
+      @NotBlank @Size(max = 255) String description,
+      @Size(max = 2000) String comment) {
+  }
+
+  private LearningPathProgress toResponse(LearningPathProgressEntity entity) {
+    return LearningPathProgress.builder()
+        .id(entity.getId())
+        .createdAt(entity.getCreatedAt().toOffsetDateTime())
+        .durationMinutes(entity.getDurationMinutes())
+        .description(entity.getDescription())
+        .comment(entity.getComment())
+        .build();
   }
 }

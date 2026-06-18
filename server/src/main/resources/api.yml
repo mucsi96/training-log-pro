@@ -758,6 +758,58 @@ paths:
         '404':
           description: Learning path not found
 
+  /learning-paths/{id}/progress:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LearningPathProgress'
+        '404':
+          description: Learning path not found
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - durationMinutes
+                - description
+              properties:
+                durationMinutes:
+                  type: integer
+                  format: int32
+                  minimum: 1
+                description:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                comment:
+                  type: string
+                  maxLength: 2000
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearningPathProgress'
+        '404':
+          description: Learning path not found
+
 components:
   schemas:
     WeightMeasurement:
@@ -984,6 +1036,27 @@ components:
           type: string
         active:
           type: boolean
+    LearningPathProgress:
+      type: object
+      required:
+        - id
+        - createdAt
+        - durationMinutes
+        - description
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        durationMinutes:
+          type: integer
+          format: int32
+        description:
+          type: string
+        comment:
+          type: string
     PodiumMessage:
       type: object
       required:

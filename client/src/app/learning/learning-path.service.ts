@@ -37,6 +37,14 @@ export type LearningPathStatus = {
   active: boolean;
 };
 
+export type LearningPathProgress = {
+  id: string;
+  createdAt: string;
+  durationMinutes: number;
+  description: string;
+  comment?: string;
+};
+
 @Injectable({ providedIn: 'root' })
 export class LearningPathService {
   private readonly http = inject(HttpClient);
@@ -157,6 +165,38 @@ export class LearningPathService {
       return path;
     } catch (e) {
       this.notifications.error('Unable to update progress');
+      throw e;
+    }
+  }
+
+  async getProgress(id: string): Promise<LearningPathProgress[]> {
+    try {
+      return await fetchJson<LearningPathProgress[]>(
+        this.http,
+        `/api/learning-paths/${id}/progress`
+      );
+    } catch (e) {
+      this.notifications.error('Unable to load progress log');
+      throw e;
+    }
+  }
+
+  async logProgress(
+    id: string,
+    durationMinutes: number,
+    description: string,
+    comment?: string
+  ): Promise<LearningPathProgress> {
+    try {
+      const entry = await fetchJson<LearningPathProgress>(
+        this.http,
+        `/api/learning-paths/${id}/progress`,
+        { method: 'post', body: { durationMinutes, description, comment } }
+      );
+      this.version.update((v) => v + 1);
+      return entry;
+    } catch (e) {
+      this.notifications.error('Unable to log progress');
       throw e;
     }
   }
