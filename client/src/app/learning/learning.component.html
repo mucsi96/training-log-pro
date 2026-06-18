@@ -25,7 +25,7 @@
                     <mat-checkbox
                       [checked]="!!block.completed"
                       [disabled]="togglingBlockId() !== null"
-                      (change)="toggleBlock(path, block.id!, $event.checked)"
+                      (change)="toggleBlock(path, block.id, $event.checked)"
                     >
                       <span class="block-main">
                         <mat-icon class="block-icon">{{ blockIcon(block.type) }}</mat-icon>

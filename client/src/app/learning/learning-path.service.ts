@@ -4,12 +4,12 @@ import { NotificationsService } from '@mucsi96/angular-material-theme';
 import { fetchJson } from '../utils/fetchJson';
 
 export type LearningPathBlock = {
-  id?: string;
+  id: string;
   type: string;
   title: string;
   description?: string;
   url?: string;
-  completed?: boolean;
+  completed: boolean;
 };
 
 export type LearningPathTopic = {

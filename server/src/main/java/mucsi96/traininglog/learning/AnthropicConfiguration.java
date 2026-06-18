@@ -7,9 +7,12 @@ import org.springframework.context.annotation.Configuration;
 import com.anthropic.client.AnthropicClient;
 import com.anthropic.client.okhttp.AnthropicOkHttpClient;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+// @Getter/@Setter rather than @Data so no generated toString() can leak apiKey.
+@Getter
+@Setter
 @Configuration
 @ConfigurationProperties(prefix = "anthropic")
 public class AnthropicConfiguration {
