@@ -73,7 +73,7 @@ public class LearningPathGenerationService {
                       },
                       "title": { "type": "string" },
                       "description": { "type": "string" },
-                      "url": { "type": "string" }
+                      "url": { "type": "string", "format": "uri" }
                     },
                     "required": ["type", "title", "description"],
                     "additionalProperties": false
