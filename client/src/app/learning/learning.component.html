@@ -28,7 +28,7 @@
                       (change)="toggleBlock(path, block.id, $event.checked)"
                     >
                       <span class="block-main">
-                        <mat-icon class="block-icon">{{ blockIcon(block.type) }}</mat-icon>
+                        <mat-icon class="block-icon" aria-hidden="true">{{ blockIcon(block.type) }}</mat-icon>
                         @if (block.url) {
                           <a
                             [href]="block.url"

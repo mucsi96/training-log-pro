@@ -19,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import lombok.RequiredArgsConstructor;
 import mucsi96.traininglog.api.LearningPathBlock;
 import mucsi96.traininglog.api.LearningPathContent;
@@ -31,6 +33,7 @@ public class LearningPathService {
   private final LearningPathRepository pathRepository;
   private final LearningPathActivityRepository activityRepository;
   private final LearningPathGenerationService generationService;
+  private final ObjectMapper objectMapper;
   private final Clock clock;
 
   @Transactional(readOnly = true)
@@ -85,7 +88,10 @@ public class LearningPathService {
   @Transactional
   public LearningPathEntity setBlockCompleted(UUID id, String blockId, boolean completed) {
     LearningPathEntity path = get(id);
-    LearningPathContent content = path.getContent();
+    // Deep-copy the content so the value we persist is a different object than the one
+    // Hibernate snapshotted at load. Mutating the loaded JSONB graph in place is not
+    // reliably flagged dirty; replacing the reference guarantees the UPDATE fires.
+    LearningPathContent content = objectMapper.convertValue(path.getContent(), LearningPathContent.class);
     LearningPathBlock block = content.getTopics().stream()
         .filter(topic -> topic.getBlocks() != null)
         .flatMap(topic -> topic.getBlocks().stream())
