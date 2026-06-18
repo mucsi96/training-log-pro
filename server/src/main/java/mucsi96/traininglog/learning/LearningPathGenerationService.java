@@ -19,6 +19,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mucsi96.traininglog.api.LearningPathContent;
@@ -31,6 +32,10 @@ public class LearningPathGenerationService {
   private final AnthropicClient anthropicClient;
   private final AnthropicConfiguration anthropicConfiguration;
   private final ObjectMapper objectMapper;
+
+  // Built once at startup from RESPONSE_SCHEMA; a malformed constant fails the
+  // bean's initialization rather than each generation request.
+  private OutputConfig outputConfig;
 
   private static final String SYSTEM_PROMPT = """
       You are an expert instructional designer. From the user's request, produce a structured, \
@@ -85,6 +90,24 @@ public class LearningPathGenerationService {
       }
       """;
 
+  // Constrains the response to the learning-path JSON schema (structured outputs),
+  // so the model always returns valid JSON in the required shape - no prose, no
+  // markdown fences, and no fields outside the schema.
+  @PostConstruct
+  void buildOutputConfig() {
+    Map<String, Object> schema;
+    try {
+      schema = objectMapper.readValue(RESPONSE_SCHEMA, new TypeReference<Map<String, Object>>() {});
+    } catch (JsonProcessingException e) {
+      throw new IllegalStateException("Invalid learning path response schema", e);
+    }
+    JsonOutputFormat.Schema.Builder schemaBuilder = JsonOutputFormat.Schema.builder();
+    schema.forEach((key, value) -> schemaBuilder.putAdditionalProperty(key, JsonValue.from(value)));
+    outputConfig = OutputConfig.builder()
+        .format(JsonOutputFormat.builder().schema(schemaBuilder.build()).build())
+        .build();
+  }
+
   public LearningPathContent generate(String prompt, LearningPathContent current) {
     StringBuilder userMessage = new StringBuilder();
     if (current != null) {
@@ -100,7 +123,7 @@ public class LearningPathGenerationService {
         .model(anthropicConfiguration.getModel())
         .maxTokens(8000L)
         .system(SYSTEM_PROMPT)
-        .outputConfig(responseOutputConfig())
+        .outputConfig(outputConfig)
         .addUserMessage(userMessage.toString())
         .build();
 
@@ -119,26 +142,6 @@ public class LearningPathGenerationService {
       log.error("Failed to parse learning path JSON from model: {}", json, e);
       throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
           "The AI returned an invalid learning path", e);
-    }
-  }
-
-  // Constrains the response to the learning-path JSON schema (structured outputs),
-  // so the model always returns valid JSON in the required shape - no prose, no
-  // markdown fences, and no fields outside the schema.
-  private OutputConfig responseOutputConfig() {
-    JsonOutputFormat.Schema.Builder schema = JsonOutputFormat.Schema.builder();
-    parseSchema().forEach((key, value) -> schema.putAdditionalProperty(key, JsonValue.from(value)));
-    return OutputConfig.builder()
-        .format(JsonOutputFormat.builder().schema(schema.build()).build())
-        .build();
-  }
-
-  private Map<String, Object> parseSchema() {
-    try {
-      return objectMapper.readValue(RESPONSE_SCHEMA, new TypeReference<Map<String, Object>>() {});
-    } catch (JsonProcessingException e) {
-      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-          "Invalid learning path response schema", e);
     }
   }
 
