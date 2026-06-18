@@ -79,7 +79,44 @@ test.describe('Learning paths', () => {
     expect(rows[0].content.summary).toBe('A deeper path with advanced material.');
   });
 
-  test('shows a saved path on the home page and toggles block progress', async ({ page }) => {
+  test('summarizes a saved path on home and links to its own page', async ({ page }) => {
+    const pathId = randomUUID();
+    await insertLearningPath(pathId, 'My Path', minimalContent('Intro video'));
+
+    await page.goto('/');
+    const summary = page.getByRole('region', { name: 'Learning' });
+    const link = summary.getByRole('link', { name: 'My Path' });
+    await expect(link).toBeVisible();
+    await expect(summary.getByText('0 / 1 done')).toBeVisible();
+
+    await link.click();
+    await expect(page).toHaveURL(`/learning/${pathId}`);
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'My Path' })
+    ).toBeVisible();
+  });
+
+  test('lists learning paths on the learning page', async ({ page }) => {
+    const pathId = randomUUID();
+    await insertLearningPath(pathId, 'My Path', minimalContent('Intro video'));
+
+    await page.goto('/learning');
+    const overview = page.getByRole('region', { name: 'Learning' });
+    const link = overview.getByRole('link', { name: 'My Path' });
+    await expect(link).toBeVisible();
+    await expect(overview.getByText('0 / 1 done')).toBeVisible();
+
+    await link.click();
+    await expect(page).toHaveURL(`/learning/${pathId}`);
+  });
+
+  test('shows an empty state on the learning page when no paths exist', async ({ page }) => {
+    await page.goto('/learning');
+    const overview = page.getByRole('region', { name: 'Learning' });
+    await expect(overview.getByText('No learning paths yet.')).toBeVisible();
+  });
+
+  test('toggles block progress on a learning path page', async ({ page }) => {
     const pathId = randomUUID();
     const blockId = randomUUID();
     const content = {
@@ -96,9 +133,9 @@ test.describe('Learning paths', () => {
     };
     await insertLearningPath(pathId, 'My Path', content);
 
-    await page.goto('/');
-    const section = page.getByRole('region', { name: 'Learning' });
-    await expect(section.getByRole('heading', { name: 'My Path' })).toBeVisible();
+    await page.goto(`/learning/${pathId}`);
+    const section = page.getByRole('region', { name: 'My Path' });
+    await expect(section.getByRole('heading', { level: 1, name: 'My Path' })).toBeVisible();
     await expect(section.getByText('0 / 1 done')).toBeVisible();
 
     const checkbox = section.getByRole('checkbox', { name: 'Read this' });

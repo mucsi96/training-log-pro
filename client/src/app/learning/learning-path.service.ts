@@ -53,6 +53,18 @@ export class LearningPathService {
     }
   }
 
+  async getPath(id: string): Promise<LearningPath> {
+    try {
+      return await fetchJson<LearningPath>(
+        this.http,
+        `/api/learning-paths/${id}`
+      );
+    } catch (e) {
+      this.notifications.error('Unable to load learning path');
+      throw e;
+    }
+  }
+
   async getToday(): Promise<LearningPathStatus[]> {
     try {
       return await fetchJson<LearningPathStatus[]>(

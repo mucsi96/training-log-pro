@@ -1,0 +1,49 @@
+@if (path.isLoading()) {
+  <div class="page-loading"><bt-bar-loader /></div>
+} @else if (path.value(); as path) {
+  <section class="learning-path" aria-labelledby="learning-path-heading">
+    <a class="back" routerLink="/learning">&larr; All learning paths</a>
+    <header class="path-header">
+      <h1 id="learning-path-heading" class="path-title">{{ path.title }}</h1>
+      <p class="path-progress">
+        {{ progressDone(path) }} / {{ progressTotal(path) }} done
+      </p>
+    </header>
+    <p class="path-summary">{{ path.content.summary }}</p>
+
+    @for (topic of path.content.topics; track topic.id) {
+      <div class="topic">
+        <h2 class="topic-title">{{ topic.title }}</h2>
+        <ul class="blocks">
+          @for (block of topic.blocks; track block.id) {
+            <li class="block">
+              <mat-checkbox
+                [checked]="!!block.completed"
+                [disabled]="togglingBlockId() !== null"
+                (change)="toggleBlock(path, block.id, $event.checked)"
+              >
+                <span class="block-main">
+                  <mat-icon class="block-icon" aria-hidden="true">{{ blockIcon(block.type) }}</mat-icon>
+                  @if (block.url) {
+                    <a
+                      [href]="block.url"
+                      target="_blank"
+                      rel="noopener"
+                      (click)="$event.stopPropagation()"
+                      >{{ block.title }}</a
+                    >
+                  } @else {
+                    <span>{{ block.title }}</span>
+                  }
+                </span>
+              </mat-checkbox>
+              @if (block.description) {
+                <span class="block-description">{{ block.description }}</span>
+              }
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  </section>
+}

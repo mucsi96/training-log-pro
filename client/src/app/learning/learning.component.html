@@ -1,67 +1,32 @@
 @if (paths.isLoading()) {
   <div class="page-loading"><bt-bar-loader /></div>
-} @else if (hasPaths()) {
+} @else {
   <section class="learning" aria-labelledby="learning-heading">
     <header class="header">
-      <h2 id="learning-heading">Learning</h2>
+      <h1 id="learning-heading">Learning</h1>
     </header>
-    <ul class="paths">
-      @for (path of paths.value(); track path.id) {
-        <li class="path" [attr.aria-label]="path.title">
-          <header class="path-header">
-            <h3 class="path-title">{{ path.title }}</h3>
-            <p class="path-progress">
-              {{ progressDone(path) }} / {{ progressTotal(path) }} done
-            </p>
-          </header>
-          <p class="path-summary">{{ path.content.summary }}</p>
 
-          @for (topic of path.content.topics; track topic.id) {
-            <div class="topic">
-              <h4 class="topic-title">{{ topic.title }}</h4>
-              <ul class="blocks">
-                @for (block of topic.blocks; track block.id) {
-                  <li class="block">
-                    <mat-checkbox
-                      [checked]="!!block.completed"
-                      [disabled]="togglingBlockId() !== null"
-                      (change)="toggleBlock(path, block.id, $event.checked)"
-                    >
-                      <span class="block-main">
-                        <mat-icon class="block-icon" aria-hidden="true">{{ blockIcon(block.type) }}</mat-icon>
-                        @if (block.url) {
-                          <a
-                            [href]="block.url"
-                            target="_blank"
-                            rel="noopener"
-                            (click)="$event.stopPropagation()"
-                            >{{ block.title }}</a
-                          >
-                        } @else {
-                          <span>{{ block.title }}</span>
-                        }
-                      </span>
-                    </mat-checkbox>
-                    @if (block.description) {
-                      <span class="block-description">{{ block.description }}</span>
-                    }
-                  </li>
-                }
-              </ul>
-            </div>
-          }
-
-          <div class="path-activity">
-            <mat-checkbox
-              [checked]="isActive(path.id)"
-              [disabled]="togglingActivityId() !== null"
-              (change)="toggleActivity(path, $event.checked)"
-            >
-              I did something for this today
-            </mat-checkbox>
-          </div>
-        </li>
-      }
-    </ul>
+    @if ((paths.value()?.length ?? 0) === 0) {
+      <p class="empty">
+        No learning paths yet. Add one from
+        <a routerLink="/settings">settings</a>.
+      </p>
+    } @else {
+      <ul class="paths">
+        @for (path of paths.value(); track path.id) {
+          <li class="path">
+            <a class="path-link" [routerLink]="['/learning', path.id]" [attr.aria-label]="path.title">
+              <header class="path-header">
+                <h2 class="path-title">{{ path.title }}</h2>
+                <p class="path-progress">
+                  {{ progressDone(path) }} / {{ progressTotal(path) }} done
+                </p>
+              </header>
+              <p class="path-summary">{{ path.content.summary }}</p>
+            </a>
+          </li>
+        }
+      </ul>
+    }
   </section>
 }
