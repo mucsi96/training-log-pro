@@ -134,7 +134,8 @@ test.describe('Learning paths', () => {
 
   test('hides the learning card on home when no paths exist', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('region', { name: 'Learning' })).toBeHidden();
+    // The card is removed from the DOM via @if (hasPaths()), not merely hidden.
+    await expect(page.getByRole('region', { name: 'Learning' })).not.toBeAttached();
   });
 
   test('gates golden day on the learning path goal when configured', async ({ page }) => {
