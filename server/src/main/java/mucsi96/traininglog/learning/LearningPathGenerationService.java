@@ -1,5 +1,6 @@
 package mucsi96.traininglog.learning;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -8,10 +9,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.anthropic.client.AnthropicClient;
+import com.anthropic.core.JsonValue;
 import com.anthropic.models.messages.ContentBlock;
+import com.anthropic.models.messages.JsonOutputFormat;
 import com.anthropic.models.messages.Message;
 import com.anthropic.models.messages.MessageCreateParams;
+import com.anthropic.models.messages.OutputConfig;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -31,18 +36,53 @@ public class LearningPathGenerationService {
       You are an expert instructional designer. From the user's request, produce a structured, \
       practical online learning path that someone can follow end to end.
 
-      Respond with ONLY a single JSON object, no prose and no markdown fences, matching exactly \
-      this shape:
-      {"summary": string, "topics": [{"title": string, "blocks": [{"type": string, \
-      "title": string, "description": string, "url": string}]}]}
-
-      Rules:
+      Guidance:
       - "summary" is one or two sentences describing the overall path.
       - Order topics from foundational to advanced.
-      - Each block "type" must be one of: video, article, practice, course, other.
+      - Each block "type" is one of: video, article, practice, course, other.
       - "description" is a short sentence on what to do in that block.
-      - "url" should be a real, well-known reference link when one fits, otherwise omit it.
-      - Do not include "id" or "completed" fields; they are managed by the application.
+      - Provide a real, well-known reference "url" when one fits; otherwise omit it.
+      """;
+
+  // JSON schema the model output is constrained to. It intentionally omits the
+  // "id" and "completed" block fields, which the application assigns and manages.
+  private static final String RESPONSE_SCHEMA = """
+      {
+        "type": "object",
+        "properties": {
+          "summary": { "type": "string" },
+          "topics": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": { "type": "string" },
+                "blocks": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": ["video", "article", "practice", "course", "other"]
+                      },
+                      "title": { "type": "string" },
+                      "description": { "type": "string" },
+                      "url": { "type": "string" }
+                    },
+                    "required": ["type", "title", "description"],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": ["title", "blocks"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["summary", "topics"],
+        "additionalProperties": false
+      }
       """;
 
   public LearningPathContent generate(String prompt, LearningPathContent current) {
@@ -60,17 +100,18 @@ public class LearningPathGenerationService {
         .model(anthropicConfiguration.getModel())
         .maxTokens(8000L)
         .system(SYSTEM_PROMPT)
+        .outputConfig(responseOutputConfig())
         .addUserMessage(userMessage.toString())
         .build();
 
     Message message = anthropicClient.messages().create(params);
 
-    String json = stripCodeFences(message.content().stream()
+    String json = message.content().stream()
         .map(ContentBlock::text)
         .filter(Optional::isPresent)
         .map(text -> text.get().text())
         .collect(Collectors.joining())
-        .trim());
+        .trim();
 
     try {
       return objectMapper.readValue(json, LearningPathContent.class);
@@ -81,6 +122,26 @@ public class LearningPathGenerationService {
     }
   }
 
+  // Constrains the response to the learning-path JSON schema (structured outputs),
+  // so the model always returns valid JSON in the required shape - no prose, no
+  // markdown fences, and no fields outside the schema.
+  private OutputConfig responseOutputConfig() {
+    JsonOutputFormat.Schema.Builder schema = JsonOutputFormat.Schema.builder();
+    parseSchema().forEach((key, value) -> schema.putAdditionalProperty(key, JsonValue.from(value)));
+    return OutputConfig.builder()
+        .format(JsonOutputFormat.builder().schema(schema.build()).build())
+        .build();
+  }
+
+  private Map<String, Object> parseSchema() {
+    try {
+      return objectMapper.readValue(RESPONSE_SCHEMA, new TypeReference<Map<String, Object>>() {});
+    } catch (JsonProcessingException e) {
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+          "Invalid learning path response schema", e);
+    }
+  }
+
   private String serialize(LearningPathContent content) {
     try {
       return objectMapper.writeValueAsString(content);
@@ -88,20 +149,5 @@ public class LearningPathGenerationService {
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
           "Unable to serialize learning path", e);
     }
-  }
-
-  private String stripCodeFences(String text) {
-    String trimmed = text.trim();
-    if (!trimmed.startsWith("```")) {
-      return trimmed;
-    }
-    int firstNewline = trimmed.indexOf('\n');
-    if (firstNewline >= 0) {
-      trimmed = trimmed.substring(firstNewline + 1);
-    }
-    if (trimmed.endsWith("```")) {
-      trimmed = trimmed.substring(0, trimmed.length() - 3);
-    }
-    return trimmed.trim();
   }
 }
