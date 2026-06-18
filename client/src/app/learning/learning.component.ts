@@ -30,10 +30,19 @@ export class LearningComponent {
 
   readonly hasPaths = computed(() => (this.paths.value()?.length ?? 0) > 0);
 
+  readonly activeIds = computed(
+    () =>
+      new Set(
+        (this.today.value() ?? [])
+          .filter((path) => path.active)
+          .map((path) => path.id)
+      )
+  );
+
   readonly blockIcon = blockIcon;
 
   isActive(id: string): boolean {
-    return this.today.value()?.find((path) => path.id === id)?.active ?? false;
+    return this.activeIds().has(id);
   }
 
   progressDone(path: LearningPath): number {

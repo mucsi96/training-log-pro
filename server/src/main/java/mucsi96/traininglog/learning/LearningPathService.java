@@ -86,21 +86,13 @@ public class LearningPathService {
   public LearningPathEntity setBlockCompleted(UUID id, String blockId, boolean completed) {
     LearningPathEntity path = get(id);
     LearningPathContent content = path.getContent();
-    boolean found = false;
-    for (LearningPathTopic topic : content.getTopics()) {
-      if (topic.getBlocks() == null) {
-        continue;
-      }
-      for (LearningPathBlock block : topic.getBlocks()) {
-        if (blockId.equals(block.getId())) {
-          block.setCompleted(completed);
-          found = true;
-        }
-      }
-    }
-    if (!found) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Block not found");
-    }
+    LearningPathBlock block = content.getTopics().stream()
+        .filter(topic -> topic.getBlocks() != null)
+        .flatMap(topic -> topic.getBlocks().stream())
+        .filter(candidate -> blockId.equals(candidate.getId()))
+        .findFirst()
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Block not found"));
+    block.setCompleted(completed);
     path.setContent(content);
     refreshCompletion(path);
     return pathRepository.save(path);
