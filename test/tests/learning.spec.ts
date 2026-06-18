@@ -121,13 +121,24 @@ test.describe('Learning paths', () => {
     });
     await expect(activity).not.toBeChecked();
 
+    const activityResponse = () =>
+      page.waitForResponse(
+        (response) =>
+          response.url().endsWith(`/api/learning-paths/${pathId}/activity`) &&
+          response.request().method() === 'PUT'
+      );
+
+    let responsePromise = activityResponse();
     await activity.check();
+    await responsePromise;
     let rows = await getLearningPathActivityRows();
     expect(rows).toHaveLength(1);
     expect(rows[0].path_id).toBe(pathId);
     expect(rows[0].date).toBe(isoDate(0));
 
+    responsePromise = activityResponse();
     await activity.uncheck();
+    await responsePromise;
     rows = await getLearningPathActivityRows();
     expect(rows).toHaveLength(0);
   });
