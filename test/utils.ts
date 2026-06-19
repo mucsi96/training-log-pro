@@ -30,6 +30,7 @@ export async function cleanupDb() {
   await query('DELETE FROM training_log.book');
   await query('DELETE FROM training_log.daily_task_completion');
   await query('DELETE FROM training_log.daily_task');
+  await query('DELETE FROM training_log.learning_path_progress');
   await query('DELETE FROM training_log.learning_path_activity');
   await query('DELETE FROM training_log.learning_path');
   await query('DELETE FROM training_log.oauth2_authorized_client');
@@ -347,6 +348,30 @@ export async function getLearningPathActivityRows() {
   const result = await query(
     `SELECT id, path_id, to_char(date, 'YYYY-MM-DD') AS date, created_at
      FROM training_log.learning_path_activity ORDER BY created_at ASC`
+  );
+  return result.rows;
+}
+
+export async function insertLearningPathProgress(
+  id: string,
+  pathId: string,
+  durationMinutes: number,
+  description: string,
+  comment: string | null = null,
+  createdAt: Date = new Date()
+) {
+  await query(
+    `INSERT INTO training_log.learning_path_progress
+       (id, path_id, created_at, duration_minutes, description, comment)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [id, pathId, createdAt, durationMinutes, description, comment]
+  );
+}
+
+export async function getLearningPathProgressRows() {
+  const result = await query(
+    `SELECT id, path_id, created_at, duration_minutes, description, comment
+     FROM training_log.learning_path_progress ORDER BY created_at ASC`
   );
   return result.rows;
 }

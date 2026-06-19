@@ -1,0 +1,50 @@
+<h2 mat-dialog-title>Log progress</h2>
+<mat-dialog-content class="dialog-content">
+  <p class="path-title">{{ data.title }}</p>
+  <form class="progress-form" (submit)="save(); $event.preventDefault()">
+    <mat-form-field appearance="outline">
+      <mat-label>Time spent (minutes)</mat-label>
+      <input
+        matInput
+        type="number"
+        name="durationMinutes"
+        min="1"
+        [ngModel]="durationMinutes()"
+        (ngModelChange)="durationMinutes.set($event)"
+        required
+      />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>What did you do?</mat-label>
+      <input
+        matInput
+        name="description"
+        [ngModel]="description()"
+        (ngModelChange)="description.set($event)"
+        required
+      />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Where did you reach?</mat-label>
+      <textarea
+        matInput
+        name="comment"
+        rows="3"
+        [ngModel]="comment()"
+        (ngModelChange)="comment.set($event)"
+      ></textarea>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()">Cancel</button>
+  <button
+    mat-flat-button
+    color="primary"
+    type="button"
+    [disabled]="!canSave()"
+    (click)="save()"
+  >
+    Save
+  </button>
+</mat-dialog-actions>

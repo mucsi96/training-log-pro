@@ -32,6 +32,7 @@ public class LearningPathService {
 
   private final LearningPathRepository pathRepository;
   private final LearningPathActivityRepository activityRepository;
+  private final LearningPathProgressRepository progressRepository;
   private final LearningPathGenerationService generationService;
   private final ObjectMapper objectMapper;
   private final Clock clock;
@@ -81,6 +82,7 @@ public class LearningPathService {
     if (!pathRepository.existsById(id)) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Learning path not found");
     }
+    progressRepository.deleteByPathId(id);
     activityRepository.deleteByPathId(id);
     pathRepository.deleteById(id);
   }
@@ -114,6 +116,31 @@ public class LearningPathService {
     } else {
       activityRepository.deleteByPathIdAndDate(pathId, date);
     }
+  }
+
+  @Transactional
+  public LearningPathProgressEntity logProgress(UUID pathId, int durationMinutes, String description,
+      String comment) {
+    if (!pathRepository.existsById(pathId)) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Learning path not found");
+    }
+    LearningPathProgressEntity entry = LearningPathProgressEntity.builder()
+        .id(UUID.randomUUID())
+        .pathId(pathId)
+        .createdAt(now())
+        .durationMinutes(durationMinutes)
+        .description(description)
+        .comment(comment)
+        .build();
+    return progressRepository.save(entry);
+  }
+
+  @Transactional(readOnly = true)
+  public List<LearningPathProgressEntity> getProgress(UUID pathId) {
+    if (!pathRepository.existsById(pathId)) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Learning path not found");
+    }
+    return progressRepository.findByPathId(pathId, Sort.by(Sort.Direction.DESC, "createdAt"));
   }
 
   @Transactional(readOnly = true)

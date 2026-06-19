@@ -789,3 +789,56 @@ databaseChangeLog:
                   defaultValueNumeric: 0
                   constraints:
                     nullable: false
+
+  - changeSet:
+      id: 28-create-learning-path-progress-table
+      author: mucsi96
+      changes:
+        - createTable:
+            tableName: learning_path_progress
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: path_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_learning_path_progress_path
+                    references: training_log.learning_path(id)
+              - column:
+                  name: created_at
+                  type: timestamp(6)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: duration_minutes
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: comment
+                  type: varchar(2000)
+                  constraints:
+                    nullable: true
+        - createIndex:
+            tableName: learning_path_progress
+            indexName: idx_learning_path_progress_path_id
+            columns:
+              - column:
+                  name: path_id
+        - createIndex:
+            tableName: learning_path_progress
+            indexName: idx_learning_path_progress_created_at
+            columns:
+              - column:
+                  name: created_at

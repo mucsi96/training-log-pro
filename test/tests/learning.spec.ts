@@ -2,8 +2,10 @@ import { test, expect } from '../fixtures';
 import {
   getGoldenDayDates,
   getLearningPathActivityRows,
+  getLearningPathProgressRows,
   getLearningPathRows,
   insertLearningPath,
+  insertLearningPathProgress,
   insertPushupSet,
   insertRide,
   setGoals,
@@ -178,6 +180,69 @@ test.describe('Learning paths', () => {
     await responsePromise;
     rows = await getLearningPathActivityRows();
     expect(rows).toHaveLength(0);
+  });
+
+  test('logs a progress entry from the learning path page', async ({ page }) => {
+    const pathId = randomUUID();
+    await insertLearningPath(pathId, 'My Path', minimalContent('Intro video'));
+
+    await page.goto(`/learning/${pathId}`);
+    const section = page.getByRole('region', { name: 'My Path' });
+    await section.getByRole('button', { name: 'Log progress' }).click();
+
+    const dialog = page.getByRole('dialog', { name: 'Log progress' });
+    await dialog.getByLabel('Time spent (minutes)').fill('45');
+    await dialog.getByLabel('What did you do?').fill('Watched the intro video');
+    await dialog
+      .getByLabel('Where did you reach?')
+      .fill('Stopped at chapter 2, ownership');
+    await dialog.getByRole('button', { name: 'Save' }).click();
+    await expect(dialog).toBeHidden();
+
+    const log = section.getByRole('region', { name: 'Progress log' });
+    await expect(log.getByText('Watched the intro video')).toBeVisible();
+    await expect(log.getByText('45 min', { exact: false })).toBeVisible();
+    await expect(
+      log.getByText('Stopped at chapter 2, ownership')
+    ).toBeVisible();
+
+    const rows = await getLearningPathProgressRows();
+    expect(rows).toHaveLength(1);
+    expect(rows[0].path_id).toBe(pathId);
+    expect(rows[0].duration_minutes).toBe(45);
+    expect(rows[0].description).toBe('Watched the intro video');
+    expect(rows[0].comment).toBe('Stopped at chapter 2, ownership');
+  });
+
+  test('shows the latest continue comment at the top of the path', async ({ page }) => {
+    const pathId = randomUUID();
+    await insertLearningPath(pathId, 'My Path', minimalContent('Intro video'));
+    await insertLearningPathProgress(
+      randomUUID(),
+      pathId,
+      30,
+      'First session',
+      'Reached chapter 1',
+      daysAgoAt(2, 8)
+    );
+    await insertLearningPathProgress(
+      randomUUID(),
+      pathId,
+      60,
+      'Second session',
+      'Reached chapter 5',
+      daysAgoAt(1, 8)
+    );
+
+    await page.goto(`/learning/${pathId}`);
+    const section = page.getByRole('region', { name: 'My Path' });
+    const banner = section.getByRole('region', { name: 'Continue from' });
+    await expect(banner.getByText('Reached chapter 5')).toBeVisible();
+    await expect(banner.getByText('Reached chapter 1')).toBeHidden();
+
+    const log = section.getByRole('region', { name: 'Progress log' });
+    await expect(log.getByText('First session')).toBeVisible();
+    await expect(log.getByText('Second session')).toBeVisible();
   });
 
   test('hides the learning card on home when no paths exist', async ({ page }) => {
