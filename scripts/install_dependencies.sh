@@ -102,5 +102,8 @@ cd mock_strava_server && npm install && cd ..
 echo "Installing mock Withings server dependencies..."
 cd mock_withings_server && npm install && cd ..
 
+echo "Installing mock Anthropic server dependencies..."
+cd mock_anthropic_server && npm install && cd ..
+
 echo "Installing test dependencies..."
 cd test && npm install && npx playwright install --with-deps chromium && cd ..
