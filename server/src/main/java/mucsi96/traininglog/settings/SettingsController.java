@@ -32,8 +32,7 @@ public class SettingsController {
         request.getPushupGoal(),
         request.getElevationGoal(),
         request.getReadingPagesGoal(),
-        request.getDailyTaskGoal(),
-        request.getLearningPathGoal());
+        request.getDailyTaskGoal());
     return toResponse(saved);
   }
 
@@ -43,7 +42,6 @@ public class SettingsController {
         .elevationGoal(entity.getElevationGoal())
         .readingPagesGoal(entity.getReadingPagesGoal())
         .dailyTaskGoal(entity.getDailyTaskGoal())
-        .learningPathGoal(entity.getLearningPathGoal())
         .build();
   }
 }

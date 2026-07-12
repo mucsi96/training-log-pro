@@ -35,9 +35,6 @@ public class SettingsEntity {
   @Column(name = "daily_task_goal", nullable = false)
   private int dailyTaskGoal;
 
-  @Column(name = "learning_path_goal", nullable = false)
-  private int learningPathGoal;
-
   @Column(name = "coins_reset_at", nullable = false, insertable = false)
   private ZonedDateTime coinsResetAt;
 
