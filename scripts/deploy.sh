@@ -48,7 +48,8 @@ helm upgrade $SERVER_RELEASE_NAME mucsi96/spring-app \
     --set resources.requests.cpu=100m \
     --set resources.limits.memory=1Gi \
     --set resources.limits.cpu=500m \
-    --wait
+    --wait \
+    --timeout 10m
 
 echo "Deploying client: $DOCKERHUB_USERNAME/training-log-pro-client:$clientLatestTag using client-app chart $clientAppChartVersion"
 
@@ -58,4 +59,5 @@ helm upgrade $CLIENT_RELEASE_NAME mucsi96/client-app \
     --set image=$DOCKERHUB_USERNAME/training-log-pro-client:$clientLatestTag \
     --set host=$HOSTNAME \
     --set entryPoint=web \
-    --wait
+    --wait \
+    --timeout 10m
