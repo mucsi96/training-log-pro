@@ -30,6 +30,7 @@ export async function cleanupDb() {
   await query('DELETE FROM training_log.book');
   await query('DELETE FROM training_log.daily_task_completion');
   await query('DELETE FROM training_log.daily_task');
+  await query('DELETE FROM training_log.api_token');
   await query('DELETE FROM training_log.oauth2_authorized_client');
   await query('DELETE FROM training_log.golden_day');
   await query(
@@ -317,6 +318,13 @@ export async function getDailyTaskCompletionRows() {
   const result = await query(
     `SELECT id, task_id, to_char(date, 'YYYY-MM-DD') AS date, completed_at
      FROM training_log.daily_task_completion ORDER BY completed_at ASC`
+  );
+  return result.rows;
+}
+
+export async function getApiTokenRows() {
+  const result = await query(
+    'SELECT id, name, token_hash FROM training_log.api_token ORDER BY created_at ASC'
   );
   return result.rows;
 }

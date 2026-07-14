@@ -116,6 +116,52 @@ public class ReadingService {
   }
 
   @Transactional
+  public void syncKoReaderProgress(String title, String author, int totalPages, int currentPage) {
+    if (currentPage > totalPages) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+          "currentPage must be between 0 and " + totalPages);
+    }
+    BookEntity book = bookRepository
+        .findFirstByTitleIgnoreCaseAndAuthorIgnoreCaseOrderByCreatedAtAsc(title, author)
+        .orElseGet(() -> {
+          log.info("registering book {} by {} with {} pages from KOReader", title, author, totalPages);
+          return bookRepository.save(BookEntity.builder()
+              .id(UUID.randomUUID())
+              .title(title)
+              .author(author)
+              .totalPages(totalPages)
+              .startingPage(0)
+              .createdAt(now())
+              .build());
+        });
+    if (!Integer.valueOf(totalPages).equals(book.getTotalPages())) {
+      book.setTotalPages(totalPages);
+      book = bookRepository.save(book);
+    }
+    List<ReadingProgressEntity> progress = progressRepository
+        .findByBookId(book.getId(), Sort.by(Sort.Direction.ASC, "createdAt"));
+    int latestPage = progress.isEmpty()
+        ? book.getStartingPage()
+        : progress.get(progress.size() - 1).getCurrentPage();
+    ZonedDateTime timestamp = now();
+    if (currentPage != latestPage) {
+      progressRepository.save(ReadingProgressEntity.builder()
+          .id(UUID.randomUUID())
+          .createdAt(timestamp)
+          .bookId(book.getId())
+          .currentPage(currentPage)
+          .build());
+    }
+    if (currentPage >= totalPages && book.getCompletedAt() == null) {
+      book.setCompletedAt(timestamp);
+      bookRepository.save(book);
+    } else if (currentPage < totalPages && book.getCompletedAt() != null) {
+      book.setCompletedAt(null);
+      bookRepository.save(book);
+    }
+  }
+
+  @Transactional
   public void deleteBook(UUID bookId) {
     if (!bookRepository.existsById(bookId)) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Book not found");

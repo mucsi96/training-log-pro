@@ -7,6 +7,7 @@ import java.util.stream.Stream;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.convert.converter.Converter;
 
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -22,6 +23,16 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfiguration {
+
+    @Bean
+    @Order(3)
+    SecurityFilterChain koReaderSyncFilterChain(HttpSecurity http) throws Exception {
+        http.securityMatcher("/reading/koreader-sync");
+        http.csrf(csrf -> csrf.disable());
+        http.authorizeHttpRequests(requests -> requests.anyRequest().permitAll());
+
+        return http.build();
+    }
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {

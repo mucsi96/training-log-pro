@@ -427,6 +427,92 @@ paths:
         '204':
           description: No Content
 
+  /reading/koreader-sync:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - author
+                - totalPages
+                - currentPage
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                author:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                totalPages:
+                  type: integer
+                  minimum: 1
+                  maximum: 100000
+                currentPage:
+                  type: integer
+                  minimum: 0
+                  maximum: 100000
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Invalid request, e.g. currentPage greater than totalPages
+        '401':
+          description: Missing or invalid API token
+
+  /api-tokens:
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApiToken'
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedApiToken'
+
+  /api-tokens/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      responses:
+        '204':
+          description: No Content
+        '404':
+          description: API token not found
+
   /tasks:
     get:
       responses:
@@ -665,6 +751,39 @@ components:
         estimatedDaysRemaining:
           type: integer
           format: int32
+    ApiToken:
+      type: object
+      required:
+        - id
+        - name
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    CreatedApiToken:
+      type: object
+      required:
+        - id
+        - name
+        - token
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        token:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
     Coins:
       type: object
       required:
