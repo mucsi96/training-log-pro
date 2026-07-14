@@ -30,24 +30,21 @@ export async function cleanupDb() {
   await query('DELETE FROM training_log.book');
   await query('DELETE FROM training_log.daily_task_completion');
   await query('DELETE FROM training_log.daily_task');
-  await query('DELETE FROM training_log.learning_path_progress');
-  await query('DELETE FROM training_log.learning_path_activity');
-  await query('DELETE FROM training_log.learning_path');
   await query('DELETE FROM training_log.oauth2_authorized_client');
   await query('DELETE FROM training_log.golden_day');
   await query(
     `UPDATE training_log.settings
      SET pushup_goal = $1, elevation_goal = $2, reading_pages_goal = $3,
-         daily_task_goal = $4, learning_path_goal = $5,
+         daily_task_goal = $4,
          coins_reset_at = TIMESTAMP '1970-01-01 00:00:00'
      WHERE id = 1`,
-    [100, 250, 0, 0, 0]
+    [100, 250, 0, 0]
   );
 }
 
 export async function getSettings() {
   const result = await query(
-    `SELECT pushup_goal, elevation_goal, reading_pages_goal, daily_task_goal, learning_path_goal
+    `SELECT pushup_goal, elevation_goal, reading_pages_goal, daily_task_goal
      FROM training_log.settings WHERE id = 1`
   );
   return result.rows[0];
@@ -57,12 +54,11 @@ export async function setGoals(
   pushupGoal: number,
   elevationGoal: number,
   readingPagesGoal: number = 0,
-  dailyTaskGoal: number = 0,
-  learningPathGoal: number = 0
+  dailyTaskGoal: number = 0
 ) {
   await query(
-    `UPDATE training_log.settings SET pushup_goal = $1, elevation_goal = $2, reading_pages_goal = $3, daily_task_goal = $4, learning_path_goal = $5 WHERE id = 1`,
-    [pushupGoal, elevationGoal, readingPagesGoal, dailyTaskGoal, learningPathGoal]
+    `UPDATE training_log.settings SET pushup_goal = $1, elevation_goal = $2, reading_pages_goal = $3, daily_task_goal = $4 WHERE id = 1`,
+    [pushupGoal, elevationGoal, readingPagesGoal, dailyTaskGoal]
   );
 }
 
@@ -321,57 +317,6 @@ export async function getDailyTaskCompletionRows() {
   const result = await query(
     `SELECT id, task_id, to_char(date, 'YYYY-MM-DD') AS date, completed_at
      FROM training_log.daily_task_completion ORDER BY completed_at ASC`
-  );
-  return result.rows;
-}
-
-export async function insertLearningPath(
-  id: string,
-  title: string,
-  content: unknown,
-  createdAt: Date = new Date()
-) {
-  await query(
-    'INSERT INTO training_log.learning_path (id, title, content, created_at) VALUES ($1, $2, $3::jsonb, $4)',
-    [id, title, JSON.stringify(content), createdAt]
-  );
-}
-
-export async function getLearningPathRows() {
-  const result = await query(
-    'SELECT id, title, content, to_char(completed_at, \'YYYY-MM-DD\') AS completed_at FROM training_log.learning_path ORDER BY created_at ASC'
-  );
-  return result.rows;
-}
-
-export async function getLearningPathActivityRows() {
-  const result = await query(
-    `SELECT id, path_id, to_char(date, 'YYYY-MM-DD') AS date, created_at
-     FROM training_log.learning_path_activity ORDER BY created_at ASC`
-  );
-  return result.rows;
-}
-
-export async function insertLearningPathProgress(
-  id: string,
-  pathId: string,
-  durationMinutes: number,
-  description: string,
-  comment: string | null = null,
-  createdAt: Date = new Date()
-) {
-  await query(
-    `INSERT INTO training_log.learning_path_progress
-       (id, path_id, created_at, duration_minutes, description, comment)
-     VALUES ($1, $2, $3, $4, $5, $6)`,
-    [id, pathId, createdAt, durationMinutes, description, comment]
-  );
-}
-
-export async function getLearningPathProgressRows() {
-  const result = await query(
-    `SELECT id, path_id, created_at, duration_minutes, description, comment
-     FROM training_log.learning_path_progress ORDER BY created_at ASC`
   );
   return result.rows;
 }

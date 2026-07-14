@@ -23,13 +23,12 @@ public class SettingsService {
 
   @Transactional
   public SettingsEntity update(int pushupGoal, int elevationGoal, int readingPagesGoal,
-      int dailyTaskGoal, int learningPathGoal) {
+      int dailyTaskGoal) {
     SettingsEntity entity = getCurrent();
     entity.setPushupGoal(pushupGoal);
     entity.setElevationGoal(elevationGoal);
     entity.setReadingPagesGoal(readingPagesGoal);
     entity.setDailyTaskGoal(dailyTaskGoal);
-    entity.setLearningPathGoal(learningPathGoal);
     return repository.save(entity);
   }
 

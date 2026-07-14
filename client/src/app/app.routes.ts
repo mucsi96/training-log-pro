@@ -31,21 +31,6 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
-    path: 'learning',
-    loadComponent: () =>
-      import('./learning/learning.component').then((m) => m.LearningComponent),
-    pathMatch: 'full',
-    canActivate: [authGuard],
-  },
-  {
-    path: 'learning/:id',
-    loadComponent: () =>
-      import('./learning/learning-path.component').then(
-        (m) => m.LearningPathComponent
-      ),
-    canActivate: [authGuard],
-  },
-  {
     path: 'settings',
     loadComponent: () =>
       import('./settings/settings.component').then((m) => m.SettingsComponent),

@@ -842,3 +842,17 @@ databaseChangeLog:
             columns:
               - column:
                   name: created_at
+
+  - changeSet:
+      id: 29-drop-learning-path-tables
+      author: mucsi96
+      changes:
+        - dropTable:
+            tableName: learning_path_progress
+        - dropTable:
+            tableName: learning_path_activity
+        - dropTable:
+            tableName: learning_path
+        - dropColumn:
+            tableName: settings
+            columnName: learning_path_goal
