@@ -94,21 +94,12 @@ jobs:
           tags: localhost/training-log-pro-mock-strava:test
           cache-from: type=gha,scope=mock-strava
           cache-to: type=gha,mode=max,scope=mock-strava
-      - name: Build mock anthropic image
-        uses: docker/build-push-action@v6
-        with:
-          context: mock_anthropic_server
-          load: true
-          tags: localhost/training-log-pro-mock-anthropic:test
-          cache-from: type=gha,scope=mock-anthropic
-          cache-to: type=gha,mode=max,scope=mock-anthropic
       - name: Load images into Podman
         run: |
           docker save localhost/training-log-pro-server:test | podman load
           docker save localhost/training-log-pro-client:test | podman load
           docker save localhost/training-log-pro-mock-withings:test | podman load
           docker save localhost/training-log-pro-mock-strava:test | podman load
-          docker save localhost/training-log-pro-mock-anthropic:test | podman load
       - name: Setup test environment and start pod
         env:
           SKIP_BUILD: "1"

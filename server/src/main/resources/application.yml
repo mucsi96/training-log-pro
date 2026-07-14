@@ -74,7 +74,3 @@ withings:
   api-uri: https://wbsapi.withings.net
 strava:
   api-uri: https://www.strava.com
-anthropic:
-  api-uri: https://api.anthropic.com
-  api-key: ${anthropic-api-key}
-  model: claude-opus-4-8
