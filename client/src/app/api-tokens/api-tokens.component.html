@@ -1,0 +1,63 @@
+@if (tokens.isLoading()) {
+<div class="page-loading"><bt-bar-loader /></div>
+} @else {
+<section class="api-tokens" aria-labelledby="api-tokens-heading">
+  <h2 id="api-tokens-heading">API tokens</h2>
+  <p class="hint">
+    Generate tokens for external devices like the KOReader plugin to sync
+    reading progress. The token file downloads once when created — store it on
+    your device.
+  </p>
+
+  <form
+    class="token-form"
+    (submit)="$event.preventDefault(); createToken()"
+  >
+    <mat-form-field appearance="outline" class="token-name">
+      <mat-label>Token name</mat-label>
+      <input
+        matInput
+        type="text"
+        placeholder="e.g. Kobo, Kindle"
+        [ngModel]="name()"
+        (ngModelChange)="name.set($event)"
+        [ngModelOptions]="{ standalone: true }"
+      />
+    </mat-form-field>
+    <button
+      mat-flat-button
+      color="primary"
+      type="submit"
+      [disabled]="!canCreate()"
+    >
+      Generate token
+    </button>
+  </form>
+
+  @if (tokensList().length === 0) {
+  <p class="empty">No API tokens yet. Generate one to connect a device.</p>
+  } @else {
+  <ul class="tokens" role="list">
+    @for (token of tokensList(); track token.id) {
+    <li class="token">
+      <div class="token-info">
+        <span class="token-name-label">{{ token.name }}</span>
+        <span class="token-date">
+          Created {{ token.createdAt | date: 'mediumDate' }}
+        </span>
+      </div>
+      <button
+        mat-icon-button
+        type="button"
+        [disabled]="busy()"
+        [attr.aria-label]="'Delete ' + token.name"
+        (click)="deleteToken(token)"
+      >
+        <mat-icon>delete</mat-icon>
+      </button>
+    </li>
+    }
+  </ul>
+  }
+</section>
+}

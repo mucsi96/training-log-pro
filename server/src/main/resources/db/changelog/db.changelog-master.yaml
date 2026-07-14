@@ -856,3 +856,33 @@ databaseChangeLog:
         - dropColumn:
             tableName: settings
             columnName: learning_path_goal
+
+  - changeSet:
+      id: 30-create-api-token-table
+      author: mucsi96
+      changes:
+        - createTable:
+            tableName: api_token
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: token_hash
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: created_at
+                  type: timestamp(6)
+                  constraints:
+                    nullable: false

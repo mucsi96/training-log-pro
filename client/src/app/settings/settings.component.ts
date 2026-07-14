@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { BarLoaderComponent } from '@mucsi96/angular-material-theme';
+import { ApiTokensComponent } from '../api-tokens/api-tokens.component';
 import { ReadingLibraryComponent } from '../reading/reading-library.component';
 import { DailyTasksLibraryComponent } from '../daily-tasks/daily-tasks-library.component';
 import { CoinsService } from '../coins/coins.service';
@@ -19,6 +20,7 @@ import { Settings, SettingsService } from './settings.service';
     MatFormFieldModule,
     MatInputModule,
     BarLoaderComponent,
+    ApiTokensComponent,
     ReadingLibraryComponent,
     DailyTasksLibraryComponent,
   ],
