@@ -22,6 +22,7 @@ All application secrets are pulled from Azure Key Vault using the Spring Cloud A
 | `withings-client-secret` | Withings OAuth2 client secret | [Withings Developer Dashboard](https://developer.withings.com/dashboard/) |
 | `strava-client-id` | Strava OAuth2 client ID | [Strava API Settings](https://www.strava.com/settings/api) |
 | `strava-client-secret` | Strava OAuth2 client secret | [Strava API Settings](https://www.strava.com/settings/api) |
+| `token-encryption-key` | Base64-encoded 256-bit AES key used to encrypt stored Strava/Withings OAuth tokens at rest. Generate with `openssl rand -base64 32`. | Self-generated |
 
 ## Runtime Environment Variables
 

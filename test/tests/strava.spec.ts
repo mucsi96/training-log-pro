@@ -4,6 +4,8 @@ import {
   populateOAuthClients,
   deleteOAuthClient,
   getOAuthClient,
+  getStoredOAuthTokens,
+  decryptToken,
   getRideRows,
   getFitnessRows,
   insertFitnessAt,
@@ -30,6 +32,25 @@ test.describe('Strava', () => {
 
     const client = await getOAuthClient('strava-client');
     expect(client.principal_name).toBe('00000000-0000-0000-0000-000000000001');
+  });
+
+  test('should store strava tokens encrypted at rest', async ({ page }) => {
+    await cleanupDb();
+    await populateOAuthClients();
+    await deleteOAuthClient('strava-client');
+
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: 'Mock Strava' })).toBeVisible();
+    await page.getByRole('link', { name: 'Authorize' }).click();
+    await page.waitForURL('/');
+
+    const stored = await getStoredOAuthTokens('strava-client');
+    // The raw column must not contain the plaintext token...
+    expect(stored.accessToken).not.toBe('test-access-token');
+    expect(stored.refreshToken).not.toBe('test-refresh-token');
+    // ...but it must still be the real token, recoverable via decryption.
+    expect(decryptToken(stored.accessToken)).toBe('test-access-token');
+    expect(decryptToken(stored.refreshToken)).toBe('test-refresh-token');
   });
 
   test('should pull today\'s ride stats from strava', async ({ page }) => {
