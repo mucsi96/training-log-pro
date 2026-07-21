@@ -83,10 +83,13 @@ test.describe('Pushups', () => {
 
     await page.goto('/');
     const section = page.getByRole('region', { name: 'Pushups' });
-    const chart = section.getByRole('img', { name: /chart/i });
-    const label = await chart.getAttribute('aria-label');
-    expect(label).toContain('70');
-    expect(label).toContain('25');
+    await expect(section.getByRole('img', { name: /chart/i })).toBeVisible();
+    // Each populated day is drawn as a bar labelled with its total: 30 + 40 = 70
+    // two days ago and 25 today. Asserting on the bar labels (rather than the
+    // chart's aria-label, which only enumerates the first 10 days) keeps this
+    // independent of how wide the selected period window is.
+    await expect(section.getByText('70', { exact: true })).toBeVisible();
+    await expect(section.getByText('25', { exact: true })).toBeVisible();
   });
 
   test('reflects the configured golden day pushup goal in the chart mark line', async ({ page }) => {
