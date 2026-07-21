@@ -21,6 +21,11 @@ import lombok.SneakyThrows;
  * fully recoverable for use against the Strava and Withings APIs.
  *
  * Wire format (Base64 encoded): iv (12 bytes) || ciphertext || GCM tag (16 bytes).
+ *
+ * The wire format carries no algorithm/key version, so rotating the key means
+ * previously stored tokens can no longer be decrypted; a rotation therefore
+ * requires clearing oauth2_authorized_client and having users re-authorize,
+ * exactly like the initial migration to encryption at rest.
  */
 @Component
 public class TokenEncryptor {
@@ -28,6 +33,7 @@ public class TokenEncryptor {
   private static final String TRANSFORMATION = "AES/GCM/NoPadding";
   private static final int IV_LENGTH = 12;
   private static final int TAG_LENGTH_BITS = 128;
+  private static final int TAG_LENGTH_BYTES = TAG_LENGTH_BITS / 8;
   private static final int KEY_LENGTH_BYTES = 32;
 
   private final SecretKeySpec keySpec;
@@ -61,6 +67,10 @@ public class TokenEncryptor {
   @SneakyThrows
   public String decrypt(String value) {
     byte[] payload = Base64.getDecoder().decode(value);
+    if (payload.length < IV_LENGTH + TAG_LENGTH_BYTES) {
+      throw new IllegalStateException(
+          "Encrypted token payload is too short: " + payload.length + " bytes");
+    }
     byte[] iv = Arrays.copyOfRange(payload, 0, IV_LENGTH);
     byte[] ciphertext = Arrays.copyOfRange(payload, IV_LENGTH, payload.length);
 

@@ -11,7 +11,7 @@ import {
 } from '../utils';
 
 test.describe('Withings', () => {
-  test('should authorize withings', async ({ page }) => {
+  test('should authorize withings and store tokens encrypted at rest', async ({ page }) => {
     await cleanupDb();
     await populateOAuthClients();
     await deleteOAuthClient('withings-client');
@@ -23,17 +23,6 @@ test.describe('Withings', () => {
 
     const client = await getOAuthClient('withings-client');
     expect(client.principal_name).toBe('00000000-0000-0000-0000-000000000001');
-  });
-
-  test('should store withings tokens encrypted at rest', async ({ page }) => {
-    await cleanupDb();
-    await populateOAuthClients();
-    await deleteOAuthClient('withings-client');
-
-    await page.goto('/');
-    await expect(page.getByRole('heading', { name: 'Mock Withings' })).toBeVisible();
-    await page.getByRole('link', { name: 'Authorize' }).click();
-    await page.waitForURL('/');
 
     const stored = await getStoredOAuthTokens('withings-client');
     // The raw column must not contain the plaintext token...

@@ -20,7 +20,7 @@ test.describe('Strava', () => {
     await pushStravaActivities(2);
   });
 
-  test('should authorize strava', async ({ page }) => {
+  test('should authorize strava and store tokens encrypted at rest', async ({ page }) => {
     await cleanupDb();
     await populateOAuthClients();
     await deleteOAuthClient('strava-client');
@@ -32,17 +32,6 @@ test.describe('Strava', () => {
 
     const client = await getOAuthClient('strava-client');
     expect(client.principal_name).toBe('00000000-0000-0000-0000-000000000001');
-  });
-
-  test('should store strava tokens encrypted at rest', async ({ page }) => {
-    await cleanupDb();
-    await populateOAuthClients();
-    await deleteOAuthClient('strava-client');
-
-    await page.goto('/');
-    await expect(page.getByRole('heading', { name: 'Mock Strava' })).toBeVisible();
-    await page.getByRole('link', { name: 'Authorize' }).click();
-    await page.waitForURL('/');
 
     const stored = await getStoredOAuthTokens('strava-client');
     // The raw column must not contain the plaintext token...

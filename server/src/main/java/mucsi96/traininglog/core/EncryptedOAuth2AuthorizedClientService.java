@@ -1,5 +1,7 @@
 package mucsi96.traininglog.core;
 
+import java.util.function.Function;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
@@ -39,7 +41,7 @@ public class EncryptedOAuth2AuthorizedClientService implements OAuth2AuthorizedC
   }
 
   private OAuth2AuthorizedClient mapTokens(OAuth2AuthorizedClient client,
-      java.util.function.Function<String, String> mapper) {
+      Function<String, String> mapper) {
     OAuth2AccessToken accessToken = client.getAccessToken();
     OAuth2AccessToken mappedAccessToken = new OAuth2AccessToken(
         accessToken.getTokenType(),
