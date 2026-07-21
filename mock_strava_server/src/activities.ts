@@ -18,7 +18,7 @@ type PushedActivity = {
   movingTime: number;
   calories: number;
   averageWatts: number;
-  weightedAverageWatts: number;
+  weightedAverageWatts: number | null;
   name: string;
   sportType: string;
   segmentEfforts: PushedSegmentEffort[];
@@ -56,7 +56,8 @@ export function pushActivity(req: Request, res: Response) {
     movingTime: body.movingTime ?? 4207,
     calories: body.calories ?? 870.2,
     averageWatts: body.averageWatts ?? 185.5,
-    weightedAverageWatts: body.weightedAverageWatts ?? 230,
+    weightedAverageWatts:
+      body.weightedAverageWatts === null ? null : body.weightedAverageWatts ?? 230,
     name: body.name ?? `Test activity ${id}`,
     sportType: body.sportType ?? 'MountainBikeRide',
     segmentEfforts,

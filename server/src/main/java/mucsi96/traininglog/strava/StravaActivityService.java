@@ -126,6 +126,7 @@ public class StravaActivityService {
       }
 
       Float sufferScore = activity.getSufferScore() != null ? activity.getSufferScore() : summary.getSufferScore();
+      Integer weightedAverageWatts = activity.getWeightedAverageWatts();
       ZonedDateTime rideCreatedAt = activity.getStartDate().atZoneSameInstant(ZoneOffset.UTC);
 
       if (sufferScore == null) {
@@ -142,7 +143,7 @@ public class StravaActivityService {
           .movingTime(activity.getMovingTime())
           .distance(activity.getDistance())
           .totalElevationGain(activity.getTotalElevationGain())
-          .weightedAverageWatts(activity.getWeightedAverageWatts())
+          .weightedAverageWatts(weightedAverageWatts != null ? weightedAverageWatts.floatValue() : null)
           .calories(activity.getCalories())
           .sportType(activity.getSportType())
           .sufferScore(sufferScore)

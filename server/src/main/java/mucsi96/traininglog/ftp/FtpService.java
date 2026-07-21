@@ -95,7 +95,7 @@ public class FtpService {
   private Map<ZonedDateTime, Computed> computeMeasurements(List<Ride> rides, List<Weight> weights, ZoneId zoneId) {
     TreeMap<LocalDate, Double> rideEftpByDay = rides.stream()
         .filter(ride -> ride.getMovingTime() >= MIN_RIDE_SECONDS)
-        .filter(ride -> ride.getWeightedAverageWatts() > 0)
+        .filter(ride -> ride.getWeightedAverageWatts() != null && ride.getWeightedAverageWatts() > 0)
         .collect(Collectors.groupingBy(
             ride -> ride.getCreatedAt().withZoneSameInstant(zoneId).toLocalDate(),
             TreeMap::new,

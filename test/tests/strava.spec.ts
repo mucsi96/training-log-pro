@@ -158,6 +158,20 @@ test.describe('Fitness when Strava back-fills suffer_score', () => {
   });
 });
 
+test.describe('Strava ride without power data', () => {
+  test('syncs a ride whose weighted_average_watts is null without crashing', async ({ page }) => {
+    // A ride recorded without a power meter has no weighted average watts.
+    await pushStravaActivity({ weightedAverageWatts: null });
+
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
+
+    const rows = await getRideRows();
+    expect(rows).toHaveLength(1);
+    expect(rows[0].weighted_average_watts).toBeNull();
+  });
+});
+
 test.describe('Fitness without a ride today', () => {
   test('decays yesterday fitness into today even before any activity', async ({ page }) => {
     // Yesterday: rides synced and fitness computed at the end of the day.
