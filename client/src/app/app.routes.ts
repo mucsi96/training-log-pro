@@ -7,13 +7,6 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./home/home.component').then((m) => m.HomeComponent),
     pathMatch: 'full',
-    data: { period: 7 },
-    canActivate: [authGuard],
-  },
-  {
-    path: 'month',
-    loadComponent: () =>
-      import('./home/home.component').then((m) => m.HomeComponent),
     data: { period: 30 },
     canActivate: [authGuard],
   },

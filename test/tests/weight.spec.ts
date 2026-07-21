@@ -41,40 +41,16 @@ test.describe('Weight', () => {
     await expect(ratioArticle.locator('.today-diff')).toHaveClass(/red/);
   });
 
-  test('should display weight diff for week', async ({ page }) => {
+  test('should display weight diff for the default month view', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
-    await expect(page.getByText('↓ 2.2 kg')).toBeVisible();
-    await expect(page.getByText('↓ 9.0 kg')).toBeVisible();
-    await expect(page.getByText('↑ 0.8 %')).toBeVisible();
-  });
-
-  test('should display weight chart for week', async ({ page }) => {
-    await page.goto('/');
-    await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
-    const chart = page.locator('section:has-text("Weight") [role="img"]');
-    await expect(chart).toHaveAttribute('aria-label', /This is a chart with type Line chart/);
-    await expect(chart).toHaveAttribute('aria-label', chartLabel('89.4,'));
-    await expect(chart).toHaveAttribute('aria-label', chartLabel('88.3,'));
-    await expect(chart).toHaveAttribute('aria-label', chartLabel('87.7,'));
-    await expect(chart).toHaveAttribute('aria-label', chartLabel('87.5,'));
-    await expect(chart).toHaveAttribute('aria-label', chartLabel('87.2.'));
-    await expect(chart).not.toHaveAttribute('aria-label', chartLabel('108.9,'));
-    await expect(chart).not.toHaveAttribute('aria-label', chartLabel('98,'));
-  });
-
-  test('should display weight diff for month', async ({ page }) => {
-    await page.goto('/');
-    await page.getByRole('link', { name: 'Month' }).click();
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
     await expect(page.getByText('↓ 10.8 kg')).toBeVisible();
     await expect(page.getByText('↓ 12.7 kg')).toBeVisible();
     await expect(page.getByText('↑ 0.1 %')).toBeVisible();
   });
 
-  test('should display weight chart for month', async ({ page }) => {
+  test('should display weight chart for the default month view', async ({ page }) => {
     await page.goto('/');
-    await page.getByRole('link', { name: 'Month' }).click();
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
     const chart = page.locator('section:has-text("Weight") [role="img"]');
     await expect(chart).toHaveAttribute('aria-label', /This is a chart with type Line chart/);

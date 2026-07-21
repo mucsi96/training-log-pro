@@ -23,18 +23,8 @@ test.describe('Ride', () => {
     await expect(page.getByText('2 h 20 min')).toBeVisible();
   });
 
-  test('should display ride stats for week', async ({ page }) => {
+  test('should display ride stats for the default month view', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
-    await expect(page.getByText('3 678')).toBeVisible();
-    await expect(page.getByText('2 256 m')).toBeVisible();
-    await expect(page.getByText('91 km')).toBeVisible();
-    await expect(page.getByText('4 h 54 min')).toBeVisible();
-  });
-
-  test('should display ride stats for month', async ({ page }) => {
-    await page.goto('/');
-    await page.getByRole('link', { name: 'Month' }).click();
     await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
     await expect(page.getByText('4 324')).toBeVisible();
     await expect(page.getByText('2 664 m')).toBeVisible();
@@ -71,7 +61,7 @@ test.describe('Ride without activity in selected timerange', () => {
     await insertRide(400, 646, 11747.7, 3074, 'Old Ride', 'MountainBikeRide', 408, 210);
   });
 
-  test('should hide ride stats when no activity in the selected week', async ({ page }) => {
+  test('should hide ride stats when no activity in the selected timerange', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Calories' })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: 'Elevation gain' })).toHaveCount(0);
