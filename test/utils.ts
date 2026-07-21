@@ -1,7 +1,7 @@
 import { createCipheriv, createDecipheriv, randomBytes, randomUUID } from 'crypto';
 import { Pool } from 'pg';
 
-// Must match token-encryption.key in server/src/main/resources/application-test.yml
+// Must match token-encryption-key in server/src/main/resources/application-test.yml
 const TOKEN_ENCRYPTION_KEY = Buffer.from(
   '8JSyUeV1b093C24h4nNiQXvL+RoOgb4VoBJn7RUVxbI=',
   'base64'
