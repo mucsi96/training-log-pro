@@ -354,7 +354,7 @@ export async function getDailyTaskCompletionRows() {
 
 export async function getApiTokenRows() {
   const result = await query(
-    'SELECT id, name, token_hash FROM training_log.api_token ORDER BY created_at ASC'
+    'SELECT id, name, encrypted_token FROM training_log.api_token ORDER BY created_at ASC'
   );
   return result.rows;
 }

@@ -897,3 +897,25 @@ databaseChangeLog:
       changes:
         - delete:
             tableName: oauth2_authorized_client
+
+  - changeSet:
+      id: 32-encrypt-api-tokens-at-rest
+      author: mucsi96
+      comment: >-
+        API tokens are now stored AES-GCM encrypted instead of SHA-256 hashed.
+        Existing hashed rows cannot be converted, so they are cleared and users
+        re-create their API tokens once.
+      changes:
+        - delete:
+            tableName: api_token
+        - dropColumn:
+            tableName: api_token
+            columnName: token_hash
+        - addColumn:
+            tableName: api_token
+            columns:
+              - column:
+                  name: encrypted_token
+                  type: varchar(255)
+                  constraints:
+                    nullable: false

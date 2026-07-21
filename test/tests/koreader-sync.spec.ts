@@ -4,6 +4,7 @@ import { type Page } from '@playwright/test';
 import { test, expect } from '../fixtures';
 import {
   cleanupDb,
+  decryptToken,
   getApiTokenRows,
   getBookRows,
   getReadingProgressRows,
@@ -61,7 +62,10 @@ test.describe('KOReader sync', () => {
     const rows = await getApiTokenRows();
     expect(rows).toHaveLength(1);
     expect(rows[0].name).toBe('Kobo');
-    expect(rows[0].token_hash).not.toContain(token);
+    // Stored encrypted, not in cleartext...
+    expect(rows[0].encrypted_token).not.toContain(token);
+    // ...but recoverable, so validation can decrypt-and-compare.
+    expect(decryptToken(rows[0].encrypted_token)).toBe(token);
   });
 
   test('deletes an API token through the settings page', async ({ page }) => {

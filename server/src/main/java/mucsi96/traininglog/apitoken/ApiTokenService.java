@@ -8,7 +8,6 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
-import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,8 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import mucsi96.traininglog.core.TokenEncryptor;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +29,7 @@ public class ApiTokenService {
   private static final int TOKEN_BYTE_LENGTH = 48;
 
   private final ApiTokenRepository apiTokenRepository;
+  private final TokenEncryptor tokenEncryptor;
   private final Clock clock;
 
   @Transactional(readOnly = true)
@@ -43,7 +43,7 @@ public class ApiTokenService {
     ApiTokenEntity entity = ApiTokenEntity.builder()
         .id(UUID.randomUUID())
         .name(name)
-        .tokenHash(hashToken(token))
+        .encryptedToken(tokenEncryptor.encrypt(token))
         .createdAt(now())
         .build();
     log.info("persisting api token {}", name);
@@ -66,22 +66,24 @@ public class ApiTokenService {
 
     String token = authorizationHeader.substring(7);
 
-    if (!apiTokenRepository.existsByTokenHash(hashToken(token))) {
+    boolean tokenMatches = apiTokenRepository.findAllEncryptedTokens().stream()
+        .anyMatch(encryptedToken -> constantTimeEquals(token, tokenEncryptor.decrypt(encryptedToken)));
+
+    if (!tokenMatches) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid API token");
     }
+  }
+
+  private boolean constantTimeEquals(String presented, String stored) {
+    return MessageDigest.isEqual(
+        presented.getBytes(StandardCharsets.UTF_8),
+        stored.getBytes(StandardCharsets.UTF_8));
   }
 
   private String generateSecureToken() {
     byte[] bytes = new byte[TOKEN_BYTE_LENGTH];
     new SecureRandom().nextBytes(bytes);
     return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-  }
-
-  @SneakyThrows
-  private String hashToken(String token) {
-    MessageDigest digest = MessageDigest.getInstance("SHA-256");
-    byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
-    return HexFormat.of().formatHex(hash);
   }
 
   private ZonedDateTime now() {
