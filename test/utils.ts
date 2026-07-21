@@ -1,5 +1,35 @@
-import { randomUUID } from 'crypto';
+import { createCipheriv, createDecipheriv, randomBytes, randomUUID } from 'crypto';
 import { Pool } from 'pg';
+
+// Must match token-encryption-key in server/src/main/resources/application-test.yml
+const TOKEN_ENCRYPTION_KEY = Buffer.from(
+  '8JSyUeV1b093C24h4nNiQXvL+RoOgb4VoBJn7RUVxbI=',
+  'base64'
+);
+
+// Mirrors the server's TokenEncryptor wire format: base64(iv || ciphertext || tag)
+// stored as the UTF-8 bytes of that base64 string. Lets tests seed the
+// oauth2_authorized_client table with values the server can decrypt.
+export function encryptToken(plaintext: string): Buffer {
+  const iv = randomBytes(12);
+  const cipher = createCipheriv('aes-256-gcm', TOKEN_ENCRYPTION_KEY, iv);
+  const ciphertext = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  const payload = Buffer.concat([iv, ciphertext, tag]);
+  return Buffer.from(payload.toString('base64'), 'utf8');
+}
+
+// Inverse of encryptToken, used to assert a stored value is the real token
+// encrypted (rather than plaintext) without depending on the random IV.
+export function decryptToken(stored: string): string {
+  const payload = Buffer.from(stored, 'base64');
+  const iv = payload.subarray(0, 12);
+  const tag = payload.subarray(payload.length - 16);
+  const ciphertext = payload.subarray(12, payload.length - 16);
+  const decipher = createDecipheriv('aes-256-gcm', TOKEN_ENCRYPTION_KEY, iv);
+  decipher.setAuthTag(tag);
+  return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8');
+}
 
 const pool = new Pool({
   host: 'localhost',
@@ -96,8 +126,8 @@ export async function populateOAuthClients() {
     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
     [
       'withings-client', '00000000-0000-0000-0000-000000000001', 'Bearer',
-      Buffer.from('test-access-token'), now, tomorrow,
-      'user.metrics', Buffer.from('test-refresh-token'), now, now,
+      encryptToken('test-access-token'), now, tomorrow,
+      'user.metrics', encryptToken('test-refresh-token'), now, now,
     ]
   );
 
@@ -109,8 +139,8 @@ export async function populateOAuthClients() {
     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
     [
       'strava-client', '00000000-0000-0000-0000-000000000001', 'Bearer',
-      Buffer.from('test-access-token'), now, tomorrow,
-      'activity:read', Buffer.from('test-refresh-token'), now, now,
+      encryptToken('test-access-token'), now, tomorrow,
+      'activity:read', encryptToken('test-refresh-token'), now, now,
     ]
   );
 }
@@ -324,7 +354,7 @@ export async function getDailyTaskCompletionRows() {
 
 export async function getApiTokenRows() {
   const result = await query(
-    'SELECT id, name, token_hash FROM training_log.api_token ORDER BY created_at ASC'
+    'SELECT id, name, encrypted_token FROM training_log.api_token ORDER BY created_at ASC'
   );
   return result.rows;
 }
@@ -349,6 +379,19 @@ export async function getOAuthClient(clientRegistrationId: string) {
     [clientRegistrationId]
   );
   return result.rows[0];
+}
+
+export async function getStoredOAuthTokens(clientRegistrationId: string) {
+  const result = await query(
+    `SELECT access_token_value, refresh_token_value
+     FROM training_log.oauth2_authorized_client WHERE client_registration_id = $1`,
+    [clientRegistrationId]
+  );
+  const row = result.rows[0];
+  return {
+    accessToken: (row.access_token_value as Buffer).toString('utf8'),
+    refreshToken: (row.refresh_token_value as Buffer).toString('utf8'),
+  };
 }
 
 export type PushStravaSegmentEffortOptions = {

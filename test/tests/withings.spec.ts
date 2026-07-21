@@ -4,12 +4,14 @@ import {
   populateOAuthClients,
   deleteOAuthClient,
   getOAuthClient,
+  getStoredOAuthTokens,
+  decryptToken,
   setWithingsMeasures,
   getWeightRows,
 } from '../utils';
 
 test.describe('Withings', () => {
-  test('should authorize withings', async ({ page }) => {
+  test('should authorize withings and store tokens encrypted at rest', async ({ page }) => {
     await cleanupDb();
     await populateOAuthClients();
     await deleteOAuthClient('withings-client');
@@ -21,6 +23,14 @@ test.describe('Withings', () => {
 
     const client = await getOAuthClient('withings-client');
     expect(client.principal_name).toBe('00000000-0000-0000-0000-000000000001');
+
+    const stored = await getStoredOAuthTokens('withings-client');
+    // The raw column must not contain the plaintext token...
+    expect(stored.accessToken).not.toBe('test-access-token');
+    expect(stored.refreshToken).not.toBe('test-refresh-token');
+    // ...but it must still be the real token, recoverable via decryption.
+    expect(decryptToken(stored.accessToken)).toBe('test-access-token');
+    expect(decryptToken(stored.refreshToken)).toBe('test-refresh-token');
   });
 
   test('should pull today\'s weight measurements from withings', async ({ page }) => {

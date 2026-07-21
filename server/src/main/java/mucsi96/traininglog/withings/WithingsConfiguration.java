@@ -49,7 +49,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import mucsi96.traininglog.core.EncryptedOAuth2AuthorizedClientService;
 import mucsi96.traininglog.core.OneTimeTokenBridgeFilter;
+import mucsi96.traininglog.core.TokenEncryptor;
 import mucsi96.traininglog.core.TokenService;
 
 @Data
@@ -145,8 +147,11 @@ public class WithingsConfiguration {
   @Bean
   OAuth2AuthorizedClientService authorizedClientService(
       JdbcTemplate jdbcTemplate,
-      ClientRegistrationRepository clientRegistrationRepository) {
-    return new JdbcOAuth2AuthorizedClientService(jdbcTemplate, clientRegistrationRepository);
+      ClientRegistrationRepository clientRegistrationRepository,
+      TokenEncryptor tokenEncryptor) {
+    OAuth2AuthorizedClientService jdbcService = new JdbcOAuth2AuthorizedClientService(jdbcTemplate,
+        clientRegistrationRepository);
+    return new EncryptedOAuth2AuthorizedClientService(jdbcService, tokenEncryptor);
   }
 
   OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> withingsAccessTokenResponseClient() {
