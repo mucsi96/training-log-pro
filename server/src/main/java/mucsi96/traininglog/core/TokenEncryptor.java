@@ -33,11 +33,11 @@ public class TokenEncryptor {
   private final SecretKeySpec keySpec;
   private final SecureRandom secureRandom = new SecureRandom();
 
-  public TokenEncryptor(@Value("${token-encryption.key}") String base64Key) {
+  public TokenEncryptor(@Value("${token-encryption-key}") String base64Key) {
     byte[] key = Base64.getDecoder().decode(base64Key);
     if (key.length != KEY_LENGTH_BYTES) {
       throw new IllegalStateException(
-          "token-encryption.key must be a Base64 encoded 256-bit (32 byte) key, but was " + key.length + " bytes");
+          "token-encryption-key must be a Base64 encoded 256-bit (32 byte) key, but was " + key.length + " bytes");
     }
     this.keySpec = new SecretKeySpec(key, "AES");
   }

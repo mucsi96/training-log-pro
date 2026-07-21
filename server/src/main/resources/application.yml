@@ -70,8 +70,6 @@ management:
       show-details: always
       probes:
         enabled: true
-token-encryption:
-  key: ${token-encryption-key}
 withings:
   api-uri: https://wbsapi.withings.net
 strava:
