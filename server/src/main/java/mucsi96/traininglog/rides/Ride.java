@@ -34,7 +34,7 @@ public class Ride {
   private float totalElevationGain;
 
   @Column
-  private float weightedAverageWatts;
+  private Float weightedAverageWatts;
 
   @Column
   private float calories;

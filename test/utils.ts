@@ -183,7 +183,7 @@ export async function insertRide(
 
 export async function getRideRows() {
   const result = await query(
-    'SELECT created_at, suffer_score FROM training_log.ride ORDER BY created_at ASC'
+    'SELECT created_at, suffer_score, weighted_average_watts FROM training_log.ride ORDER BY created_at ASC'
   );
   return result.rows;
 }
@@ -411,7 +411,7 @@ export type PushStravaActivityOptions = {
   movingTime?: number;
   calories?: number;
   averageWatts?: number;
-  weightedAverageWatts?: number;
+  weightedAverageWatts?: number | null;
   name?: string;
   sportType?: string;
   segmentEfforts?: PushStravaSegmentEffortOptions[];
