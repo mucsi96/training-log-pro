@@ -71,7 +71,14 @@
 </mat-toolbar>
 
 <main>
-  @if (isAuthenticated() && !isReady()) {
+  @if (authError(); as error) {
+  <div class="auth-error" role="alert">
+    <h1>Sign-in failed</h1>
+    <p>The sign-in service rejected the request:</p>
+    <p class="auth-error-details">{{ error }}</p>
+    <button mat-flat-button (click)="retryLogin()">Try again</button>
+  </div>
+  } @else if (isAuthenticated() && !isReady()) {
   <div class="page-loading"><bt-bar-loader /></div>
   } @else {
   <router-outlet></router-outlet>

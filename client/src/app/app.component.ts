@@ -27,9 +27,12 @@ import { WithingsService } from './withings/withings.service';
   styleUrl: './app.component.css',
 })
 export class AppComponent {
-  readonly isAuthenticated = inject(AuthService).isAuthenticated;
+  private readonly authService = inject(AuthService);
   private readonly stravaService = inject(StravaService);
   private readonly withingsService = inject(WithingsService);
+
+  readonly isAuthenticated = this.authService.isAuthenticated;
+  readonly authError = this.authService.authError;
 
   readonly isReady = computed(
     () => this.stravaService.isSynced() && this.withingsService.isSynced()
@@ -41,5 +44,9 @@ export class AppComponent {
         this.stravaService.sync();
       }
     });
+  }
+
+  retryLogin(): void {
+    this.authService.login();
   }
 }

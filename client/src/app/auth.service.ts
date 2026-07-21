@@ -28,9 +28,19 @@ export class AuthService {
   private readonly destroyRef = inject(DestroyRef);
 
   private readonly user = signal<User | null>(null);
+  private readonly authorityError = signal<string | null>(null);
   private inFlightRefresh: Promise<User | null> | null = null;
   private lastForegroundRefresh = 0;
   private returnedFromAuthority = false;
+
+  /**
+   * The authority's error from a failed redirect return (e.g. an AADSTS
+   * message). While set, no automatic redirect to the authority is started -
+   * otherwise a rejection the authority repeats on every attempt (invalid
+   * scope, misconfigured client) becomes an infinite redirect loop. Only an
+   * explicit user-initiated login() clears it.
+   */
+  readonly authError = this.authorityError.asReadonly();
 
   readonly isAuthenticated = computed(() => {
     const user = this.user();
@@ -51,6 +61,7 @@ export class AuthService {
   }
 
   login(): void {
+    this.authorityError.set(null);
     // Preserve the deep-linked route across the authority round-trip: the
     // redirect_uri is always the origin, so without this a `goto('/settings')`
     // would come back authenticated but land on `/`. oidc-client-ts returns
@@ -94,6 +105,14 @@ export class AuthService {
    * a full authority redirect. Returns a Promise - CanActivateFn accepts it.
    */
   async ensureAuthenticated(): Promise<boolean> {
+    if (this.authorityError()) {
+      console.warn(
+        '[auth] Auth guard blocked - authority returned an error, waiting for user-initiated retry instead of redirecting again',
+        JSON.stringify({ error: this.authorityError() })
+      );
+      return false;
+    }
+
     if (this.inFlightRefresh) {
       await this.inFlightRefresh.catch(() => null);
     }
@@ -237,9 +256,17 @@ export class AuthService {
           })
         );
       } catch (error) {
+        // Prefer the authority's own error_description (e.g. the full AADSTS
+        // message) - when the state lookup fails the library error is only
+        // "No matching state found in storage".
+        const description =
+          url.searchParams.get('error_description') ??
+          url.searchParams.get('error') ??
+          errorMessage(error);
+        this.authorityError.set(description);
         console.error(
           '[auth] Cold start - redirect callback failed',
-          JSON.stringify({ error: errorMessage(error) })
+          JSON.stringify({ error: errorMessage(error), description })
         );
       }
       // Restore the originally requested route and strip the auth params so the
