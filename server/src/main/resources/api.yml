@@ -465,7 +465,7 @@ paths:
         '401':
           description: Missing or invalid API token
 
-  /api-tokens:
+  /devices:
     get:
       responses:
         '200':
@@ -475,7 +475,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ApiToken'
+                  $ref: '#/components/schemas/Device'
     post:
       requestBody:
         required: true
@@ -496,9 +496,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreatedApiToken'
+                $ref: '#/components/schemas/CreatedDevice'
 
-  /api-tokens/{id}:
+  /devices/{id}:
     parameters:
       - in: path
         name: id
@@ -511,7 +511,115 @@ paths:
         '204':
           description: No Content
         '404':
-          description: API token not found
+          description: Device not found
+
+  /devices/{id}/books:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceBook'
+        '404':
+          description: Device not found
+
+  /devices/{id}/books/{bookId}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: bookId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      responses:
+        '204':
+          description: No Content
+        '404':
+          description: Device or book not found
+
+  /device/books:
+    get:
+      description: Pending books for the device identified by its API key
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeviceBook'
+        '401':
+          description: Missing or invalid API key
+
+  /device/books/{id}/file:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      description: Download a pending book with the device API key
+      responses:
+        '200':
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Missing or invalid API key
+        '404':
+          description: Book not found for this device
+
+  /device/books/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      description: Acknowledge a downloaded book with the device API key
+      responses:
+        '204':
+          description: No Content
+        '401':
+          description: Missing or invalid API key
+        '404':
+          description: Book not found for this device
 
   /tasks:
     get:
@@ -751,12 +859,13 @@ components:
         estimatedDaysRemaining:
           type: integer
           format: int32
-    ApiToken:
+    Device:
       type: object
       required:
         - id
         - name
         - createdAt
+        - books
       properties:
         id:
           type: string
@@ -766,12 +875,16 @@ components:
         createdAt:
           type: string
           format: date-time
-    CreatedApiToken:
+        books:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceBook'
+    CreatedDevice:
       type: object
       required:
         - id
         - name
-        - token
+        - apiKey
         - createdAt
       properties:
         id:
@@ -779,7 +892,22 @@ components:
           format: uuid
         name:
           type: string
-        token:
+        apiKey:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    DeviceBook:
+      type: object
+      required:
+        - id
+        - fileName
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        fileName:
           type: string
         createdAt:
           type: string

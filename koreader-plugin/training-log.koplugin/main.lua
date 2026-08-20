@@ -1,8 +1,11 @@
+local ConfirmBox = require("ui/widget/confirmbox")
 local NetworkMgr = require("ui/network/manager")
+local PathChooser = require("ui/widget/pathchooser")
 local UIManager = require("ui/uimanager")
 local InfoMessage = require("ui/widget/infomessage")
 local WidgetContainer = require("ui/widget/container/widgetcontainer")
 local logger = require("logger")
+local _ = require("gettext")
 
 local https = require("ssl.https")
 local ltn12 = require("ltn12")
@@ -10,12 +13,14 @@ local json = require("json")
 
 local OPEN_SYNC_DELAY_SECONDS = 5
 local PAGE_TURN_SYNC_DELAY_SECONDS = 30
+local PENDING_BOOKS_CHECK_DELAY_SECONDS = 10
 
 local config_error_shown = false
+local pending_books_checked = false
 
 local TrainingLog = WidgetContainer:extend {
     name = "training-log",
-    is_doc_only = true,
+    is_doc_only = false,
 }
 
 local function getPluginDir()
@@ -49,17 +54,17 @@ local function loadConfig()
         return nil, "serverUrl is missing in training-log.json."
     end
 
-    local tokenPath = dir .. "training-log.token"
-    local token = readFile(tokenPath)
-    if not token then
-        return nil, "Token not found.\nPlace training-log.token next to the plugin."
+    local keyPath = dir .. "training-log.key"
+    local apiKey = readFile(keyPath)
+    if not apiKey then
+        return nil, "API key not found.\nDownload training-log.key from the Devices page and place it next to the plugin."
     end
-    config.token = token:gsub("\xEF\xBB\xBF", ""):gsub("%s+", "")
+    config.apiKey = apiKey:gsub("\xEF\xBB\xBF", ""):gsub("%s+", "")
 
     return config, nil
 end
 
-local function postProgress(serverUrl, token, requestBody)
+local function postProgress(serverUrl, apiKey, requestBody)
     local requestJson = json.encode(requestBody)
 
     local responseBody = {}
@@ -70,7 +75,7 @@ local function postProgress(serverUrl, token, requestBody)
         headers = {
             ["Content-Type"] = "application/json",
             ["Content-Length"] = tostring(#requestJson),
-            ["Authorization"] = "Bearer " .. token,
+            ["Authorization"] = "Bearer " .. apiKey,
         },
         source = ltn12.source.string(requestJson),
         sink = ltn12.sink.table(responseBody),
@@ -84,6 +89,65 @@ local function postProgress(serverUrl, token, requestBody)
     return true, nil
 end
 
+local function fetchPendingBooks(serverUrl, apiKey)
+    local responseBody = {}
+
+    local _, code = https.request {
+        url = serverUrl .. "/api/device/books",
+        method = "GET",
+        headers = {
+            ["Accept"] = "application/json",
+            ["Authorization"] = "Bearer " .. apiKey,
+        },
+        sink = ltn12.sink.table(responseBody),
+    }
+
+    if code ~= 200 then
+        return nil, code and ("HTTP " .. code) or "Connection failed"
+    end
+
+    local ok, books = pcall(json.decode, table.concat(responseBody))
+    if not ok or type(books) ~= "table" then
+        return nil, "Invalid response from server"
+    end
+
+    return books, nil
+end
+
+local function downloadBookFile(serverUrl, apiKey, bookId, targetPath)
+    local file = io.open(targetPath, "wb")
+    if not file then
+        return false, "Cannot write to " .. targetPath
+    end
+
+    local _, code = https.request {
+        url = serverUrl .. "/api/device/books/" .. bookId .. "/file",
+        method = "GET",
+        headers = {
+            ["Authorization"] = "Bearer " .. apiKey,
+        },
+        sink = ltn12.sink.file(file),
+    }
+
+    if code ~= 200 then
+        os.remove(targetPath)
+        return false, code and ("HTTP " .. code) or "Connection failed"
+    end
+
+    return true, nil
+end
+
+local function acknowledgeBook(serverUrl, apiKey, bookId)
+    local _, code = https.request {
+        url = serverUrl .. "/api/device/books/" .. bookId,
+        method = "DELETE",
+        headers = {
+            ["Authorization"] = "Bearer " .. apiKey,
+        },
+    }
+    return code == 204
+end
+
 function TrainingLog:init()
     local config, configErr = loadConfig()
     self.config = config
@@ -92,6 +156,124 @@ function TrainingLog:init()
     self.last_synced_page = nil
     self.last_synced_total = nil
     self.scheduled_sync = nil
+
+    if self.ui and self.ui.menu then
+        self.ui.menu:registerToMainMenu(self)
+    end
+
+    if self.config and not pending_books_checked then
+        pending_books_checked = true
+        UIManager:scheduleIn(PENDING_BOOKS_CHECK_DELAY_SECONDS, function()
+            self:checkPendingBooks(false)
+        end)
+    end
+end
+
+function TrainingLog:addToMainMenu(menu_items)
+    menu_items.training_log = {
+        text = _("Training Log: download pending books"),
+        sorting_hint = "tools",
+        callback = function()
+            self:checkPendingBooks(true)
+        end,
+    }
+end
+
+function TrainingLog:checkPendingBooks(manual)
+    if not self.config then
+        if manual then
+            UIManager:show(InfoMessage:new {
+                text = "Training Log: " .. (self.configErr or "Not configured."),
+            })
+        end
+        return
+    end
+
+    if not NetworkMgr:isOnline() then
+        if manual then
+            UIManager:show(InfoMessage:new {
+                text = _("Training Log: no network connection."),
+            })
+        else
+            logger.info("training-log: skipping pending books check, no network connection")
+        end
+        return
+    end
+
+    local books, err = fetchPendingBooks(self.config.serverUrl, self.config.apiKey)
+    if not books then
+        logger.warn("training-log: pending books check failed: " .. tostring(err))
+        if manual then
+            UIManager:show(InfoMessage:new {
+                text = _("Training Log: could not check for pending books.") .. "\n" .. tostring(err),
+            })
+        end
+        return
+    end
+
+    if #books == 0 then
+        if manual then
+            UIManager:show(InfoMessage:new {
+                text = _("Training Log: no pending books."),
+            })
+        end
+        return
+    end
+
+    local names = {}
+    for _, book in ipairs(books) do
+        table.insert(names, book.fileName)
+    end
+
+    UIManager:show(ConfirmBox:new {
+        text = ("Training Log: %d book(s) waiting for this device:\n%s\n\nDownload now?")
+            :format(#books, table.concat(names, "\n")),
+        ok_text = _("Download"),
+        ok_callback = function()
+            self:chooseBookPlacement(books)
+        end,
+    })
+end
+
+function TrainingLog:chooseBookPlacement(books)
+    local path_chooser = PathChooser:new {
+        select_directory = true,
+        select_file = false,
+        path = G_reader_settings:readSetting("home_dir"),
+        onConfirm = function(dir_path)
+            self:downloadBooks(books, dir_path)
+        end,
+    }
+    UIManager:show(path_chooser)
+end
+
+function TrainingLog:downloadBooks(books, dir_path)
+    local downloaded = {}
+    local failed = {}
+
+    for _, book in ipairs(books) do
+        local fileName = tostring(book.fileName):gsub("[/\\]", "_")
+        local targetPath = dir_path .. "/" .. fileName
+        local ok, err = downloadBookFile(
+            self.config.serverUrl, self.config.apiKey, book.id, targetPath)
+        if ok then
+            acknowledgeBook(self.config.serverUrl, self.config.apiKey, book.id)
+            table.insert(downloaded, fileName)
+            logger.info("training-log: downloaded " .. fileName .. " to " .. dir_path)
+        else
+            table.insert(failed, fileName)
+            logger.warn("training-log: download of " .. fileName .. " failed: " .. tostring(err))
+        end
+    end
+
+    local message
+    if #failed == 0 then
+        message = ("Training Log: downloaded %d book(s) to\n%s"):format(#downloaded, dir_path)
+    else
+        message = ("Training Log: downloaded %d book(s), %d failed:\n%s")
+            :format(#downloaded, #failed, table.concat(failed, "\n"))
+    end
+    UIManager:show(InfoMessage:new { text = message })
 end
 
 function TrainingLog:getBookInfo()
@@ -164,7 +346,7 @@ end
 
 function TrainingLog:sync()
     self:cancelScheduledSync()
-    if not self.config or not self.ui.document then return end
+    if not self.config or not self.ui or not self.ui.document then return end
 
     local total_pages = self.ui.document:getPageCount()
     local current_page = self.current_page or self.ui:getCurrentPage()
@@ -189,7 +371,7 @@ function TrainingLog:sync()
         return
     end
 
-    local ok, err = postProgress(self.config.serverUrl, self.config.token, {
+    local ok, err = postProgress(self.config.serverUrl, self.config.apiKey, {
         title = title,
         author = author,
         totalPages = total_pages,

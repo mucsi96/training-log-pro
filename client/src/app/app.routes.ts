@@ -29,4 +29,10 @@ export const routes: Routes = [
       import('./settings/settings.component').then((m) => m.SettingsComponent),
     canActivate: [authGuard],
   },
+  {
+    path: 'devices',
+    loadComponent: () =>
+      import('./devices/devices.component').then((m) => m.DevicesComponent),
+    canActivate: [authGuard],
+  },
 ];

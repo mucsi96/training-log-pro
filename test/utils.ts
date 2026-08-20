@@ -60,7 +60,8 @@ export async function cleanupDb() {
   await query('DELETE FROM training_log.book');
   await query('DELETE FROM training_log.daily_task_completion');
   await query('DELETE FROM training_log.daily_task');
-  await query('DELETE FROM training_log.api_token');
+  await query('DELETE FROM training_log.device_book');
+  await query('DELETE FROM training_log.device');
   await query('DELETE FROM training_log.oauth2_authorized_client');
   await query('DELETE FROM training_log.golden_day');
   await query(
@@ -352,9 +353,16 @@ export async function getDailyTaskCompletionRows() {
   return result.rows;
 }
 
-export async function getApiTokenRows() {
+export async function getDeviceRows() {
   const result = await query(
-    'SELECT id, name, encrypted_token FROM training_log.api_token ORDER BY created_at ASC'
+    'SELECT id, name, encrypted_key FROM training_log.device ORDER BY created_at ASC'
+  );
+  return result.rows;
+}
+
+export async function getDeviceBookRows() {
+  const result = await query(
+    'SELECT id, device_id, file_name, content_type, data FROM training_log.device_book ORDER BY created_at ASC'
   );
   return result.rows;
 }

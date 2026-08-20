@@ -1,4 +1,4 @@
-package mucsi96.traininglog.apitoken;
+package mucsi96.traininglog.device;
 
 import java.time.ZonedDateTime;
 import java.util.UUID;
@@ -14,19 +14,19 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Entity
-@Table(name = "api_token", schema = "training_log")
+@Table(name = "device", schema = "training_log")
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ApiTokenEntity {
+public class DeviceEntity {
   @Id
   private UUID id;
 
   @Column(nullable = false)
   private String name;
 
-  @Column(name = "encrypted_token", nullable = false)
-  private String encryptedToken;
+  @Column(name = "encrypted_key", nullable = false)
+  private String encryptedKey;
 
   @Column(name = "created_at", nullable = false)
   private ZonedDateTime createdAt;
