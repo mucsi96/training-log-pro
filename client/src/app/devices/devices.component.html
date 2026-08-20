@@ -1,0 +1,115 @@
+<section class="devices-page" aria-labelledby="devices-heading">
+  <header class="header">
+    <h1 id="devices-heading">Devices</h1>
+    <p class="subtitle">
+      Connect e-readers like KOReader to sync reading progress and receive
+      ebooks. The API key file downloads once when a device is added — store it
+      on the device.
+    </p>
+  </header>
+
+  @if (devices.isLoading()) {
+  <div class="page-loading"><bt-bar-loader /></div>
+  } @else {
+  <form class="device-form" (submit)="$event.preventDefault(); createDevice()">
+    <mat-form-field appearance="outline" class="device-name">
+      <mat-label>Device name</mat-label>
+      <input
+        matInput
+        type="text"
+        placeholder="e.g. Kobo, Kindle"
+        [ngModel]="name()"
+        (ngModelChange)="name.set($event)"
+        [ngModelOptions]="{ standalone: true }"
+      />
+    </mat-form-field>
+    <button
+      mat-flat-button
+      color="primary"
+      type="submit"
+      [disabled]="!canCreate()"
+    >
+      Add device
+    </button>
+  </form>
+
+  @if (devicesList().length === 0) {
+  <p class="empty">No devices yet. Add one to connect an e-reader.</p>
+  } @else {
+  <ul class="devices" role="list">
+    @for (device of devicesList(); track device.id) {
+    <li>
+      <article
+        class="device"
+        [class.device--drag-over]="dragOverDeviceId() === device.id"
+        [attr.aria-label]="device.name"
+        (dragover)="onDragOver($event, device)"
+        (dragleave)="onDragLeave($event, device)"
+        (drop)="onDrop($event, device)"
+      >
+        <header class="device-header">
+          <mat-icon class="device-icon" aria-hidden="true">tablet</mat-icon>
+          <div class="device-info">
+            <h2 class="device-name-label">{{ device.name }}</h2>
+            <p class="device-date">
+              Added {{ device.createdAt | date: 'mediumDate' }}
+            </p>
+          </div>
+          <button
+            mat-icon-button
+            type="button"
+            [disabled]="busy()"
+            [attr.aria-label]="'Remove ' + device.name"
+            (click)="deleteDevice(device)"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+        </header>
+
+        @if (device.books.length > 0) {
+        <ul class="device-books" role="list">
+          @for (book of device.books; track book.id) {
+          <li class="device-book">
+            <mat-icon aria-hidden="true">book</mat-icon>
+            <span class="device-book-name">{{ book.fileName }}</span>
+            <span class="device-book-status">Waiting for device</span>
+            <button
+              mat-icon-button
+              type="button"
+              [disabled]="busy()"
+              [attr.aria-label]="'Remove ' + book.fileName"
+              (click)="removeBook(device, book.id)"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
+          </li>
+          }
+        </ul>
+        }
+
+        <div class="device-drop-zone">
+          @if (uploadingDeviceId() === device.id) {
+          <span class="device-drop-hint">Sending…</span>
+          } @else {
+          <span class="device-drop-hint">
+            Drop an ebook here to send it to this device
+          </span>
+          <label class="device-upload">
+            or
+            <span class="device-upload-link">browse</span>
+            <input
+              class="device-upload-input"
+              type="file"
+              multiple
+              [attr.aria-label]="'Send ebook to ' + device.name"
+              (change)="onFilesPicked($event, device)"
+            />
+          </label>
+          }
+        </div>
+      </article>
+    </li>
+    }
+  </ul>
+  } }
+</section>

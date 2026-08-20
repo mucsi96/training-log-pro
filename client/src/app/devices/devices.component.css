@@ -1,0 +1,168 @@
+.devices-page {
+  display: grid;
+  gap: 24px;
+  max-width: 480px;
+}
+
+.header {
+  display: grid;
+  gap: 4px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 22px;
+  color: var(--mat-sys-on-primary);
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--bt-text-muted);
+  font-size: 13px;
+}
+
+.device-form {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.device-name {
+  flex: 1;
+  min-width: 200px;
+}
+
+.empty {
+  color: var(--bt-text-muted);
+  text-align: center;
+  font-size: 14px;
+}
+
+.devices {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.device {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, hsl(217, 28%, 18%), hsl(217, 28%, 14%));
+  border: 1px solid hsl(217, 19%, 27%);
+}
+
+.device--drag-over {
+  border-color: var(--mat-sys-primary);
+  background: linear-gradient(135deg, hsl(217, 28%, 22%), hsl(217, 28%, 18%));
+}
+
+.device-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.device-icon {
+  color: var(--bt-text-muted);
+}
+
+.device-info {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+}
+
+.device-name-label {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--mat-sys-on-primary);
+}
+
+.device-date {
+  margin: 0;
+  color: var(--bt-text-muted);
+  font-size: 12px;
+}
+
+.device-books {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.device-book {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 0.75rem;
+  background: var(--mat-sys-surface-container);
+  font-size: 14px;
+}
+
+.device-book mat-icon {
+  color: var(--bt-text-muted);
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.device-book-name {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
+.device-book-status {
+  color: var(--bt-text-muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.device-drop-zone {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 16px;
+  border: 1px dashed hsl(217, 19%, 35%);
+  border-radius: 0.75rem;
+  text-align: center;
+}
+
+.device--drag-over .device-drop-zone {
+  border-color: var(--mat-sys-primary);
+}
+
+.device-drop-hint {
+  color: var(--bt-text-muted);
+  font-size: 13px;
+}
+
+.device-upload {
+  color: var(--bt-text-muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.device-upload-link {
+  color: var(--mat-sys-primary);
+  text-decoration: underline;
+}
+
+.device-upload-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

@@ -27,7 +27,7 @@ public class SecurityConfiguration {
     @Bean
     @Order(3)
     SecurityFilterChain koReaderSyncFilterChain(HttpSecurity http) throws Exception {
-        http.securityMatcher("/reading/koreader-sync");
+        http.securityMatcher("/reading/koreader-sync", "/device/books/**");
         http.csrf(csrf -> csrf.disable());
         http.authorizeHttpRequests(requests -> requests.anyRequest().permitAll());
 

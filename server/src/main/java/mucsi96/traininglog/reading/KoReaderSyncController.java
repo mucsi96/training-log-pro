@@ -18,20 +18,20 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import mucsi96.traininglog.apitoken.ApiTokenService;
+import mucsi96.traininglog.device.DeviceService;
 
 @RestController
 @RequiredArgsConstructor
 public class KoReaderSyncController {
 
-  private final ApiTokenService apiTokenService;
+  private final DeviceService deviceService;
   private final ReadingService readingService;
 
   @PostMapping(value = "/reading/koreader-sync", consumes = MediaType.APPLICATION_JSON_VALUE)
   ResponseEntity<Void> sync(
       @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
       @Valid @RequestBody KoReaderSyncRequest request) {
-    apiTokenService.validateBearerToken(authorizationHeader);
+    deviceService.authenticate(authorizationHeader);
     readingService.syncKoReaderProgress(
         request.getTitle().trim(),
         request.getAuthor().trim(),

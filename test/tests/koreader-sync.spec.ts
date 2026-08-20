@@ -1,11 +1,8 @@
 import { randomUUID } from 'crypto';
-import * as fs from 'fs';
-import { type Page } from '@playwright/test';
 import { test, expect } from '../fixtures';
+import { createDeviceViaUI } from '../device-helpers';
 import {
   cleanupDb,
-  decryptToken,
-  getApiTokenRows,
   getBookRows,
   getReadingProgressRows,
   insertBook,
@@ -21,26 +18,12 @@ type SyncBody = {
   currentPage: number;
 };
 
-async function createTokenViaUI(page: Page, name: string): Promise<string> {
-  await page.goto('/settings');
-  const section = page.getByRole('region', { name: 'API tokens' });
-  await section.getByLabel('Token name').fill(name);
-
-  const downloadPromise = page.waitForEvent('download');
-  await section.getByRole('button', { name: 'Generate token' }).click();
-
-  const download = await downloadPromise;
-  expect(download.suggestedFilename()).toBe('training-log.token');
-  const filePath = await download.path();
-  return fs.readFileSync(filePath!, 'utf-8');
-}
-
-async function sync(token: string | null, body: SyncBody): Promise<Response> {
+async function sync(apiKey: string | null, body: SyncBody): Promise<Response> {
   return await fetch(SYNC_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
     },
     body: JSON.stringify(body),
   });
@@ -52,38 +35,10 @@ test.describe('KOReader sync', () => {
     await populateOAuthClients();
   });
 
-  test('creates an API token through the settings page', async ({ page }) => {
-    const token = await createTokenViaUI(page, 'Kobo');
-
-    expect(token.length).toBeGreaterThan(32);
-    const section = page.getByRole('region', { name: 'API tokens' });
-    await expect(section.getByText('Kobo')).toBeVisible();
-
-    const rows = await getApiTokenRows();
-    expect(rows).toHaveLength(1);
-    expect(rows[0].name).toBe('Kobo');
-    // Stored encrypted, not in cleartext...
-    expect(rows[0].encrypted_token).not.toContain(token);
-    // ...but recoverable, so validation can decrypt-and-compare.
-    expect(decryptToken(rows[0].encrypted_token)).toBe(token);
-  });
-
-  test('deletes an API token through the settings page', async ({ page }) => {
-    await createTokenViaUI(page, 'Kobo');
-    const section = page.getByRole('region', { name: 'API tokens' });
-
-    await section.getByRole('button', { name: 'Delete Kobo' }).click();
-
-    await expect(
-      section.getByText('No API tokens yet. Generate one to connect a device.')
-    ).toBeVisible();
-    expect(await getApiTokenRows()).toHaveLength(0);
-  });
-
   test('registers a new book on first sync', async ({ page }) => {
-    const token = await createTokenViaUI(page, 'Kobo');
+    const apiKey = await createDeviceViaUI(page, 'Kobo');
 
-    const response = await sync(token, {
+    const response = await sync(apiKey, {
       title: 'The Pragmatic Programmer',
       author: 'David Thomas',
       totalPages: 320,
@@ -116,9 +71,9 @@ test.describe('KOReader sync', () => {
   }) => {
     const bookId = randomUUID();
     await insertBook(bookId, 'Clean Code', 'Robert C. Martin', 464);
-    const token = await createTokenViaUI(page, 'Kobo');
+    const apiKey = await createDeviceViaUI(page, 'Kobo');
 
-    const response = await sync(token, {
+    const response = await sync(apiKey, {
       title: 'Clean Code',
       author: 'Robert C. Martin',
       totalPages: 464,
@@ -139,7 +94,7 @@ test.describe('KOReader sync', () => {
   test('does not record duplicate progress for an unchanged page', async ({
     page,
   }) => {
-    const token = await createTokenViaUI(page, 'Kobo');
+    const apiKey = await createDeviceViaUI(page, 'Kobo');
     const body = {
       title: 'Clean Code',
       author: 'Robert C. Martin',
@@ -147,8 +102,8 @@ test.describe('KOReader sync', () => {
       currentPage: 100,
     };
 
-    await sync(token, body);
-    const response = await sync(token, body);
+    await sync(apiKey, body);
+    const response = await sync(apiKey, body);
 
     expect(response.status).toBe(204);
     expect(await getReadingProgressRows()).toHaveLength(1);
@@ -157,9 +112,9 @@ test.describe('KOReader sync', () => {
   test('marks the book completed when the last page is reached', async ({
     page,
   }) => {
-    const token = await createTokenViaUI(page, 'Kobo');
+    const apiKey = await createDeviceViaUI(page, 'Kobo');
 
-    await sync(token, {
+    await sync(apiKey, {
       title: 'Clean Code',
       author: 'Robert C. Martin',
       totalPages: 464,
@@ -181,15 +136,15 @@ test.describe('KOReader sync', () => {
   test('adopts a new page count when KOReader rendering changes', async ({
     page,
   }) => {
-    const token = await createTokenViaUI(page, 'Kobo');
+    const apiKey = await createDeviceViaUI(page, 'Kobo');
 
-    await sync(token, {
+    await sync(apiKey, {
       title: 'Clean Code',
       author: 'Robert C. Martin',
       totalPages: 464,
       currentPage: 100,
     });
-    await sync(token, {
+    await sync(apiKey, {
       title: 'Clean Code',
       author: 'Robert C. Martin',
       totalPages: 520,
@@ -208,9 +163,9 @@ test.describe('KOReader sync', () => {
   test('rejects a sync with currentPage beyond totalPages', async ({
     page,
   }) => {
-    const token = await createTokenViaUI(page, 'Kobo');
+    const apiKey = await createDeviceViaUI(page, 'Kobo');
 
-    const response = await sync(token, {
+    const response = await sync(apiKey, {
       title: 'Clean Code',
       author: 'Robert C. Martin',
       totalPages: 464,
@@ -221,7 +176,7 @@ test.describe('KOReader sync', () => {
     expect(await getBookRows()).toHaveLength(0);
   });
 
-  test('rejects a sync without a token', async () => {
+  test('rejects a sync without an API key', async () => {
     const response = await sync(null, {
       title: 'Clean Code',
       author: 'Robert C. Martin',
@@ -233,8 +188,8 @@ test.describe('KOReader sync', () => {
     expect(await getBookRows()).toHaveLength(0);
   });
 
-  test('rejects a sync with an invalid token', async () => {
-    const response = await sync('invalid-token', {
+  test('rejects a sync with an invalid API key', async () => {
+    const response = await sync('invalid-key', {
       title: 'Clean Code',
       author: 'Robert C. Martin',
       totalPages: 464,
@@ -245,15 +200,15 @@ test.describe('KOReader sync', () => {
     expect(await getBookRows()).toHaveLength(0);
   });
 
-  test('rejects a sync with a deleted token', async ({ page }) => {
-    const token = await createTokenViaUI(page, 'Kobo');
-    const section = page.getByRole('region', { name: 'API tokens' });
-    await section.getByRole('button', { name: 'Delete Kobo' }).click();
+  test('rejects a sync after the device is removed', async ({ page }) => {
+    const apiKey = await createDeviceViaUI(page, 'Kobo');
+    const section = page.getByRole('region', { name: 'Devices' });
+    await section.getByRole('button', { name: 'Remove Kobo' }).click();
     await expect(
-      section.getByText('No API tokens yet. Generate one to connect a device.')
+      section.getByText('No devices yet. Add one to connect an e-reader.')
     ).toBeVisible();
 
-    const response = await sync(token, {
+    const response = await sync(apiKey, {
       title: 'Clean Code',
       author: 'Robert C. Martin',
       totalPages: 464,
