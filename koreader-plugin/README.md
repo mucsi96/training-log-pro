@@ -4,7 +4,7 @@ KOReader plugin that connects your e-reader to the training-log server:
 
 - When you open a book KOReader hasn't synced before, it is added to your library automatically.
 - As you read, your current page is synced automatically — shortly after opening a book, after page turns (debounced), and immediately when you close the book, finish it, or the device suspends.
-- Ebooks dropped on your device in the web UI's **Devices** page are offered for download: the plugin checks for pending books, asks where to place them on the device, downloads them with your API key and acknowledges them so they disappear from the queue.
+- Ebooks dropped on your device in the web UI's **Devices** page are offered for download: the plugin checks for pending books, downloads them into the configured folder with your API key and acknowledges them so they disappear from the queue.
 
 ## Installation
 
@@ -24,13 +24,15 @@ KOReader plugin that connects your e-reader to the training-log server:
 
    ```json
    {
-       "serverUrl": "https://your-server.example.com"
+       "serverUrl": "https://your-server.example.com",
+       "booksDir": "/mnt/onboard/books"
    }
    ```
 
-   | Field       | Required | Description                                               |
-   |-------------|----------|-----------------------------------------------------------|
-   | `serverUrl` | yes      | Base URL of the training-log server (no trailing slash)   |
+   | Field       | Required                | Description                                                        |
+   |-------------|-------------------------|--------------------------------------------------------------------|
+   | `serverUrl` | yes                     | Base URL of the training-log server (no trailing slash)            |
+   | `booksDir`  | for receiving ebooks    | Folder on the device where ebooks sent to this device are placed   |
 
 3. Download the API key file from the training-log app:
    - Go to **Devices** in the web UI
@@ -53,8 +55,8 @@ Just read. The plugin needs no interaction:
 
 1. In the web UI, open **Devices** and drag an ebook file onto your device (or use the browse link).
 2. On the e-reader, the plugin checks for pending books shortly after KOReader starts. You can also trigger a check any time via the main menu: **Training Log: download pending books**.
-3. When books are waiting, the plugin lists them and asks for confirmation, then asks where to place them on the device.
-4. The books are downloaded into the chosen folder using your API key and removed from the pending queue.
+3. When books are waiting, the plugin lists them and asks for confirmation.
+4. The books are downloaded into the `booksDir` folder from the plugin config using your API key and removed from the pending queue.
 
 Notes:
 

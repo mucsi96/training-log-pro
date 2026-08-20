@@ -1,6 +1,5 @@
 local ConfirmBox = require("ui/widget/confirmbox")
 local NetworkMgr = require("ui/network/manager")
-local PathChooser = require("ui/widget/pathchooser")
 local UIManager = require("ui/uimanager")
 local InfoMessage = require("ui/widget/infomessage")
 local WidgetContainer = require("ui/widget/container/widgetcontainer")
@@ -220,34 +219,31 @@ function TrainingLog:checkPendingBooks(manual)
         return
     end
 
+    if not self.config.booksDir then
+        UIManager:show(InfoMessage:new {
+            text = ("Training Log: %d book(s) waiting for this device, but booksDir is missing in training-log.json.")
+                :format(#books),
+        })
+        return
+    end
+
     local names = {}
     for _, book in ipairs(books) do
         table.insert(names, book.fileName)
     end
 
     UIManager:show(ConfirmBox:new {
-        text = ("Training Log: %d book(s) waiting for this device:\n%s\n\nDownload now?")
-            :format(#books, table.concat(names, "\n")),
+        text = ("Training Log: %d book(s) waiting for this device:\n%s\n\nDownload to %s?")
+            :format(#books, table.concat(names, "\n"), self.config.booksDir),
         ok_text = _("Download"),
         ok_callback = function()
-            self:chooseBookPlacement(books)
+            self:downloadBooks(books, self.config.booksDir)
         end,
     })
 end
 
-function TrainingLog:chooseBookPlacement(books)
-    local path_chooser = PathChooser:new {
-        select_directory = true,
-        select_file = false,
-        path = G_reader_settings:readSetting("home_dir"),
-        onConfirm = function(dir_path)
-            self:downloadBooks(books, dir_path)
-        end,
-    }
-    UIManager:show(path_chooser)
-end
-
 function TrainingLog:downloadBooks(books, dir_path)
+    dir_path = dir_path:gsub("/+$", "")
     local downloaded = {}
     local failed = {}
 
