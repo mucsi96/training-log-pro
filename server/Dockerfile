@@ -1,37 +1,34 @@
-# Stage 1: Build server with Maven
-FROM docker.io/library/maven:3-eclipse-temurin-21 AS build
+# Stage 1: Compile a GraalVM native executable with Maven
+FROM docker.io/library/maven:3-eclipse-temurin-21 AS maven-dist
+
+FROM ghcr.io/graalvm/native-image-community:25 AS build
+
+COPY --from=maven-dist /usr/share/maven /opt/maven
+ENV PATH=/opt/maven/bin:$PATH
 
 WORKDIR /workspace
 
 # Copy POM and download dependencies (cached separately from source)
 COPY pom.xml ./
-RUN mvn dependency:go-offline -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+RUN mvn dependency:go-offline -Pnative -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
 
-# Copy source code and build
+# Copy source code and build the native executable
 COPY src ./src
-RUN mvn package -DskipTests -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
-
-# Extract dependencies for layer caching
-RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar) \
-    && rm -f target/dependency/META-INF/services/java.nio.file.spi.FileSystemProvider
+RUN mvn native:compile -Pnative -DskipTests -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
 
 # Stage 2: Runtime image
-FROM docker.io/library/eclipse-temurin:26-jre
+FROM docker.io/library/debian:12-slim
 
 VOLUME /tmp
 
-ARG DEPENDENCY=/workspace/target/dependency
 ARG SPRING_PROFILES_ACTIVE=prod
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 
-# Copy application layers
-COPY --from=build ${DEPENDENCY}/BOOT-INF/lib /app/lib
-COPY --from=build ${DEPENDENCY}/META-INF /app/META-INF
-COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
+COPY --from=build /workspace/target/training-log /app/training-log
 
 # Set environment variables
 ENV SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
 
 # Run the application
-ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-Djdk.httpclient.allowRestrictedHeaders=content-length", "-cp", "app:app/lib/*", "mucsi96.traininglog.TrainingLogApplication"]
+ENTRYPOINT ["/app/training-log", "-Djdk.httpclient.allowRestrictedHeaders=content-length"]

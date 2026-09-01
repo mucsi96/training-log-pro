@@ -29,6 +29,7 @@
   </scm>
   <properties>
     <java.version>21</java.version>
+    <spring-cloud-azure.version>7.3.0</spring-cloud-azure.version>
   </properties>
   <dependencies>
     <dependency>
@@ -123,7 +124,7 @@
       <dependency>
         <groupId>com.azure.spring</groupId>
         <artifactId>spring-cloud-azure-dependencies</artifactId>
-        <version>7.3.0</version>
+        <version>${spring-cloud-azure.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -167,6 +168,34 @@
               <artifactId>lombok</artifactId>
             </exclude>
           </excludes>
+        </configuration>
+        <executions>
+          <execution>
+            <!-- AOT processing evaluates bean conditions against the build-time
+              environment. Run it with the test profile so OAuth2 client
+              placeholders resolve, and pin the actuator to a separate port so
+              the management context shape matches every deployed environment. -->
+            <id>process-aot</id>
+            <configuration>
+              <profiles>
+                <profile>test</profile>
+              </profiles>
+              <systemPropertyVariables>
+                <SPRING_ACTUATOR_PORT>8182</SPRING_ACTUATOR_PORT>
+              </systemPropertyVariables>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.graalvm.buildtools</groupId>
+        <artifactId>native-maven-plugin</artifactId>
+        <configuration>
+          <buildArgs>
+            <!-- Cap the image builder heap so the build fits on GitHub-hosted
+              runners next to the rest of the Docker build. -->
+            <buildArg>-J-Xmx12g</buildArg>
+          </buildArgs>
         </configuration>
       </plugin>
       <plugin>
@@ -229,5 +258,47 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <!-- Extends the native profile inherited from spring-boot-starter-parent. -->
+    <profile>
+      <id>native</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>3.1.0</version>
+            <executions>
+              <execution>
+                <!-- GraalVM's image classloader rejects a package that mixes
+                  classes from a signed jar with the unsigned Spring AOT
+                  generated bean definition classes, so the Microsoft code
+                  signature has to be removed from the Azure autoconfigure jar
+                  before native-image loads the classpath. -->
+                <id>strip-azure-autoconfigure-jar-signature</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <target>
+                    <property name="azure.autoconfigure.jar"
+                      value="${settings.localRepository}/com/azure/spring/spring-cloud-azure-autoconfigure/${spring-cloud-azure.version}/spring-cloud-azure-autoconfigure-${spring-cloud-azure.version}.jar" />
+                    <zip destfile="${azure.autoconfigure.jar}.unsigned">
+                      <zipfileset src="${azure.autoconfigure.jar}"
+                        excludes="META-INF/*.SF,META-INF/*.RSA,META-INF/*.DSA" />
+                    </zip>
+                    <move file="${azure.autoconfigure.jar}.unsigned"
+                      tofile="${azure.autoconfigure.jar}" overwrite="true" />
+                  </target>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
 </project>

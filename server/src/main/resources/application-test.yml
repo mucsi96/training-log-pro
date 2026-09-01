@@ -1,10 +1,4 @@
 spring:
-  cloud:
-    azure:
-      keyvault:
-        secret:
-          property-sources:
-            - enabled: false
   security:
     oauth2:
       client:

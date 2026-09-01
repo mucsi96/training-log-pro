@@ -36,6 +36,13 @@
 - Use string literals over enums
 - Standalone components
 
+## GraalVM Native Image
+
+- Server container images run a GraalVM native executable (see `server/Dockerfile`)
+- Spring AOT evaluates bean conditions at build time; avoid `@Profile`/`@ConditionalOn*` beans that differ between environments
+- Types deserialized outside controller signatures (RestTemplate, ObjectMapper) need reflection hints in `NativeReflectionConfiguration` (`@RegisterReflectionForBinding`)
+- Verify AOT processing locally: `cd server && mvn package -Pnative -DskipTests`
+
 ## Design
 
 - Material UI dark theme
@@ -64,7 +71,7 @@ Training and fitness tracking application demonstrating patterns for:
 
 ## Key Technologies
 
-- Spring Boot 4, Java 21
+- Spring Boot 4, Java 21, GraalVM native image (server container images)
 - Angular with Material UI
 - PostgreSQL
 - Azure AD (MSAL) authentication

@@ -22,13 +22,6 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.yaml
     default-schema: training_log
     liquibase-schema: training_log
-  cloud:
-    azure:
-      keyvault:
-        secret:
-          property-sources:
-            - endpoint: ${AZURE_KEYVAULT_ENDPOINT}
-              enabled: true
   security:
     oauth2:
       resourceserver:
