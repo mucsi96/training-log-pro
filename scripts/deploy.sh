@@ -33,6 +33,9 @@ clientAppChartVersion=$(helm search repo mucsi96/client-app --output json | jq -
 
 echo "Deploying server: $DOCKERHUB_USERNAME/training-log-pro-server:$serverLatestTag using spring-app chart $springAppChartVersion"
 
+# CPU limit is intentionally omitted (limits.cpu=null clears the chart
+# default): on a single-user node it only throttles startup; the memory
+# limit is what actually matters.
 helm upgrade $SERVER_RELEASE_NAME mucsi96/spring-app \
     --install \
     --version $springAppChartVersion \
@@ -47,7 +50,7 @@ helm upgrade $SERVER_RELEASE_NAME mucsi96/spring-app \
     --set resources.requests.memory=512Mi \
     --set resources.requests.cpu=100m \
     --set resources.limits.memory=1Gi \
-    --set resources.limits.cpu=500m \
+    --set resources.limits.cpu=null \
     --wait \
     --timeout 10m
 
@@ -59,5 +62,8 @@ helm upgrade $CLIENT_RELEASE_NAME mucsi96/client-app \
     --set image=$DOCKERHUB_USERNAME/training-log-pro-client:$clientLatestTag \
     --set host=$HOSTNAME \
     --set entryPoint=web \
+    --set resources.requests.memory=16Mi \
+    --set resources.requests.cpu=5m \
+    --set resources.limits.memory=32Mi \
     --wait \
     --timeout 10m
