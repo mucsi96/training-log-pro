@@ -32,8 +32,10 @@ import org.springframework.context.annotation.ImportRuntimeHints;
  *
  * The whole {@code liquibase.change} package is registered rather than the
  * setter missing today, because the next attribute added to the changelog would
- * fail exactly the same way. Abstract types are kept: the setters live on the
- * abstract bases far more often than on the concrete change.
+ * fail exactly the same way. The scan is deliberately indiscriminate - it keeps
+ * abstract types, where the setters live far more often than on the concrete
+ * change, and does not bother to exclude interfaces or annotations either.
+ * Narrowing it to concrete classes is what would reintroduce the bug.
  *
  * Only the native image needs this. The AOT-on-JVM run described in AGENTS.md
  * cannot show the failure - reflection always works there.
