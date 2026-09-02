@@ -226,17 +226,21 @@ Build-time details that live in `server/pom.xml` and are easy to trip over:
   they are controller parameter and return types, which the framework's own AOT
   processing covers, as do JPA entities and Spring Data repositories.
 
-Spring Cloud Azure needs one workaround in application code:
-`AzureGlobalPropertiesConfiguration` re-declares the `AzureGlobalProperties`
-bean. Spring Cloud Azure registers it from an `ImportBeanDefinitionRegistrar`
-using a lambda instance supplier, which AOT cannot turn into generated code, so
-it drops the bean and the image fails to start with "required a bean of type
-AzureGlobalProperties that could not be found". See the class comment for why it
-uses its own bean name. That workaround turns on Spring Cloud Azure's
-registration order, which is not a public contract, so smoke-test the image
-whenever `spring-cloud-azure-dependencies` moves - a change there could drop the
-bean again with no compile-time signal, and nothing in the pipeline would catch
-it: the test profile does not need the bean, so the e2e pod stays green, and
+Spring Cloud Azure needs one addition in application code:
+`AzureGlobalPropertiesConfiguration` declares the `AzureGlobalProperties` bean.
+Spring Cloud Azure registers its own from an `ImportBeanDefinitionRegistrar`
+using a lambda instance supplier, which AOT cannot turn into generated code, and
+the library ships a `BeanRegistrationExcludeFilter` that drops that bean from
+AOT processing by name rather than let it fail there. So an AOT-processed
+application has to bring its own, or it does not start: "required a bean of type
+AzureGlobalProperties that could not be found". This is by design upstream, not
+a gap waiting to be fixed. See the class comment for why the bean needs its own
+name and why a plain JVM run binds what it did before.
+
+What is not contracted is that arrangement staying put, so smoke-test the image
+whenever `spring-cloud-azure-dependencies` moves, and read the release notes for
+anything about the global-properties bean. Nothing in the pipeline would catch a
+change: the test profile does not need the bean, so the e2e pod stays green, and
 `publish-server`'s check of the prod executable exits before Spring starts.
 
 The image is deliberately not built with `--static`. A fully static binary links
