@@ -235,7 +235,9 @@ AzureGlobalProperties that could not be found". See the class comment for why it
 uses its own bean name. That workaround turns on Spring Cloud Azure's
 registration order, which is not a public contract, so smoke-test the image
 whenever `spring-cloud-azure-dependencies` moves - a change there could drop the
-bean again with no compile-time signal.
+bean again with no compile-time signal, and nothing in the pipeline would catch
+it: the test profile does not need the bean, so the e2e pod stays green, and
+`publish-server`'s check of the prod executable exits before Spring starts.
 
 The image is deliberately not built with `--static`. A fully static binary links
 but then segfaults the moment it starts in the container - before GraalVM

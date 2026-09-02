@@ -270,10 +270,13 @@ jobs:
           cache-to: type=gha,mode=max,scope=server-prod
 
       # The profile is baked in at build time, so this is a different
-      # executable from the one test-e2e exercised, taking code paths - the Key
-      # Vault property source above all - that no test covers. This cannot
-      # catch a missing reflection hint, but it does catch a binary that does
-      # not start, before the image is published and deploy picks it up.
+      # executable from the one test-e2e exercised, and nothing else here runs
+      # it. Be clear about how little this proves: -XX:PrintFlags= exits inside
+      # the VM's own option parsing, before any Spring code runs, so it catches
+      # a binary that cannot start at all - what a fully static link produces,
+      # and what would otherwise first appear as a crash-looping pod - and
+      # nothing beyond that. The prod profile's own wiring and the Key Vault
+      # property source stay covered by the manual check in AGENTS.md alone.
       - name: Check the server executable runs
         if: steps.get_next_version.outputs.hasNextVersion == 'true'
         run: |
