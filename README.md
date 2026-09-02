@@ -24,13 +24,30 @@ All application secrets are pulled from Azure Key Vault using the Spring Cloud A
 | `strava-client-secret` | Strava OAuth2 client secret | [Strava API Settings](https://www.strava.com/settings/api) |
 | `token-encryption-key` | Base64-encoded 256-bit AES key used to encrypt stored Strava/Withings OAuth tokens at rest. Generate with `openssl rand -base64 32`. | Self-generated |
 
+## One image per Spring profile
+
+The server is shipped as a GraalVM native executable. Bean definitions are
+resolved during ahead-of-time processing at build time, so the active Spring
+profile is baked into the executable and cannot be chosen at startup any more.
+The server image is therefore built once per profile, via the `SPRING_PROFILE`
+build argument:
+
+```bash
+podman build --build-arg SPRING_PROFILE=test -t training-log-pro-server:test server   # e2e pod
+podman build --build-arg SPRING_PROFILE=prod -t training-log-pro-server:prod server   # published image
+```
+
+`SPRING_PROFILES_ACTIVE` is not read at runtime; the pipeline builds the test
+image for the e2e job and the prod image when publishing to Docker Hub. Running
+the server on a JVM for local development is unaffected - `mvn spring-boot:run
+-Dspring-boot.run.profiles=local` still selects the profile the usual way.
+
 ## Runtime Environment Variables
 
 | Variable | Description |
 |---|---|
 | `AZURE_KEYVAULT_ENDPOINT` | Azure Key Vault endpoint URL |
 | `SPRING_ACTUATOR_PORT` | Port for Spring Boot Actuator endpoints |
-| `SPRING_PROFILES_ACTIVE` | Active Spring profile (`prod`, `local`, `test`) |
 
 ## Port Mapping
 
