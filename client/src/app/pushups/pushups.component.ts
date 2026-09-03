@@ -8,6 +8,7 @@ import { BarLoaderComponent } from '@mucsi96/angular-material-theme';
 import { map } from 'rxjs';
 import { PushupsService } from './pushups.service';
 import { SettingsService } from '../settings/settings.service';
+import { metricGoals, TIERS } from '../day-goal/day-goal.model';
 import {
   PushupsAddDialogComponent,
   PushupsAddDialogResult,
@@ -36,7 +37,9 @@ export class PushupsComponent {
     loader: () => this.settingsService.getSettings(),
   });
 
-  readonly goal = computed(() => this.settings.value()?.pushupGoal ?? 0);
+  readonly goals = computed(() =>
+    metricGoals(this.settings.value()?.tiers ?? [], 'PUSHUPS')
+  );
 
   readonly periodSets = resource({
     params: () => ({ period: this.period(), version: this.pushupsService.version() }),
@@ -112,8 +115,11 @@ export class PushupsComponent {
             silent: true,
             symbol: 'none',
             label: { show: false },
-            lineStyle: { color: 'hsl(218, 11%, 65%)', type: 'dashed' },
-            data: [{ yAxis: this.goal() }],
+            lineStyle: { type: 'dashed' },
+            data: this.goals().map(({ tier, goal }) => ({
+              yAxis: goal,
+              lineStyle: { color: TIERS[tier].color },
+            })),
           },
         },
       ],

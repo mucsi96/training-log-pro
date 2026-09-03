@@ -2,20 +2,18 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { NotificationsService } from '@mucsi96/angular-material-theme';
 import { fetchJson } from '../utils/fetchJson';
-import { GoldenDayService } from '../golden-day/golden-day.service';
+import { DayGoalService } from '../day-goal/day-goal.service';
+import { TierGoals } from '../day-goal/day-goal.model';
 
 export type Settings = {
-  pushupGoal: number;
-  elevationGoal: number;
-  readingPagesGoal: number;
-  dailyTaskGoal: number;
+  readonly tiers: TierGoals[];
 };
 
 @Injectable({ providedIn: 'root' })
 export class SettingsService {
   private readonly http = inject(HttpClient);
   private readonly notifications = inject(NotificationsService);
-  private readonly goldenDayService = inject(GoldenDayService);
+  private readonly dayGoalService = inject(DayGoalService);
 
   readonly version = signal(0);
 
@@ -36,7 +34,7 @@ export class SettingsService {
         { method: 'put', body: settings }
       );
       this.version.update((v) => v + 1);
-      this.goldenDayService.version.update((v) => v + 1);
+      this.dayGoalService.version.update((v) => v + 1);
       this.notifications.success('Settings saved');
       return saved;
     } catch (e) {

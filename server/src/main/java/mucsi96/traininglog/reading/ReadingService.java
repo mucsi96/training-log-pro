@@ -24,7 +24,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import mucsi96.traininglog.settings.SettingsService;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +32,6 @@ public class ReadingService {
 
   private final BookRepository bookRepository;
   private final ReadingProgressRepository progressRepository;
-  private final SettingsService settingsService;
   private final Clock clock;
 
   @Transactional
@@ -182,18 +180,6 @@ public class ReadingService {
   }
 
   @Transactional(readOnly = true)
-  public ReadingStats getStats(ZoneId zoneId) {
-    int dailyGoal = settingsService.getCurrent().getReadingPagesGoal();
-    LocalDate today = LocalDate.now(clock.withZone(zoneId));
-    int todayPages = getPagesReadByDay(zoneId).getOrDefault(today, 0);
-    return ReadingStats.builder()
-        .todayPages(todayPages)
-        .dailyPagesGoal(dailyGoal)
-        .goalReached(dailyGoal > 0 && todayPages >= dailyGoal)
-        .build();
-  }
-
-  @Transactional(readOnly = true)
   public Map<LocalDate, Integer> getPagesReadByDay(ZoneId zoneId) {
     Map<UUID, Integer> lastSeen = bookRepository.findAll().stream()
         .collect(Collectors.toMap(BookEntity::getId, BookEntity::getStartingPage));
@@ -284,13 +270,5 @@ public class ReadingService {
     private ZonedDateTime completedAt;
     private Double averagePagesPerDay;
     private Integer estimatedDaysRemaining;
-  }
-
-  @Data
-  @Builder
-  public static class ReadingStats {
-    private int todayPages;
-    private int dailyPagesGoal;
-    private boolean goalReached;
   }
 }

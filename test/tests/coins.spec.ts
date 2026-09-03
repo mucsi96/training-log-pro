@@ -2,8 +2,8 @@ import { test, expect } from '../fixtures';
 import {
   cleanupDb,
   getCoinsResetAt,
-  getGoldenDayDates,
-  insertGoldenDay,
+  getAchievedDates,
+  insertAchievedDay,
   insertPushupSet,
   insertRide,
   populateOAuthClients,
@@ -27,7 +27,7 @@ const isoDate = (daysAgo: number) => {
   return d.toISOString().slice(0, 10);
 };
 
-const insertGoldenRide = (daysAgo: number, totalElevationGain: number) =>
+const insertGoalRide = (daysAgo: number, totalElevationGain: number) =>
   insertRide(
     daysAgo,
     400,
@@ -48,7 +48,7 @@ test.describe('Golden coins', () => {
     await populateOAuthClients();
   });
 
-  test('shows zero coins when there are no golden days', async ({ page }) => {
+  test('shows zero coins when there are no gold days', async ({ page }) => {
     await page.goto('/');
 
     const counter = counterOf(page);
@@ -56,19 +56,29 @@ test.describe('Golden coins', () => {
     await expect(counter).toHaveAccessibleName(/0 coins, 0 points/);
   });
 
-  test('shows 5 points per golden day', async ({ page }) => {
-    await insertGoldenDay(isoDate(3));
-    await insertGoldenDay(isoDate(2));
-    await insertGoldenDay(isoDate(1));
+  test('shows 5 points per gold day', async ({ page }) => {
+    await insertAchievedDay(isoDate(3));
+    await insertAchievedDay(isoDate(2));
+    await insertAchievedDay(isoDate(1));
 
     await page.goto('/');
 
     await expect(counterOf(page)).toHaveAccessibleName(/3 coins, 15 points/);
   });
 
-  test('increments coins when today becomes golden', async ({ page }) => {
+  test('does not count silver or bronze days', async ({ page }) => {
+    await insertAchievedDay(isoDate(3), 'GOLD');
+    await insertAchievedDay(isoDate(2), 'SILVER');
+    await insertAchievedDay(isoDate(1), 'BRONZE');
+
+    await page.goto('/');
+
+    await expect(counterOf(page)).toHaveAccessibleName(/1 coin, 5 points/);
+  });
+
+  test('increments coins when today becomes gold', async ({ page }) => {
     await insertPushupSet(daysAgoAt(0, 8), 95);
-    await insertGoldenRide(0, 260);
+    await insertGoalRide(0, 260);
 
     await page.goto('/');
     const counter = counterOf(page);
@@ -88,13 +98,13 @@ test.describe('Golden coins', () => {
     await expect(counter).toHaveAccessibleName(/1 coin, 5 points/);
   });
 
-  test('resets coin count from settings without deleting past golden days', async ({
+  test('resets coin count from settings without deleting past achieved days', async ({
     page,
   }) => {
-    await insertGoldenDay(isoDate(3));
-    await insertGoldenDay(isoDate(2));
-    await insertGoldenDay(isoDate(1));
-    const datesBefore = await getGoldenDayDates();
+    await insertAchievedDay(isoDate(3));
+    await insertAchievedDay(isoDate(2));
+    await insertAchievedDay(isoDate(1));
+    const datesBefore = await getAchievedDates();
 
     await page.goto('/');
     await expect(counterOf(page)).toHaveAccessibleName(/3 coins, 15 points/);
@@ -110,13 +120,13 @@ test.describe('Golden coins', () => {
 
     const after = await getCoinsResetAt();
     expect(after.getTime()).toBeGreaterThan(before.getTime());
-    expect(await getGoldenDayDates()).toEqual(datesBefore);
+    expect(await getAchievedDates()).toEqual(datesBefore);
 
     await expect(counterOf(page)).toHaveAccessibleName(/0 coins, 0 points/);
   });
 
-  test('counts coins again for new golden days after reset', async ({ page }) => {
-    await insertGoldenDay(isoDate(2));
+  test('counts coins again for new gold days after reset', async ({ page }) => {
+    await insertAchievedDay(isoDate(2));
 
     await page.goto('/settings');
     const coinsSection = page.getByRole('region', { name: 'Golden coins' });
@@ -125,7 +135,7 @@ test.describe('Golden coins', () => {
     await expect(coinsSection.getByText('0 coins')).toBeVisible();
 
     await insertPushupSet(daysAgoAt(0, 8), 100);
-    await insertGoldenRide(0, 260);
+    await insertGoalRide(0, 260);
 
     await page.goto('/');
     await expect(counterOf(page)).toHaveAccessibleName(/1 coin, 5 points/);

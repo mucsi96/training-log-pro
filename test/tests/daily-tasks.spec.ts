@@ -3,12 +3,12 @@ import {
   cleanupDb,
   getDailyTaskCompletionRows,
   getDailyTaskRows,
-  getGoldenDayDates,
+  getAchievedDates,
   insertDailyTask,
   insertPushupSet,
   insertRide,
   populateOAuthClients,
-  setGoals,
+  setTierRequirements,
 } from '../utils';
 import { randomUUID } from 'crypto';
 
@@ -30,7 +30,7 @@ const isoDate = (daysAgo: number) => {
   return d.toISOString().slice(0, 10);
 };
 
-const insertGoldenRide = (daysAgo: number, totalElevationGain: number) =>
+const insertGoalRide = (daysAgo: number, totalElevationGain: number) =>
   insertRide(
     daysAgo,
     400,
@@ -132,36 +132,36 @@ test.describe('Daily tasks', () => {
     await expect(page.getByRole('region', { name: 'Daily tasks' })).toBeHidden();
   });
 
-  test('gates golden day on daily task goal when configured', async ({ page }) => {
+  test('gates the gold day on the daily task requirement when configured', async ({ page }) => {
     await insertPushupSet(daysAgoAt(0, 8), 100);
-    await insertGoldenRide(0, 260);
+    await insertGoalRide(0, 260);
     await insertDailyTask(randomUUID(), 'Learn German');
     await insertDailyTask(randomUUID(), 'Water flower');
-    await setGoals(100, 250, 0, 2);
+    await setTierRequirements('GOLD', { PUSHUPS: 100, ELEVATION: 250, DAILY_TASKS: 2 });
 
     await page.goto('/');
-    const section = page.getByRole('region', { name: 'Golden day' });
+    const section = page.getByRole('region', { name: 'Day goal' });
     await expect(section.getByText('0/2 tasks')).toBeVisible();
-    await expect(section.getByText('Today is golden')).toBeHidden();
+    await expect(section.getByText('Today is a gold day')).toBeHidden();
 
     const checklist = page.getByRole('region', { name: 'Daily tasks' });
     await checklist.getByRole('checkbox', { name: 'Learn German' }).check();
     await expect(section.getByText('1/2 tasks')).toBeVisible();
-    await expect(section.getByText('Today is golden')).toBeHidden();
+    await expect(section.getByText('Today is a gold day')).toBeHidden();
 
     await checklist.getByRole('checkbox', { name: 'Water flower' }).check();
-    await expect(section.getByText('Today is golden')).toBeVisible();
-    expect(await getGoldenDayDates()).toContain(isoDate(0));
+    await expect(section.getByText('Today is a gold day')).toBeVisible();
+    expect(await getAchievedDates()).toContain(isoDate(0));
   });
 
-  test('ignores daily tasks when goal is zero', async ({ page }) => {
+  test('ignores daily tasks when no tier requires them', async ({ page }) => {
     await insertPushupSet(daysAgoAt(0, 8), 100);
-    await insertGoldenRide(0, 260);
+    await insertGoalRide(0, 260);
     await insertDailyTask(randomUUID(), 'Learn German');
 
     await page.goto('/');
-    const section = page.getByRole('region', { name: 'Golden day' });
-    await expect(section.getByText('Today is golden')).toBeVisible();
+    const section = page.getByRole('region', { name: 'Day goal' });
+    await expect(section.getByText('Today is a gold day')).toBeVisible();
     await expect(section.getByText(/tasks$/)).toBeHidden();
   });
 });

@@ -22,17 +22,6 @@ public class SettingsService {
   }
 
   @Transactional
-  public SettingsEntity update(int pushupGoal, int elevationGoal, int readingPagesGoal,
-      int dailyTaskGoal) {
-    SettingsEntity entity = getCurrent();
-    entity.setPushupGoal(pushupGoal);
-    entity.setElevationGoal(elevationGoal);
-    entity.setReadingPagesGoal(readingPagesGoal);
-    entity.setDailyTaskGoal(dailyTaskGoal);
-    return repository.save(entity);
-  }
-
-  @Transactional
   public SettingsEntity resetCoins() {
     SettingsEntity entity = getCurrent();
     entity.setCoinsResetAt(ZonedDateTime.now(clock));

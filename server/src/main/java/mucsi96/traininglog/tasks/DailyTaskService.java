@@ -5,7 +5,6 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -83,15 +82,12 @@ public class DailyTaskService {
   }
 
   @Transactional(readOnly = true)
-  public Map<LocalDate, Set<UUID>> getCompletionsByDays(Collection<LocalDate> dates) {
-    if (dates.isEmpty()) {
-      return Map.of();
-    }
-    return completionRepository.findByDateIn(dates).stream()
+  public Map<LocalDate, Integer> getCompletionCountByDay() {
+    return completionRepository.findAll().stream()
         .collect(Collectors.groupingBy(
             DailyTaskCompletionEntity::getDate,
             TreeMap::new,
-            Collectors.mapping(DailyTaskCompletionEntity::getTaskId, Collectors.toSet())));
+            Collectors.collectingAndThen(Collectors.counting(), Long::intValue)));
   }
 
   public record TodayTasks(List<DailyTaskEntity> tasks, Set<UUID> completedTaskIds) {

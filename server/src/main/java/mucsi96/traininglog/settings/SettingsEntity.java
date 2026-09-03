@@ -23,18 +23,6 @@ public class SettingsEntity {
   @Id
   private Integer id;
 
-  @Column(name = "pushup_goal", nullable = false)
-  private int pushupGoal;
-
-  @Column(name = "elevation_goal", nullable = false)
-  private int elevationGoal;
-
-  @Column(name = "reading_pages_goal", nullable = false)
-  private int readingPagesGoal;
-
-  @Column(name = "daily_task_goal", nullable = false)
-  private int dailyTaskGoal;
-
   @Column(name = "coins_reset_at", nullable = false, insertable = false)
   private ZonedDateTime coinsResetAt;
 

@@ -7,7 +7,7 @@ import {
   insertBook,
   insertReadingProgress,
   populateOAuthClients,
-  setGoals,
+  setTierRequirements,
 } from '../utils';
 
 const startOfTodayUtc = () => {
@@ -29,7 +29,7 @@ test.describe('Reading', () => {
   });
 
   test('shows empty state when no books exist', async ({ page }) => {
-    await setGoals(100, 250, 30);
+    await setTierRequirements('GOLD', { PUSHUPS: 100, ELEVATION: 250, READING_PAGES: 30 });
     await page.goto('/');
 
     const section = page.getByRole('region', { name: 'Reading' });
@@ -131,7 +131,7 @@ test.describe('Reading', () => {
   test('only counts pages read past the starting page toward the daily goal', async ({
     page,
   }) => {
-    await setGoals(100, 250, 30);
+    await setTierRequirements('GOLD', { PUSHUPS: 100, ELEVATION: 250, READING_PAGES: 30 });
     const bookId = randomUUID();
     await insertBook(
       bookId,
@@ -145,8 +145,8 @@ test.describe('Reading', () => {
     await insertReadingProgress(bookId, 115, daysAgoAt(0, 12));
 
     await page.goto('/');
-    const golden = page.getByRole('region', { name: 'Golden day' });
-    await expect(golden.getByText('15/30 pages')).toBeVisible();
+    const dayGoal = page.getByRole('region', { name: 'Day goal' });
+    await expect(dayGoal.getByText('15/30 pages')).toBeVisible();
   });
 
   test('does not expose book add or remove controls on the dashboard', async ({
@@ -195,7 +195,7 @@ test.describe('Reading', () => {
   });
 
   test('aggregates pages read across books toward the daily goal', async ({ page }) => {
-    await setGoals(100, 250, 30);
+    await setTierRequirements('GOLD', { PUSHUPS: 100, ELEVATION: 250, READING_PAGES: 30 });
     const bookA = randomUUID();
     const bookB = randomUUID();
     await insertBook(bookA, 'Book A', 'Author A', 200, daysAgoAt(1, 8));
@@ -206,20 +206,20 @@ test.describe('Reading', () => {
     await insertReadingProgress(bookB, 8, daysAgoAt(0, 12));
 
     await page.goto('/');
-    const golden = page.getByRole('region', { name: 'Golden day' });
-    await expect(golden.getByText('20/30 pages')).toBeVisible();
+    const dayGoal = page.getByRole('region', { name: 'Day goal' });
+    await expect(dayGoal.getByText('20/30 pages')).toBeVisible();
   });
 
   test('shows daily goal reached when total pages match the goal', async ({ page }) => {
-    await setGoals(100, 250, 30);
+    await setTierRequirements('GOLD', { PUSHUPS: 100, ELEVATION: 250, READING_PAGES: 30 });
     const bookId = randomUUID();
     await insertBook(bookId, 'Book', 'Author', 200, daysAgoAt(1, 8));
     await insertReadingProgress(bookId, 0, daysAgoAt(1, 8));
     await insertReadingProgress(bookId, 30, daysAgoAt(0, 12));
 
     await page.goto('/');
-    const golden = page.getByRole('region', { name: 'Golden day' });
-    await expect(golden.getByText('30/30 pages')).toBeVisible();
+    const dayGoal = page.getByRole('region', { name: 'Day goal' });
+    await expect(dayGoal.getByText('30/30 pages')).toBeVisible();
   });
 
   test('shows estimated days to finish based on reading velocity', async ({ page }) => {
@@ -605,14 +605,14 @@ test.describe('Reading', () => {
   });
 
   test('reflects the configured daily reading goal', async ({ page }) => {
-    await setGoals(100, 250, 50);
+    await setTierRequirements('GOLD', { PUSHUPS: 100, ELEVATION: 250, READING_PAGES: 50 });
     const bookId = randomUUID();
     await insertBook(bookId, 'Book', 'Author', 200, daysAgoAt(1, 8));
     await insertReadingProgress(bookId, 0, daysAgoAt(1, 8));
     await insertReadingProgress(bookId, 20, daysAgoAt(0, 12));
 
     await page.goto('/');
-    const golden = page.getByRole('region', { name: 'Golden day' });
-    await expect(golden.getByText('20/50 pages')).toBeVisible();
+    const dayGoal = page.getByRole('region', { name: 'Day goal' });
+    await expect(dayGoal.getByText('20/50 pages')).toBeVisible();
   });
 });

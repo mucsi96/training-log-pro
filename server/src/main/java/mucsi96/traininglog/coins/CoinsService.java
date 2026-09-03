@@ -7,7 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import mucsi96.traininglog.api.Coins;
-import mucsi96.traininglog.goldenday.GoldenDayRepository;
+import mucsi96.traininglog.api.DayGoalTier;
+import mucsi96.traininglog.daygoal.AchievedDayRepository;
 import mucsi96.traininglog.settings.SettingsEntity;
 import mucsi96.traininglog.settings.SettingsService;
 
@@ -15,9 +16,10 @@ import mucsi96.traininglog.settings.SettingsService;
 @RequiredArgsConstructor
 public class CoinsService {
 
+  /** One coin for every gold day since the last reset. */
   static final int POINTS_PER_COIN = 5;
 
-  private final GoldenDayRepository goldenDayRepository;
+  private final AchievedDayRepository achievedDayRepository;
   private final SettingsService settingsService;
 
   @Transactional(readOnly = true)
@@ -32,7 +34,7 @@ public class CoinsService {
 
   private Coins buildCoins(SettingsEntity settings) {
     ZonedDateTime resetAt = settings.getCoinsResetAt();
-    int totalCoins = (int) goldenDayRepository.countByCreatedAtGreaterThan(resetAt);
+    int totalCoins = (int) achievedDayRepository.countByTierAndAchievedAtGreaterThan(DayGoalTier.GOLD, resetAt);
     return Coins.builder()
         .totalCoins(totalCoins)
         .totalPoints(totalCoins * POINTS_PER_COIN)
