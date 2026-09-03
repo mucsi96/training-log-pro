@@ -2,8 +2,9 @@
   <header class="header">
     <h1 id="settings-heading">Settings</h1>
     <p class="subtitle">
-      Configure golden day goals. Changes apply from today onwards and never
-      change the status of past golden days.
+      Configure what a gold, silver or bronze day takes. A day earns the most
+      demanding tier whose requirements it meets. Changes apply from today
+      onwards and never take away a tier a day has already earned.
     </p>
   </header>
 
@@ -16,47 +17,40 @@
       [formRoot]="settingsForm"
       (submit)="save()"
     >
-      <h2 id="settings-form-heading">Golden day goals</h2>
-      <mat-form-field appearance="outline">
-        <mat-label>Daily pushup goal</mat-label>
-        <input
-          matInput
-          type="number"
-          [formField]="settingsForm.pushupGoal"
-        />
-        <span matTextSuffix>pushups</span>
-      </mat-form-field>
+      <h2 id="settings-form-heading">Day goal tiers</h2>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Daily ride elevation goal</mat-label>
-        <input
-          matInput
-          type="number"
-          [formField]="settingsForm.elevationGoal"
-        />
-        <span matTextSuffix>m</span>
-      </mat-form-field>
+      @for (tierForm of settingsForm.tiers; track tierForm().value().tier) {
+        @let tier = tierForm().value();
+        <fieldset class="tier" [attr.data-tier]="tier.tier">
+          <legend>{{ TIERS[tier.tier].label }}</legend>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Daily reading goal</mat-label>
-        <input
-          matInput
-          type="number"
-          [formField]="settingsForm.readingPagesGoal"
-        />
-        <span matTextSuffix>pages</span>
-      </mat-form-field>
+          @for (goalForm of tierForm.goals; track goalForm().value().metric) {
+            @let metric = METRICS[goalForm().value().metric];
+            <div class="requirement">
+              <mat-checkbox
+                [checked]="goalForm.required().value()"
+                (change)="goalForm.required().value.set($event.checked)"
+              >
+                {{ metric.label }}
+              </mat-checkbox>
+              @if (!goalForm.goal().hidden()) {
+                <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                  <mat-label>{{ metric.label }} goal</mat-label>
+                  <input matInput type="number" [formField]="goalForm.goal" />
+                  <span matTextSuffix>{{ metric.unit }}</span>
+                </mat-form-field>
+              }
+            </div>
+          }
 
-      <mat-form-field appearance="outline">
-        <mat-label>Daily task goal</mat-label>
-        <input
-          matInput
-          type="number"
-          [formField]="settingsForm.dailyTaskGoal"
-        />
-        <span matTextSuffix>tasks</span>
-        <mat-hint>Complete at least this many of your daily tasks to earn a golden day. Set to 0 to ignore tasks.</mat-hint>
-      </mat-form-field>
+          @if (requiresNothing(tier)) {
+            <p class="tier-hint">
+              Nothing is required, so a {{ TIERS[tier.tier].label.toLowerCase() }}
+              day is never awarded.
+            </p>
+          }
+        </fieldset>
+      }
 
       <div class="actions">
         <button
@@ -81,7 +75,7 @@
       </span>
       <span class="coins-detail">
         {{ totalCoins() }} {{ totalCoins() === 1 ? 'coin' : 'coins' }} ·
-        {{ pointsPerCoin() }} per golden day
+        {{ pointsPerCoin() }} per gold day
       </span>
     </p>
     <div class="actions">

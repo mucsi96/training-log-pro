@@ -981,3 +981,90 @@ databaseChangeLog:
             columns:
               - column:
                   name: device_id
+
+  - changeSet:
+      id: 35-create-day-goal-requirement-table
+      author: mucsi96
+      changes:
+        - createTable:
+            tableName: day_goal_requirement
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tier
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: metric
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: goal
+                  type: integer
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: day_goal_requirement
+            columnNames: tier, metric
+            constraintName: day_goal_requirement_tier_metric_key
+        - sql:
+            dbms: postgresql
+            sql: |
+              INSERT INTO training_log.day_goal_requirement (id, tier, metric, goal)
+              SELECT gen_random_uuid(), 'GOLD', goals.metric, goals.goal
+              FROM training_log.settings s
+              CROSS JOIN LATERAL (VALUES
+                ('PUSHUPS', s.pushup_goal),
+                ('ELEVATION', s.elevation_goal),
+                ('READING_PAGES', s.reading_pages_goal),
+                ('DAILY_TASKS', s.daily_task_goal)) AS goals (metric, goal)
+              WHERE s.id = 1 AND goals.goal > 0;
+        - dropColumn:
+            tableName: settings
+            columnName: pushup_goal
+        - dropColumn:
+            tableName: settings
+            columnName: elevation_goal
+        - dropColumn:
+            tableName: settings
+            columnName: reading_pages_goal
+        - dropColumn:
+            tableName: settings
+            columnName: daily_task_goal
+
+  - changeSet:
+      id: 36-rename-golden-day-to-achieved-day
+      author: mucsi96
+      changes:
+        - renameTable:
+            oldTableName: golden_day
+            newTableName: achieved_day
+        - renameColumn:
+            tableName: achieved_day
+            oldColumnName: created_at
+            newColumnName: achieved_at
+            columnDataType: timestamp(6)
+        - dropDefaultValue:
+            tableName: achieved_day
+            columnName: achieved_at
+            columnDataType: timestamp(6)
+        - addColumn:
+            tableName: achieved_day
+            columns:
+              - column:
+                  name: tier
+                  type: varchar(16)
+                  defaultValue: GOLD
+                  constraints:
+                    nullable: false
+        - dropDefaultValue:
+            tableName: achieved_day
+            columnName: tier
+            columnDataType: varchar(16)

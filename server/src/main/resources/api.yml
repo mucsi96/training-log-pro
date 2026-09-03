@@ -104,7 +104,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PushupSet'
 
-  /golden-day:
+  /day-goal:
     get:
       responses:
         '200':
@@ -112,64 +112,9 @@ paths:
           content:
             application/json:
               schema:
-                title: GoldenDayStats
-                type: object
-                required:
-                  - monthCount
-                  - currentStreak
-                  - todayGolden
-                  - celebrateToday
-                  - todayPushups
-                  - todayElevationGain
-                  - todayReadingPages
-                  - pushupGoal
-                  - elevationGoal
-                  - readingPagesGoal
-                  - todayTasksCompleted
-                  - dailyTaskGoal
-                  - goldenDates
-                properties:
-                  monthCount:
-                    type: integer
-                    format: int32
-                  currentStreak:
-                    type: integer
-                    format: int32
-                  todayGolden:
-                    type: boolean
-                  celebrateToday:
-                    type: boolean
-                  todayPushups:
-                    type: integer
-                    format: int32
-                  todayElevationGain:
-                    type: number
-                    format: double
-                  todayReadingPages:
-                    type: integer
-                    format: int32
-                  pushupGoal:
-                    type: integer
-                    format: int32
-                  elevationGoal:
-                    type: integer
-                    format: int32
-                  readingPagesGoal:
-                    type: integer
-                    format: int32
-                  todayTasksCompleted:
-                    type: integer
-                    format: int32
-                  dailyTaskGoal:
-                    type: integer
-                    format: int32
-                  goldenDates:
-                    type: array
-                    items:
-                      type: string
-                      format: date
+                $ref: '#/components/schemas/DayGoalStats'
 
-  /golden-day/celebrate:
+  /day-goal/celebrate:
     post:
       responses:
         '204':
@@ -735,30 +680,6 @@ paths:
         '404':
           description: Task not found
 
-  /reading/stats:
-    get:
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                title: ReadingStats
-                type: object
-                required:
-                  - todayPages
-                  - dailyPagesGoal
-                  - goalReached
-                properties:
-                  todayPages:
-                    type: integer
-                    format: int32
-                  dailyPagesGoal:
-                    type: integer
-                    format: int32
-                  goalReached:
-                    type: boolean
-
 components:
   schemas:
     WeightMeasurement:
@@ -790,34 +711,112 @@ components:
           format: date-time
         count:
           type: integer
-    Settings:
+    DayGoalTier:
+      type: string
+      description: Tiers of the day goal, from the most to the least demanding.
+      enum:
+        - GOLD
+        - SILVER
+        - BRONZE
+    DayGoalMetric:
+      type: string
+      enum:
+        - PUSHUPS
+        - ELEVATION
+        - READING_PAGES
+        - DAILY_TASKS
+    MetricGoal:
       type: object
+      description: Whether a metric is required for a tier and, if so, how much of it.
       required:
-        - pushupGoal
-        - elevationGoal
-        - readingPagesGoal
-        - dailyTaskGoal
+        - metric
+        - required
       properties:
-        pushupGoal:
-          type: integer
-          format: int32
-          minimum: 1
-          maximum: 10000
-        elevationGoal:
+        metric:
+          $ref: '#/components/schemas/DayGoalMetric'
+        required:
+          type: boolean
+        goal:
+          description: Present when the metric is required.
           type: integer
           format: int32
           minimum: 1
           maximum: 100000
-        readingPagesGoal:
+    TierGoals:
+      type: object
+      description: A tier is awarded when every required metric reaches its goal. A tier without a required metric is never awarded.
+      required:
+        - tier
+        - goals
+      properties:
+        tier:
+          $ref: '#/components/schemas/DayGoalTier'
+        goals:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetricGoal'
+    Settings:
+      type: object
+      required:
+        - tiers
+      properties:
+        tiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/TierGoals'
+    TierCount:
+      type: object
+      required:
+        - tier
+        - count
+      properties:
+        tier:
+          $ref: '#/components/schemas/DayGoalTier'
+        count:
           type: integer
           format: int32
-          minimum: 0
-          maximum: 10000
-        dailyTaskGoal:
+    MetricValue:
+      type: object
+      required:
+        - metric
+        - value
+      properties:
+        metric:
+          $ref: '#/components/schemas/DayGoalMetric'
+        value:
+          type: number
+          format: double
+    DayGoalStats:
+      type: object
+      description: Today's standing. nextTier is the least demanding attainable tier above todayTier, absent once there is none left to reach.
+      required:
+        - celebrateToday
+        - currentStreak
+        - monthCounts
+        - todayProgress
+        - tiers
+      properties:
+        todayTier:
+          $ref: '#/components/schemas/DayGoalTier'
+        nextTier:
+          $ref: '#/components/schemas/DayGoalTier'
+        celebrateToday:
+          type: boolean
+        currentStreak:
           type: integer
           format: int32
-          minimum: 0
-          maximum: 100
+        monthCounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/TierCount'
+        todayProgress:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetricValue'
+        tiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/TierGoals'
     Book:
       type: object
       required:

@@ -63,48 +63,64 @@ export async function cleanupDb() {
   await query('DELETE FROM training_log.device_book');
   await query('DELETE FROM training_log.device');
   await query('DELETE FROM training_log.oauth2_authorized_client');
-  await query('DELETE FROM training_log.golden_day');
+  await query('DELETE FROM training_log.achieved_day');
+  await query('DELETE FROM training_log.day_goal_requirement');
+  await setTierRequirements('GOLD', DEFAULT_GOLD_REQUIREMENTS);
   await query(
     `UPDATE training_log.settings
-     SET pushup_goal = $1, elevation_goal = $2, reading_pages_goal = $3,
-         daily_task_goal = $4,
-         coins_reset_at = TIMESTAMP '1970-01-01 00:00:00'
-     WHERE id = 1`,
-    [100, 250, 0, 0]
+     SET coins_reset_at = TIMESTAMP '1970-01-01 00:00:00'
+     WHERE id = 1`
   );
 }
 
-export async function getSettings() {
+export type DayGoalTier = 'GOLD' | 'SILVER' | 'BRONZE';
+export type DayGoalMetric = 'PUSHUPS' | 'ELEVATION' | 'READING_PAGES' | 'DAILY_TASKS';
+export type TierRequirements = Partial<Record<DayGoalMetric, number>>;
+export type AchievedDay = { date: string; tier: DayGoalTier };
+
+export const DEFAULT_GOLD_REQUIREMENTS: TierRequirements = { PUSHUPS: 100, ELEVATION: 250 };
+
+/** Replaces what the tier requires; an empty object makes the tier unattainable. */
+export async function setTierRequirements(tier: DayGoalTier, requirements: TierRequirements) {
+  await query('DELETE FROM training_log.day_goal_requirement WHERE tier = $1', [tier]);
+  for (const [metric, goal] of Object.entries(requirements)) {
+    await query(
+      `INSERT INTO training_log.day_goal_requirement (id, tier, metric, goal)
+       VALUES (gen_random_uuid(), $1, $2, $3)`,
+      [tier, metric, goal]
+    );
+  }
+}
+
+export async function getRequirements(): Promise<Record<DayGoalTier, TierRequirements>> {
   const result = await query(
-    `SELECT pushup_goal, elevation_goal, reading_pages_goal, daily_task_goal
-     FROM training_log.settings WHERE id = 1`
+    'SELECT tier, metric, goal FROM training_log.day_goal_requirement ORDER BY tier, metric'
   );
-  return result.rows[0];
-}
-
-export async function setGoals(
-  pushupGoal: number,
-  elevationGoal: number,
-  readingPagesGoal: number = 0,
-  dailyTaskGoal: number = 0
-) {
-  await query(
-    `UPDATE training_log.settings SET pushup_goal = $1, elevation_goal = $2, reading_pages_goal = $3, daily_task_goal = $4 WHERE id = 1`,
-    [pushupGoal, elevationGoal, readingPagesGoal, dailyTaskGoal]
+  return result.rows.reduce(
+    (byTier, row) => ({
+      ...byTier,
+      [row.tier as DayGoalTier]: { ...byTier[row.tier as DayGoalTier], [row.metric]: row.goal },
+    }),
+    { GOLD: {}, SILVER: {}, BRONZE: {} } as Record<DayGoalTier, TierRequirements>
   );
 }
 
-export async function getGoldenDayDates(): Promise<string[]> {
+export async function getAchievedDays(): Promise<AchievedDay[]> {
   const result = await query(
-    `SELECT to_char(date, 'YYYY-MM-DD') AS date FROM training_log.golden_day ORDER BY date ASC`
+    `SELECT to_char(date, 'YYYY-MM-DD') AS date, tier FROM training_log.achieved_day ORDER BY date ASC`
   );
-  return result.rows.map((row) => row.date as string);
+  return result.rows.map((row) => ({ date: row.date as string, tier: row.tier as DayGoalTier }));
 }
 
-export async function insertGoldenDay(date: Date | string) {
+export async function getAchievedDates(): Promise<string[]> {
+  return (await getAchievedDays()).map((day) => day.date);
+}
+
+export async function insertAchievedDay(date: Date | string, tier: DayGoalTier = 'GOLD') {
   await query(
-    `INSERT INTO training_log.golden_day (date) VALUES ($1) ON CONFLICT DO NOTHING`,
-    [date]
+    `INSERT INTO training_log.achieved_day (date, tier, achieved_at)
+     VALUES ($1, $2, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING`,
+    [date, tier]
   );
 }
 

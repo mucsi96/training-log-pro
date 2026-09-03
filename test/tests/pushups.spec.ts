@@ -4,7 +4,7 @@ import {
   populateOAuthClients,
   insertPushupSet,
   getPushupSetRows,
-  setGoals,
+  setTierRequirements,
 } from '../utils';
 
 const startOfTodayUtc = () => {
@@ -92,8 +92,8 @@ test.describe('Pushups', () => {
     await expect(section.getByText('25', { exact: true })).toBeVisible();
   });
 
-  test('reflects the configured golden day pushup goal in the chart mark line', async ({ page }) => {
-    await setGoals(50, 250);
+  test('reflects the configured pushup goals in the chart mark lines', async ({ page }) => {
+    await setTierRequirements('GOLD', { PUSHUPS: 50, ELEVATION: 250 });
     await insertPushupSet(daysAgoAt(0, 8), 20);
 
     await page.goto('/');

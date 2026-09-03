@@ -6,25 +6,10 @@ import { PushupsService } from '../pushups/pushups.service';
 import { ReadingService } from '../reading/reading.service';
 import { CoinsService } from '../coins/coins.service';
 import { fetchJson } from '../utils/fetchJson';
-
-export type GoldenDayStats = {
-  monthCount: number;
-  currentStreak: number;
-  todayGolden: boolean;
-  celebrateToday: boolean;
-  todayPushups: number;
-  todayElevationGain: number;
-  todayReadingPages: number;
-  pushupGoal: number;
-  elevationGoal: number;
-  readingPagesGoal: number;
-  todayTasksCompleted: number;
-  dailyTaskGoal: number;
-  goldenDates: string[];
-};
+import { DayGoalStats } from './day-goal.model';
 
 @Injectable({ providedIn: 'root' })
-export class GoldenDayService {
+export class DayGoalService {
   private readonly http = inject(HttpClient);
   private readonly notifications = inject(NotificationsService);
   private readonly stravaService = inject(StravaService);
@@ -34,19 +19,19 @@ export class GoldenDayService {
 
   readonly version = signal(0);
 
-  async getStats(): Promise<GoldenDayStats> {
+  async getStats(): Promise<DayGoalStats> {
     await this.stravaService.sync();
     try {
-      const stats = await fetchJson<GoldenDayStats>(this.http, '/api/golden-day');
+      const stats = await fetchJson<DayGoalStats>(this.http, '/api/day-goal');
       this.coinsService.refresh();
       return stats;
     } catch (e) {
-      this.notifications.error('Unable to fetch golden day stats');
+      this.notifications.error('Unable to fetch day goal stats');
       throw e;
     }
   }
 
   async markCelebrated(): Promise<void> {
-    await fetchJson<void>(this.http, '/api/golden-day/celebrate', { method: 'post' });
+    await fetchJson<void>(this.http, '/api/day-goal/celebrate', { method: 'post' });
   }
 }

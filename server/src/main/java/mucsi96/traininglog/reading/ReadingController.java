@@ -26,7 +26,6 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import mucsi96.traininglog.api.Book;
-import mucsi96.traininglog.api.ReadingStats;
 import mucsi96.traininglog.reading.ReadingService.BookSummary;
 
 @RestController
@@ -80,17 +79,6 @@ public class ReadingController {
   ResponseEntity<Void> deleteBook(@PathVariable UUID id) {
     readingService.deleteBook(id);
     return ResponseEntity.noContent().build();
-  }
-
-  @GetMapping("/stats")
-  @PreAuthorize("hasAuthority('APPROLE_WorkoutReader') and hasAuthority('SCOPE_readWorkouts')")
-  ReadingStats getStats(@RequestHeader("X-Timezone") ZoneId zoneId) {
-    ReadingService.ReadingStats stats = readingService.getStats(zoneId);
-    return ReadingStats.builder()
-        .todayPages(stats.getTodayPages())
-        .dailyPagesGoal(stats.getDailyPagesGoal())
-        .goalReached(stats.isGoalReached())
-        .build();
   }
 
   private Book toResponse(BookSummary book, ZoneId zoneId) {

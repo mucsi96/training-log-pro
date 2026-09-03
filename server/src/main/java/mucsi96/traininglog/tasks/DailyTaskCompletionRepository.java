@@ -2,7 +2,6 @@ package mucsi96.traininglog.tasks;
 
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,8 +13,6 @@ import org.springframework.data.repository.query.Param;
 public interface DailyTaskCompletionRepository
     extends JpaRepository<DailyTaskCompletionEntity, UUID> {
   List<DailyTaskCompletionEntity> findByDate(LocalDate date);
-
-  List<DailyTaskCompletionEntity> findByDateIn(Collection<LocalDate> dates);
 
   void deleteByTaskId(UUID taskId);
 

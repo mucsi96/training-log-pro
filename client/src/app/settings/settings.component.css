@@ -39,6 +39,50 @@ h2 {
   border: 1px solid hsl(217, 19%, 27%);
 }
 
+.tier {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 12px 14px 14px;
+  border-radius: 10px;
+  border: 1px solid hsl(217, 19%, 27%);
+  border-left: 4px solid var(--tier-color);
+}
+
+.tier[data-tier='GOLD'] {
+  --tier-color: hsl(45, 95%, 58%);
+}
+
+.tier[data-tier='SILVER'] {
+  --tier-color: hsl(210, 10%, 75%);
+}
+
+.tier[data-tier='BRONZE'] {
+  --tier-color: hsl(28, 65%, 52%);
+}
+
+legend {
+  padding: 0 6px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tier-color);
+}
+
+.requirement {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) 2fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.tier-hint {
+  margin: 0;
+  color: var(--bt-text-muted);
+  font-size: 12px;
+}
+
 .actions {
   display: flex;
   justify-content: flex-end;

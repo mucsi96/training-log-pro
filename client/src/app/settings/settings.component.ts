@@ -1,13 +1,28 @@
 import { Component, computed, effect, inject, resource, signal } from '@angular/core';
-import { form, FormField, FormRoot, max, min, required, submit } from '@angular/forms/signals';
+import {
+  applyEach,
+  form,
+  FormField,
+  FormRoot,
+  hidden,
+  max,
+  min,
+  required,
+  submit,
+} from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { BarLoaderComponent } from '@mucsi96/angular-material-theme';
 import { ReadingLibraryComponent } from '../reading/reading-library.component';
 import { DailyTasksLibraryComponent } from '../daily-tasks/daily-tasks-library.component';
 import { CoinsService } from '../coins/coins.service';
+import { METRICS, TierGoals, TIERS } from '../day-goal/day-goal.model';
 import { Settings, SettingsService } from './settings.service';
+
+const MIN_GOAL = 1;
+const MAX_GOAL = 100000;
 
 @Component({
   standalone: true,
@@ -16,6 +31,7 @@ import { Settings, SettingsService } from './settings.service';
     FormField,
     FormRoot,
     MatButtonModule,
+    MatCheckboxModule,
     MatFormFieldModule,
     MatInputModule,
     BarLoaderComponent,
@@ -28,6 +44,9 @@ import { Settings, SettingsService } from './settings.service';
 export class SettingsComponent {
   private readonly settingsService = inject(SettingsService);
   private readonly coinsService = inject(CoinsService);
+
+  readonly TIERS = TIERS;
+  readonly METRICS = METRICS;
 
   readonly settings = resource({
     params: () => this.settingsService.version(),
@@ -44,26 +63,17 @@ export class SettingsComponent {
   readonly totalPoints = computed(() => this.coins.value()?.totalPoints ?? 0);
   readonly pointsPerCoin = computed(() => this.coins.value()?.pointsPerCoin ?? 5);
 
-  readonly model = signal<Settings>({
-    pushupGoal: 100,
-    elevationGoal: 250,
-    readingPagesGoal: 0,
-    dailyTaskGoal: 0,
-  });
+  readonly model = signal<Settings>({ tiers: [] });
 
   readonly settingsForm = form(this.model, (path) => {
-    required(path.pushupGoal);
-    min(path.pushupGoal, 1);
-    max(path.pushupGoal, 10000);
-    required(path.elevationGoal);
-    min(path.elevationGoal, 1);
-    max(path.elevationGoal, 100000);
-    required(path.readingPagesGoal);
-    min(path.readingPagesGoal, 0);
-    max(path.readingPagesGoal, 10000);
-    required(path.dailyTaskGoal);
-    min(path.dailyTaskGoal, 0);
-    max(path.dailyTaskGoal, 100);
+    applyEach(path.tiers, (tier) => {
+      applyEach(tier.goals, (goal) => {
+        hidden(goal.goal, ({ valueOf }) => !valueOf(goal.required));
+        required(goal.goal);
+        min(goal.goal, MIN_GOAL);
+        max(goal.goal, MAX_GOAL);
+      });
+    });
   });
 
   readonly saving = signal(false);
@@ -77,8 +87,12 @@ export class SettingsComponent {
       if (!value) {
         return;
       }
-      this.model.set({ ...value });
+      this.model.set(value);
     });
+  }
+
+  requiresNothing(tier: TierGoals): boolean {
+    return !tier.goals.some((goal) => goal.required);
   }
 
   async save() {

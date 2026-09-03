@@ -1,0 +1,172 @@
+.day-goal {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, hsl(217, 28%, 18%), hsl(217, 28%, 14%));
+  border: 1px solid hsl(217, 19%, 27%);
+  overflow: hidden;
+}
+
+.day-goal--gold {
+  background: linear-gradient(135deg, hsl(45, 95%, 58%) 0%, hsl(38, 95%, 50%) 60%, hsl(32, 90%, 44%) 100%);
+  border-color: hsl(45, 100%, 70%);
+  box-shadow: 0 0 0 1px hsla(45, 100%, 70%, 0.5), 0 6px 20px hsla(40, 100%, 50%, 0.35);
+}
+
+.day-goal--silver {
+  background: linear-gradient(135deg, hsl(210, 14%, 84%) 0%, hsl(210, 10%, 70%) 60%, hsl(210, 10%, 56%) 100%);
+  border-color: hsl(210, 20%, 90%);
+  box-shadow: 0 0 0 1px hsla(210, 20%, 90%, 0.5), 0 6px 20px hsla(210, 10%, 70%, 0.35);
+}
+
+.day-goal--bronze {
+  background: linear-gradient(135deg, hsl(28, 70%, 60%) 0%, hsl(25, 65%, 47%) 60%, hsl(22, 60%, 38%) 100%);
+  border-color: hsl(28, 70%, 72%);
+  box-shadow: 0 0 0 1px hsla(28, 70%, 72%, 0.5), 0 6px 20px hsla(25, 65%, 47%, 0.35);
+}
+
+.day-goal--gold h2,
+.day-goal--gold dt,
+.day-goal--gold .caption,
+.day-goal--gold .status,
+.day-goal--gold .stat-value,
+.day-goal--gold .stat-unit,
+.day-goal--silver h2,
+.day-goal--silver dt,
+.day-goal--silver .caption,
+.day-goal--silver .status,
+.day-goal--silver .stat-value,
+.day-goal--silver .stat-unit,
+.day-goal--bronze h2,
+.day-goal--bronze dt,
+.day-goal--bronze .caption,
+.day-goal--bronze .status,
+.day-goal--bronze .stat-value,
+.day-goal--bronze .stat-unit {
+  color: hsl(30, 70%, 10%);
+}
+
+.header {
+  display: grid;
+  gap: 2px;
+}
+
+h2 {
+  margin: 0;
+  color: var(--mat-sys-on-primary);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.status {
+  margin: 0;
+  color: var(--bt-text-muted);
+  font-size: 12px;
+}
+
+.status--achieved {
+  color: hsl(45, 100%, 70%);
+  font-weight: 600;
+}
+
+.progress::before {
+  content: '·';
+  margin: 0 4px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 16px;
+}
+
+.month {
+  display: grid;
+  gap: 6px;
+}
+
+.caption {
+  margin: 0;
+  color: var(--bt-text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.tier-counts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.stat {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+}
+
+dt {
+  color: var(--bt-text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.stat[data-tier] dt::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 5px;
+  border-radius: 50%;
+  border: 1px solid hsla(0, 0%, 0%, 0.25);
+  background: var(--tier-color);
+  vertical-align: baseline;
+}
+
+.stat[data-tier='GOLD'] {
+  --tier-color: hsl(45, 95%, 58%);
+}
+
+.stat[data-tier='SILVER'] {
+  --tier-color: hsl(210, 10%, 75%);
+}
+
+.stat[data-tier='BRONZE'] {
+  --tier-color: hsl(28, 65%, 52%);
+}
+
+dd {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.stat-value {
+  color: var(--mat-sys-on-primary);
+  font-size: 26px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.stat-unit {
+  color: var(--bt-text-muted);
+  font-size: 12px;
+}
