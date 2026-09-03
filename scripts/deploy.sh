@@ -67,9 +67,9 @@ helm upgrade $SERVER_RELEASE_NAME mucsi96/spring-app \
     --set serviceAccountName=training-log-api-workload-identity \
     --set env.AZURE_KEYVAULT_ENDPOINT=$AZURE_KEYVAULT_ENDPOINT \
     --set env.CLIENT_APP_NAME=$CLIENT_RELEASE_NAME \
-    --set resources.requests.memory=320Mi \
+    --set resources.requests.memory=128Mi \
     --set resources.requests.cpu=100m \
-    --set resources.limits.memory=1Gi \
+    --set resources.limits.memory=512Mi \
     --set resources.limits.cpu=500m \
     --wait \
     --timeout 10m
