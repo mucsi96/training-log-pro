@@ -47,7 +47,7 @@ public class StravaController {
   private final TokenService tokenService;
 
   @PostMapping("/activities/sync")
-  @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
+  @PreAuthorize("hasAuthority('APPROLE_createWorkout')")
   public ResponseEntity<?> syncActivities(
       Authentication principal,
       HttpServletRequest servletRequest,

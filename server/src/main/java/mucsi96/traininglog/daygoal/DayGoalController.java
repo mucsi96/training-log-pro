@@ -17,7 +17,7 @@ import mucsi96.traininglog.api.DayGoalStats;
 @RestController
 @RequestMapping(value = "/day-goal", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
-@PreAuthorize("hasAuthority('APPROLE_WorkoutReader') and hasAuthority('SCOPE_readWorkouts')")
+@PreAuthorize("hasAuthority('APPROLE_readWorkouts')")
 public class DayGoalController {
 
   private final DayGoalService dayGoalService;

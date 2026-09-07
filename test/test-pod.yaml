@@ -89,9 +89,9 @@ spec:
         - name: PREFERRED_USERNAME
           value: test-user@example.com
         - name: ROLES
-          value: WorkoutReader,WorkoutCreator
+          value: readWorkouts,createWorkout
         - name: SCP
-          value: readWorkouts createWorkout
+          value: api-access
         - name: AUD
           value: mock-api-client-id
       livenessProbe:

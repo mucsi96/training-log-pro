@@ -20,13 +20,13 @@ public class SettingsController {
   private final DayGoalRequirementService requirementService;
 
   @GetMapping
-  @PreAuthorize("hasAuthority('APPROLE_WorkoutReader') and hasAuthority('SCOPE_readWorkouts')")
+  @PreAuthorize("hasAuthority('APPROLE_readWorkouts')")
   Settings getSettings() {
     return Settings.builder().tiers(requirementService.getTierGoals()).build();
   }
 
   @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
+  @PreAuthorize("hasAuthority('APPROLE_createWorkout')")
   Settings updateSettings(@RequestBody Settings request) {
     return Settings.builder().tiers(requirementService.update(request.getTiers())).build();
   }

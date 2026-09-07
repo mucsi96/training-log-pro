@@ -38,7 +38,7 @@ public class DailyTaskController {
   private final Clock clock;
 
   @GetMapping
-  @PreAuthorize("hasAuthority('APPROLE_WorkoutReader') and hasAuthority('SCOPE_readWorkouts')")
+  @PreAuthorize("hasAuthority('APPROLE_readWorkouts')")
   List<DailyTask> listTasks() {
     return dailyTaskService.listTasks().stream()
         .map(this::toResponse)
@@ -46,7 +46,7 @@ public class DailyTaskController {
   }
 
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
+  @PreAuthorize("hasAuthority('APPROLE_createWorkout')")
   ResponseEntity<DailyTask> addTask(@Valid @RequestBody TaskRequest request) {
     DailyTaskEntity saved = dailyTaskService.addTask(request.name().trim());
     DailyTask body = toResponse(saved);
@@ -57,21 +57,21 @@ public class DailyTaskController {
   }
 
   @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
+  @PreAuthorize("hasAuthority('APPROLE_createWorkout')")
   DailyTask renameTask(@PathVariable UUID id, @Valid @RequestBody TaskRequest request) {
     DailyTaskEntity saved = dailyTaskService.renameTask(id, request.name().trim());
     return toResponse(saved);
   }
 
   @DeleteMapping("/{id}")
-  @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
+  @PreAuthorize("hasAuthority('APPROLE_createWorkout')")
   ResponseEntity<Void> deleteTask(@PathVariable UUID id) {
     dailyTaskService.deleteTask(id);
     return ResponseEntity.noContent().build();
   }
 
   @GetMapping("/today")
-  @PreAuthorize("hasAuthority('APPROLE_WorkoutReader') and hasAuthority('SCOPE_readWorkouts')")
+  @PreAuthorize("hasAuthority('APPROLE_readWorkouts')")
   List<DailyTaskStatus> listToday(@RequestHeader("X-Timezone") ZoneId zoneId) {
     LocalDate today = LocalDate.now(clock.withZone(zoneId));
     DailyTaskService.TodayTasks snapshot = dailyTaskService.getTodayTasks(today);
@@ -85,7 +85,7 @@ public class DailyTaskController {
   }
 
   @PutMapping(value = "/{id}/completion", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
+  @PreAuthorize("hasAuthority('APPROLE_createWorkout')")
   ResponseEntity<Void> setCompletion(
       @PathVariable UUID id,
       @Valid @RequestBody CompletionRequest request,

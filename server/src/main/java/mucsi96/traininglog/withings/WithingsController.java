@@ -39,7 +39,7 @@ public class WithingsController {
   private final TokenService tokenService;
 
   @PostMapping("/sync")
-  @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
+  @PreAuthorize("hasAuthority('APPROLE_createWorkout')")
   public ResponseEntity<?> sync(
       Authentication principal,
       HttpServletRequest servletRequest,

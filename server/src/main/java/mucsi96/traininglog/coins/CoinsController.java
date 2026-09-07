@@ -18,13 +18,13 @@ public class CoinsController {
   private final CoinsService coinsService;
 
   @GetMapping
-  @PreAuthorize("hasAuthority('APPROLE_WorkoutReader') and hasAuthority('SCOPE_readWorkouts')")
+  @PreAuthorize("hasAuthority('APPROLE_readWorkouts')")
   Coins getCoins() {
     return coinsService.getCoins();
   }
 
   @PostMapping("/reset")
-  @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
+  @PreAuthorize("hasAuthority('APPROLE_createWorkout')")
   Coins resetCoins() {
     return coinsService.resetCoins();
   }

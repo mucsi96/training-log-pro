@@ -36,7 +36,7 @@ public class ReadingController {
   private final ReadingService readingService;
 
   @GetMapping("/books")
-  @PreAuthorize("hasAuthority('APPROLE_WorkoutReader') and hasAuthority('SCOPE_readWorkouts')")
+  @PreAuthorize("hasAuthority('APPROLE_readWorkouts')")
   List<Book> listBooks(@RequestHeader("X-Timezone") ZoneId zoneId) {
     return readingService.getBooks().stream()
         .map(book -> toResponse(book, zoneId))
@@ -44,7 +44,7 @@ public class ReadingController {
   }
 
   @PostMapping(value = "/books", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
+  @PreAuthorize("hasAuthority('APPROLE_createWorkout')")
   Book addBook(@Valid @RequestBody BookRequest request, @RequestHeader("X-Timezone") ZoneId zoneId) {
     int startingPage = request.getStartingPage() == null ? 0 : request.getStartingPage();
     BookSummary saved = readingService.addBook(
@@ -53,7 +53,7 @@ public class ReadingController {
   }
 
   @PutMapping(value = "/books/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
+  @PreAuthorize("hasAuthority('APPROLE_createWorkout')")
   Book updateBook(
       @PathVariable UUID id,
       @Valid @RequestBody BookRequest request,
@@ -65,7 +65,7 @@ public class ReadingController {
   }
 
   @PostMapping(value = "/books/{id}/progress", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
+  @PreAuthorize("hasAuthority('APPROLE_createWorkout')")
   Book updateProgress(
       @PathVariable UUID id,
       @Valid @RequestBody UpdateBookProgressRequest request,
@@ -75,7 +75,7 @@ public class ReadingController {
   }
 
   @DeleteMapping("/books/{id}")
-  @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
+  @PreAuthorize("hasAuthority('APPROLE_createWorkout')")
   ResponseEntity<Void> deleteBook(@PathVariable UUID id) {
     readingService.deleteBook(id);
     return ResponseEntity.noContent().build();

@@ -22,7 +22,7 @@ import mucsi96.traininglog.segments.PodiumService;
 @RestController
 @RequestMapping(value = "/ride", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
-@PreAuthorize("hasAuthority('APPROLE_WorkoutReader') and hasAuthority('SCOPE_readWorkouts')")
+@PreAuthorize("hasAuthority('APPROLE_readWorkouts')")
 public class RideController {
 
   private final RideService rideService;
