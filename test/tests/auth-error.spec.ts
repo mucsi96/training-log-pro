@@ -36,3 +36,58 @@ test('recovers with a user-initiated retry after an authority error', async ({
     page.getByRole('button', { name: 'Open profile menu' })
   ).toBeVisible();
 });
+
+test('reauthenticates immediately when the refresh token expires', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(
+    page.getByRole('button', { name: 'Open profile menu' })
+  ).toBeVisible();
+
+  const refreshToken = await page.evaluate(() => {
+    const key = Object.keys(localStorage).find((item) =>
+      item.startsWith('oidc.user:')
+    );
+    return key ? JSON.parse(localStorage.getItem(key)!).refresh_token : null;
+  });
+  expect(refreshToken).toBeTruthy();
+
+  const environment = await (await page.request.get('/api/environment')).json();
+  const consumed = await page.request.post(
+    `${environment.mockOAuth2ServerUri}/default/token`,
+    {
+      form: { grant_type: 'refresh_token', refresh_token: refreshToken },
+    }
+  );
+  expect(consumed.ok()).toBeTruthy();
+
+  let authorizationRequests = 0;
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname === '/default/authorize') {
+      authorizationRequests += 1;
+    }
+  });
+
+  await page.evaluate(() => {
+    const originalDateNow = Date.now;
+    Date.now = () => originalDateNow() + 31_000;
+    window.dispatchEvent(new Event('focus'));
+    Date.now = originalDateNow;
+  });
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const key = Object.keys(localStorage).find((item) =>
+          item.startsWith('oidc.user:')
+        );
+        return key ? JSON.parse(localStorage.getItem(key)!).refresh_token : null;
+      })
+    )
+    .not.toBe(refreshToken);
+  await expect(
+    page.getByRole('button', { name: 'Open profile menu' })
+  ).toBeVisible();
+  await expect(page.getByText(/^Unable to fetch/)).not.toBeVisible();
+  expect(authorizationRequests).toBe(1);
+});
