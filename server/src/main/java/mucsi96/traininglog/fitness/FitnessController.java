@@ -19,7 +19,7 @@ import mucsi96.traininglog.api.FitnessTimeline;
 @RestController
 @RequestMapping(value = "/fitness", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
-@PreAuthorize("hasAuthority('APPROLE_WorkoutReader') and hasAuthority('SCOPE_readWorkouts')")
+@PreAuthorize("hasAuthority('APPROLE_readWorkouts')")
 public class FitnessController {
 
   private final FitnessService fitnessService;

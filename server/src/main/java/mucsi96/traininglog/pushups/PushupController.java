@@ -32,7 +32,7 @@ public class PushupController {
   private final PushupService pushupService;
 
   @GetMapping
-  @PreAuthorize("hasAuthority('APPROLE_WorkoutReader') and hasAuthority('SCOPE_readWorkouts')")
+  @PreAuthorize("hasAuthority('APPROLE_readWorkouts')")
   List<PushupSetResponse> list(
       @RequestParam(required = false) @Positive Integer period,
       @RequestHeader("X-Timezone") ZoneId zoneId) {
@@ -45,7 +45,7 @@ public class PushupController {
   }
 
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
+  @PreAuthorize("hasAuthority('APPROLE_createWorkout')")
   PushupSetResponse add(
       @Valid @RequestBody AddPushupSetRequest request,
       @RequestHeader("X-Timezone") ZoneId zoneId) {

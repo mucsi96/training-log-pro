@@ -62,7 +62,7 @@ function buildAzureAdSettings(config: EnvironmentConfig): UserManagerSettings {
     ...baseSettings(),
     authority: `https://login.microsoftonline.com/${config.tenantId}/v2.0`,
     client_id: config.clientId,
-    scope: `openid profile offline_access ${config.apiClientId}/readWorkouts ${config.apiClientId}/createWorkout`,
+    scope: `openid profile offline_access ${config.apiClientId}/api-access`,
   } as UserManagerSettings;
 }
 

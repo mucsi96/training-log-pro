@@ -38,7 +38,7 @@ public class DeviceController {
   private final DeviceService deviceService;
 
   @GetMapping
-  @PreAuthorize("hasAuthority('APPROLE_WorkoutReader') and hasAuthority('SCOPE_readWorkouts')")
+  @PreAuthorize("hasAuthority('APPROLE_readWorkouts')")
   List<Device> listDevices(@RequestHeader("X-Timezone") ZoneId zoneId) {
     return deviceService.getDevices().stream()
         .map(device -> toResponse(device, zoneId))
@@ -46,7 +46,7 @@ public class DeviceController {
   }
 
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
+  @PreAuthorize("hasAuthority('APPROLE_createWorkout')")
   CreatedDevice createDevice(
       @Valid @RequestBody CreateDeviceRequest request,
       @RequestHeader("X-Timezone") ZoneId zoneId) {
@@ -60,14 +60,14 @@ public class DeviceController {
   }
 
   @DeleteMapping("/{id}")
-  @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
+  @PreAuthorize("hasAuthority('APPROLE_createWorkout')")
   ResponseEntity<Void> deleteDevice(@PathVariable UUID id) {
     deviceService.deleteDevice(id);
     return ResponseEntity.noContent().build();
   }
 
   @PostMapping(value = "/{id}/books", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
+  @PreAuthorize("hasAuthority('APPROLE_createWorkout')")
   DeviceBook uploadBook(
       @PathVariable UUID id,
       @RequestParam("file") MultipartFile file,
@@ -88,7 +88,7 @@ public class DeviceController {
   }
 
   @DeleteMapping("/{id}/books/{bookId}")
-  @PreAuthorize("hasAuthority('APPROLE_WorkoutCreator') and hasAuthority('SCOPE_createWorkout')")
+  @PreAuthorize("hasAuthority('APPROLE_createWorkout')")
   ResponseEntity<Void> removeBook(@PathVariable UUID id, @PathVariable UUID bookId) {
     deviceService.removeBook(id, bookId);
     return ResponseEntity.noContent().build();

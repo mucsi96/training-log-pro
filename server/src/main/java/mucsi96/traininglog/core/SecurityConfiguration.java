@@ -46,7 +46,7 @@ public class SecurityConfiguration {
                         "/strava/authorize",
                         "/withings/authorize")
                 .permitAll()
-                .anyRequest().authenticated());
+                .anyRequest().hasAuthority("SCOPE_api-access"));
 
         return http.build();
     }

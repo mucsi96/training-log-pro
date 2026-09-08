@@ -20,7 +20,7 @@ import mucsi96.traininglog.api.WeightMeasurement;
 @RestController
 @RequestMapping(value = "/weight", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
-@PreAuthorize("hasAuthority('APPROLE_WorkoutReader') and hasAuthority('SCOPE_readWorkouts')")
+@PreAuthorize("hasAuthority('APPROLE_readWorkouts')")
 public class WeightController {
 
   private final WeightService weightService;
