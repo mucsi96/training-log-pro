@@ -73,7 +73,7 @@ main {
   display: block;
   padding: 1px max(1rem, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(1rem, env(safe-area-inset-left));
   max-width: 90rem;
-  margin: 50px auto 0;
+  margin: 20px auto 0;
 }
 
 .auth-error {

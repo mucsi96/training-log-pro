@@ -15,7 +15,7 @@ test.describe('Ride', () => {
   });
 
   test('should display today\'s ride stats', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?view=training');
     await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
     await expect(page.getByText('1 740')).toBeVisible();
     await expect(page.getByText('1 032 m')).toBeVisible();
@@ -24,7 +24,7 @@ test.describe('Ride', () => {
   });
 
   test('should display ride stats for the default month view', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?view=training');
     await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
     await expect(page.getByText('4 324')).toBeVisible();
     await expect(page.getByText('2 664 m')).toBeVisible();
@@ -33,7 +33,7 @@ test.describe('Ride', () => {
   });
 
   test('should display ride stats for year', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?view=training');
     await page.getByRole('link', { name: 'Year' }).click();
     await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
     await expect(page.getByText('4 970')).toBeVisible();
@@ -43,7 +43,7 @@ test.describe('Ride', () => {
   });
 
   test('should display ride stats for all time', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?view=training');
     await page.getByRole('link', { name: 'All time' }).click();
     await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
     await expect(page.getByText('5 616')).toBeVisible();
@@ -62,7 +62,7 @@ test.describe('Ride without activity in selected timerange', () => {
   });
 
   test('should hide ride stats when no activity in the selected timerange', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?view=training');
     await expect(page.getByRole('heading', { name: 'Calories' })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: 'Elevation gain' })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: 'Distance' })).toHaveCount(0);
@@ -70,7 +70,7 @@ test.describe('Ride without activity in selected timerange', () => {
   });
 
   test('should display ride stats when activity exists for all time', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?view=training');
     await page.getByRole('link', { name: 'All time' }).click();
     await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
   });

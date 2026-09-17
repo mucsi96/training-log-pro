@@ -1,7 +1,7 @@
 section {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 60px 20px;
+  gap: 12px;
   align-items: start;
 }
 
@@ -17,6 +17,18 @@ section > * {
   gap: 4px;
 }
 
+section:not(.podium-panel) article {
+  padding: 16px;
+  border: 1px solid var(--bt-outline);
+  border-radius: 14px;
+  background: var(--bt-surface-1);
+}
+
+section:not(.podium-panel) p,
+section:not(.podium-panel) h2 {
+  margin: 0;
+}
+
 h2 {
   color: var(--bt-text-muted);
   font-size: 14px;
@@ -24,7 +36,7 @@ h2 {
 
 .value {
   color: var(--mat-sys-on-primary);
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
 }
 
@@ -37,6 +49,7 @@ h2 {
   --podium-medal-color: #cd7f32;
   --podium-medal-glow: rgb(205 127 50 / 0.25);
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   padding: 20px;
   margin: 0 0 24px;
@@ -45,6 +58,35 @@ h2 {
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
   border-left: 4px solid var(--podium-medal-color);
   color: inherit;
+}
+
+.podium-panel > .podium-header {
+  display: flex;
+}
+
+.podium-panel > .podium-details {
+  display: block;
+}
+
+.podium-details summary {
+  min-height: 44px;
+  display: list-item;
+  align-content: center;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.podium-details summary:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+
+.podium-details[open] .podium-stats {
+  margin: 12px 0;
+}
+
+.podium-details .podium-route {
+  margin: 16px 0;
 }
 
 .podium-panel[data-position="1"] {

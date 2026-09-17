@@ -19,6 +19,8 @@
       <p class="podium-subtitle">{{ podium.segmentName }}</p>
     </div>
   </header>
+  <details class="podium-details">
+  <summary>Segment details & route</summary>
   <dl class="podium-stats">
     <div>
       <dt>Length</dt>
@@ -97,6 +99,7 @@
     }
   </ul>
   }
+  </details>
 </section>
 }
 @if ((period.time ?? 0) > 0) {

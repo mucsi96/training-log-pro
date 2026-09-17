@@ -1,8 +1,37 @@
-<app-day-goal></app-day-goal>
-<app-daily-tasks></app-daily-tasks>
-<app-pushups></app-pushups>
-<app-reading></app-reading>
-<app-ride></app-ride>
-<app-fitness></app-fitness>
-<app-ftp></app-ftp>
-<app-weight></app-weight>
+<header class="page-heading">
+  <div>
+    <h1>Overview</h1>
+  </div>
+  <mat-icon aria-hidden="true">bolt</mat-icon>
+</header>
+
+<mat-tab-group animationDuration="0ms" mat-stretch-tabs [disablePagination]="true" [selectedIndex]="selectedIndex()" (selectedIndexChange)="selectView($event)">
+  <mat-tab label="Today">
+    <ng-template matTabContent>
+      <div class="today-grid">
+        <app-day-goal />
+        <app-daily-tasks />
+        <app-pushups [compact]="true" />
+        <app-reading [compact]="true" />
+      </div>
+    </ng-template>
+  </mat-tab>
+  <mat-tab label="Training">
+    <ng-template matTabContent>
+      <div class="detail-grid">
+        <div class="section-intro"><h2>Your rides</h2><p>Today’s totals · selected period below</p></div>
+        <app-ride />
+        <div class="metric-grid"><app-fitness /><app-ftp /></div>
+        <app-pushups />
+      </div>
+    </ng-template>
+  </mat-tab>
+  <mat-tab label="Health">
+    <ng-template matTabContent>
+      <div class="detail-grid">
+        <div class="section-intro"><h2>Body measurements</h2><p>Your latest measurements and trends</p></div>
+        <app-weight />
+      </div>
+    </ng-template>
+  </mat-tab>
+</mat-tab-group>

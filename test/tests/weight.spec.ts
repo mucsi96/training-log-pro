@@ -18,7 +18,7 @@ test.describe('Weight', () => {
   });
 
   test('should display today\'s weight', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?view=health');
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
     await expect(page.getByText('87.2 kg')).toBeVisible();
     await expect(page.getByText('21.8 kg')).toBeVisible();
@@ -26,7 +26,7 @@ test.describe('Weight', () => {
   });
 
   test('should display today\'s diff inline with each value', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?view=health');
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
     const weightArticle = page.locator('article', { hasText: 'Weight' });
     await expect(weightArticle.locator('.today-diff')).toHaveText('↓ 0.3 kg');
@@ -42,7 +42,7 @@ test.describe('Weight', () => {
   });
 
   test('should display weight diff for the default month view', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?view=health');
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
     await expect(page.getByText('↓ 10.8 kg')).toBeVisible();
     await expect(page.getByText('↓ 12.7 kg')).toBeVisible();
@@ -50,7 +50,7 @@ test.describe('Weight', () => {
   });
 
   test('should display weight chart for the default month view', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?view=health');
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
     const chart = page.locator('section:has-text("Weight") [role="img"]');
     await expect(chart).toHaveAttribute('aria-label', /This is a chart with type Line chart/);
@@ -64,7 +64,7 @@ test.describe('Weight', () => {
   });
 
   test('should display weight diff for year', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?view=health');
     await page.getByRole('link', { name: 'Year' }).click();
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
     await expect(page.getByText('↓ 21.7 kg')).toBeVisible();
@@ -73,7 +73,7 @@ test.describe('Weight', () => {
   });
 
   test('should display weight chart for year', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?view=health');
     await page.getByRole('link', { name: 'Year' }).click();
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
     const chart = page.locator('section:has-text("Weight") [role="img"]');
@@ -88,7 +88,7 @@ test.describe('Weight', () => {
   });
 
   test('should display weight diff for all time', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?view=health');
     await page.getByRole('link', { name: 'All time' }).click();
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
     await expect(page.getByText('↓ 21.7 kg')).toBeVisible();
@@ -97,7 +97,7 @@ test.describe('Weight', () => {
   });
 
   test('should display weight chart for all time', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?view=health');
     await page.getByRole('link', { name: 'All time' }).click();
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
     const chart = page.locator('section:has-text("Weight") [role="img"]');
@@ -123,7 +123,7 @@ test.describe('Weight without a measurement today', () => {
   });
 
   test('should display weight chart even without today\'s measurement', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?view=health');
     const chart = page.locator('section:has-text("Weight") [role="img"]').first();
     await expect(chart).toHaveAttribute('aria-label', /This is a chart with type Line chart/);
     await expect(chart).toHaveAttribute('aria-label', chartLabel('89.4,'));

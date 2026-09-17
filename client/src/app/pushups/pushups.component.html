@@ -2,12 +2,15 @@
 @if (periodSets.isLoading() || settings.isLoading()) {
 <div class="page-loading"><bt-bar-loader /></div>
 } @else {
-<section aria-labelledby="pushups-heading">
+<section aria-labelledby="pushups-heading" [class.compact]="compact()">
   <header class="header">
     <h2 id="pushups-heading">Pushups</h2>
   </header>
 
-  @if (chart) {
+  @if (compact()) {
+    <p class="today-total"><strong>{{ todayTotal() }}</strong> today</p>
+    <button mat-flat-button type="button" (click)="openAddDialog()" [disabled]="busy()" aria-label="Add pushups">+ Add set</button>
+  } @else if (chart) {
   <button
     type="button"
     class="chart-wrapper"

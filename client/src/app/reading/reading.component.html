@@ -1,7 +1,7 @@
 @if (books.isLoading()) {
 <div class="page-loading"><bt-bar-loader /></div>
 } @else {
-<section class="reading" aria-labelledby="reading-heading">
+<section class="reading" [class.compact]="compact()" aria-labelledby="reading-heading">
   <header class="header">
     <h2 id="reading-heading">Reading</h2>
   </header>
@@ -9,7 +9,8 @@
   <div class="books">
     @if (inProgressBooks().length === 0) {
     <p class="empty">No books in progress. Add a book in Settings.</p>
-    } @for (book of inProgressBooks(); track book.id) {
+    } @for (book of visibleBooks(); track book.id) {
+    <article class="book-entry" [attr.aria-label]="book.title">
     <div
       class="book"
       role="button"
@@ -32,6 +33,12 @@
         ></div>
       </div>
 
+      @if (compact()) {
+        <p class="compact-progress">{{ book.currentPage }} / {{ book.totalPages }} pages <span>Update progress →</span></p>
+      }
+    </div>
+    <details class="book-details">
+      <summary>Reading details</summary>
       <dl class="stats">
         <div class="stat">
           <dt>Page</dt>
@@ -55,8 +62,12 @@
           </dd>
         </div>
       </dl>
-    </div>
+    </details>
+    </article>
     }
   </div>
+  @if (compact() && inProgressBooks().length > 1) {
+    <button mat-button type="button" [attr.aria-expanded]="expanded()" (click)="expanded.set(!expanded())">{{ expanded() ? 'Show fewer books' : 'View all ' + inProgressBooks().length + ' books' }}</button>
+  }
 </section>
 }

@@ -64,7 +64,7 @@ test.describe('Podium messages', () => {
       ],
     });
 
-    await page.goto('/');
+    await page.goto('/?view=training');
 
     // Sync persisted both segment efforts from the synced activity.
     await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
@@ -84,7 +84,7 @@ test.describe('Podium messages', () => {
   test('shows nothing when no podium was reached today', async ({ page }) => {
     await pushStravaActivity({ segmentEfforts: [] });
 
-    await page.goto('/');
+    await page.goto('/?view=training');
     await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
     await expect(page.getByTestId('podium-banner')).toHaveCount(0);
   });
@@ -111,7 +111,7 @@ test.describe('Podium messages', () => {
       ],
     });
 
-    await page.goto('/');
+    await page.goto('/?view=training');
     await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
 
     const efforts = await getSegmentEffortRows();
@@ -140,7 +140,7 @@ test.describe('Podium messages', () => {
       ],
     });
 
-    await page.goto('/');
+    await page.goto('/?view=training');
     await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
 
     const efforts = await getSegmentEffortRows();
@@ -190,11 +190,12 @@ test.describe('Podium messages', () => {
         ],
       });
 
-      await page.goto('/');
+      await page.goto('/?view=training');
       const panel = page.getByTestId('podium-banner');
       await expect(panel).toBeVisible();
       await expect(panel).toContainText('2nd place all-time on UndAbflug');
       await expect(panel).toHaveAttribute('data-position', '2');
+      await panel.getByText('Segment details & route', { exact: true }).click();
 
       await expect(page.getByTestId('podium-distance')).toContainText('1.2 km');
       await expect(page.getByTestId('podium-time')).toContainText('3:30');
@@ -242,7 +243,7 @@ test.describe('Podium messages', () => {
       ],
     });
 
-    await page.goto('/');
+    await page.goto('/?view=training');
 
     const banner = page.getByTestId('podium-banner');
     await expect(banner).toBeVisible();
@@ -258,6 +259,7 @@ test.describe('Podium messages', () => {
     expect(Number(row.dist_count)).toBeGreaterThan(0);
     expect(Number(row.alt_count)).toBeGreaterThan(0);
 
+    await banner.getByText('Segment details & route', { exact: true }).click();
     await expect(banner.getByTestId('podium-map')).toBeVisible();
     await expect(banner.getByTestId('podium-elevation-chart')).toBeVisible();
 
