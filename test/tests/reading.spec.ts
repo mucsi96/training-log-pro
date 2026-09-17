@@ -117,15 +117,17 @@ test.describe('Reading', () => {
     await insertReadingProgress(bookId, 100, daysAgoAt(4, 8));
     await insertReadingProgress(bookId, 140, daysAgoAt(0, 12));
 
-    await page.goto('/?view=health');
+    await page.goto('/');
     const section = page.getByRole('region', { name: 'Reading' });
     const book = section.getByRole('button', {
       name: /Resumed Book, 140 of 300 pages/,
     });
     await expect(book).toBeVisible();
-    await expect(book.getByText('8.0', { exact: true })).toBeVisible();
-    await expect(book.getByText('20', { exact: true })).toBeVisible();
-    await expect(book.getByText('days left')).toBeVisible();
+    const details = section.getByRole('article', { name: 'Resumed Book', exact: true });
+    await details.getByText('Reading details', { exact: true }).click();
+    await expect(details.getByText('8.0', { exact: true })).toBeVisible();
+    await expect(details.getByText('20', { exact: true })).toBeVisible();
+    await expect(details.getByText('days left')).toBeVisible();
   });
 
   test('only counts pages read past the starting page toward the daily goal', async ({
@@ -228,9 +230,10 @@ test.describe('Reading', () => {
     await insertReadingProgress(bookId, 0, daysAgoAt(4, 8));
     await insertReadingProgress(bookId, 100, daysAgoAt(0, 12));
 
-    await page.goto('/?view=health');
+    await page.goto('/');
     const section = page.getByRole('region', { name: 'Reading' });
-    const book = section.getByRole('button', { name: /Long Book/ });
+    const book = section.getByRole('article', { name: 'Long Book', exact: true });
+    await book.getByText('Reading details', { exact: true }).click();
     await expect(book.getByText(/days? left/)).toBeVisible();
     await expect(book.getByText('pages/day')).toBeVisible();
   });

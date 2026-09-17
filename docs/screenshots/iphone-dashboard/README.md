@@ -18,6 +18,7 @@ was 2,488 pixels tall; the redesigned Today view fits within the viewport.
 
 - [Training](iphone-training.png)
 - [Health](iphone-health.png)
+- [Reading details expanded on Today](iphone-reading-expanded.png)
 - [Smaller iPhone viewport, 375 × 667](iphone-se-overview.png)
 - [Desktop, 1440 × 1000](desktop-overview.png)
 - [Ride achievement collapsed](iphone-podium-collapsed.png)
@@ -37,4 +38,5 @@ npx playwright test mobile-dashboard.spec.ts
 
 The test output includes fresh screenshots and checks task expansion,
 completion persistence, quick logging, tab navigation, period selection,
-viewport fit, and achievement disclosure.
+viewport fit, reading-detail disclosure on Today, and achievement disclosure.
+Health contains only body measurements and trends.

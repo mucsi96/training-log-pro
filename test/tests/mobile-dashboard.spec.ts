@@ -23,6 +23,16 @@ test('daily overview stays compact with a long task list', async ({ page }, test
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
   await page.screenshot({ path: testInfo.outputPath('iphone-overview.png'), fullPage: true });
 
+  const reading = page.getByRole('article', { name: 'Atomic Habits', exact: true });
+  await expect(reading).toBeInViewport({ ratio: 1 });
+  await expect(reading.getByText('pages/day', { exact: true })).not.toBeVisible();
+  await reading.getByText('Reading details', { exact: true }).click();
+  await expect(reading.getByText('pages/day', { exact: true })).toBeVisible();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.screenshot({ path: testInfo.outputPath('iphone-reading-expanded.png'), fullPage: true });
+  await reading.getByText('Reading details', { exact: true }).click();
+  await expect(reading.getByText('pages/day', { exact: true })).not.toBeVisible();
+
   await tasks.getByRole('button', { name: 'View all 12 tasks' }).click();
   await expect(tasks.getByRole('checkbox')).toHaveCount(12);
   await tasks.getByRole('checkbox', { name: 'Floss', exact: true }).check();
@@ -44,6 +54,7 @@ test('daily overview stays compact with a long task list', async ({ page }, test
   await expect(page.getByRole('tab', { name: 'Training', exact: true })).toHaveAttribute('aria-selected', 'true');
   await page.getByRole('tab', { name: 'Health', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Weight', exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Reading', exact: true })).toHaveCount(0);
   await page.screenshot({ path: testInfo.outputPath('iphone-health.png'), fullPage: true });
   await page.getByRole('tab', { name: 'Today', exact: true }).click();
   await tasks.getByRole('button', { name: 'View all 12 tasks' }).click();

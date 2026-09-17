@@ -10,6 +10,7 @@
     @if (inProgressBooks().length === 0) {
     <p class="empty">No books in progress. Add a book in Settings.</p>
     } @for (book of visibleBooks(); track book.id) {
+    <article class="book-entry" [attr.aria-label]="book.title">
     <div
       class="book"
       role="button"
@@ -34,7 +35,10 @@
 
       @if (compact()) {
         <p class="compact-progress">{{ book.currentPage }} / {{ book.totalPages }} pages <span>Update progress →</span></p>
-      } @else {
+      }
+    </div>
+    <details class="book-details">
+      <summary>Reading details</summary>
       <dl class="stats">
         <div class="stat">
           <dt>Page</dt>
@@ -58,8 +62,8 @@
           </dd>
         </div>
       </dl>
-      }
-    </div>
+    </details>
+    </article>
     }
   </div>
   @if (compact() && inProgressBooks().length > 1) {
