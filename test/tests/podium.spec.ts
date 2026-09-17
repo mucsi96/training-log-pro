@@ -147,60 +147,68 @@ test.describe('Podium messages', () => {
     expect(efforts.map((row) => Number(row.id))).toEqual([7001]);
   });
 
-  test('renders segment details and neighbour gaps on the podium panel', async ({
-    page,
-  }) => {
-    // Strava sync triggers a Withings sync first, which persists today's
-    // weight from the mock. Lock today's weight to 70 kg so watts/kg is
-    // deterministic (280 W / 70 kg = 4.0 W/kg).
-    await setWithingsMeasures([{ value: 700000, type: 1, unit: -4 }]);
-    for (const [daysAgo, elapsed, effortId] of [
-      [3, 200, 3001],
-      [4, 220, 3002],
-      [5, 260, 3003],
-    ] as const) {
-      await insertSegmentEffort({
-        id: effortId,
-        segmentId: 42,
-        segmentName: 'UndAbflug',
-        segmentDistance: 1200,
-        segmentAverageGrade: 6,
-        elapsedTime: elapsed,
-        daysAgo,
-        averageWatts: 240,
-      });
-    }
-
-    await pushStravaActivity({
-      segmentEfforts: [
-        {
-          id: 9101,
+  for (const { fasterDaysAgo, slowerDaysAgo, fasterDate, slowerDate } of [
+    { fasterDaysAgo: 3, slowerDaysAgo: 1, fasterDate: '3 days ago', slowerDate: 'yesterday' },
+    { fasterDaysAgo: 100, slowerDaysAgo: 740, fasterDate: '3 months ago', slowerDate: '2 years ago' },
+    { fasterDaysAgo: 5, slowerDaysAgo: 0, fasterDate: '5 days ago', slowerDate: 'today' },
+  ]) {
+    test(`renders segment details and neighbour dates: ${fasterDate}, ${slowerDate}`, async ({
+      page,
+    }) => {
+      // Strava sync triggers a Withings sync first, which persists today's
+      // weight from the mock. Lock today's weight to 70 kg so watts/kg is
+      // deterministic (280 W / 70 kg = 4.0 W/kg).
+      await setWithingsMeasures([{ value: 700000, type: 1, unit: -4 }]);
+      for (const [daysAgo, elapsed, effortId] of [
+        [fasterDaysAgo, 200, 3001],
+        [slowerDaysAgo, 220, 3002],
+        [800, 260, 3003],
+      ] as const) {
+        await insertSegmentEffort({
+          id: effortId,
           segmentId: 42,
           segmentName: 'UndAbflug',
           segmentDistance: 1200,
           segmentAverageGrade: 6,
-          elapsedTime: 210,
-          averageWatts: 280,
-        },
-      ],
+          elapsedTime: elapsed,
+          daysAgo,
+          averageWatts: 240,
+        });
+      }
+
+      await pushStravaActivity({
+        segmentEfforts: [
+          {
+            id: 9101,
+            segmentId: 42,
+            segmentName: 'UndAbflug',
+            segmentDistance: 1200,
+            segmentAverageGrade: 6,
+            elapsedTime: 210,
+            averageWatts: 280,
+          },
+        ],
+      });
+
+      await page.goto('/');
+      const panel = page.getByTestId('podium-banner');
+      await expect(panel).toBeVisible();
+      await expect(panel).toContainText('2nd place all-time on UndAbflug');
+      await expect(panel).toHaveAttribute('data-position', '2');
+
+      await expect(page.getByTestId('podium-distance')).toContainText('1.2 km');
+      await expect(page.getByTestId('podium-time')).toContainText('3:30');
+      await expect(page.getByTestId('podium-elevation')).toContainText('72 m');
+      await expect(page.getByTestId('podium-watts')).toContainText('280 W');
+      await expect(page.getByTestId('podium-watts-per-kg')).toContainText('4.0 W/kg');
+      await expect(page.getByTestId('podium-gap-faster')).toContainText('1st place');
+      await expect(page.getByTestId('podium-gap-faster')).toContainText('-0:10');
+      await expect(page.getByTestId('podium-gap-slower')).toContainText('3rd place');
+      await expect(page.getByTestId('podium-gap-slower')).toContainText('+0:10');
+      await expect(panel.getByRole('listitem').filter({ hasText: '1st place' })).toContainText(fasterDate);
+      await expect(panel.getByRole('listitem').filter({ hasText: '3rd place' })).toContainText(slowerDate);
     });
-
-    await page.goto('/');
-    const panel = page.getByTestId('podium-banner');
-    await expect(panel).toBeVisible();
-    await expect(panel).toContainText('2nd place all-time on UndAbflug');
-    await expect(panel).toHaveAttribute('data-position', '2');
-
-    await expect(page.getByTestId('podium-distance')).toContainText('1.2 km');
-    await expect(page.getByTestId('podium-time')).toContainText('3:30');
-    await expect(page.getByTestId('podium-elevation')).toContainText('72 m');
-    await expect(page.getByTestId('podium-watts')).toContainText('280 W');
-    await expect(page.getByTestId('podium-watts-per-kg')).toContainText('4.0 W/kg');
-    await expect(page.getByTestId('podium-gap-faster')).toContainText('1st place');
-    await expect(page.getByTestId('podium-gap-faster')).toContainText('-0:10');
-    await expect(page.getByTestId('podium-gap-slower')).toContainText('3rd place');
-    await expect(page.getByTestId('podium-gap-slower')).toContainText('+0:10');
-  });
+  }
 
   test('renders mini map and elevation chart when a podium is achieved', async ({
     page,

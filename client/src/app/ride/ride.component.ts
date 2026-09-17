@@ -1,4 +1,4 @@
-import { DecimalPipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, inject, resource } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
@@ -7,6 +7,7 @@ import { BarLoaderComponent } from '@mucsi96/angular-material-theme';
 import { map } from 'rxjs';
 import { RideService } from './ride.service';
 import { MeasurementWithUnitPipe } from '../utils/measurement-with-unit.pipe';
+import { RelativeDatePipe } from '../utils/relative-date.pipe';
 import { PodiumElevationChartComponent } from './podium-elevation-chart.component';
 import { PodiumRouteMapComponent } from './podium-route-map.component';
 
@@ -14,6 +15,8 @@ import { PodiumRouteMapComponent } from './podium-route-map.component';
   standalone: true,
   imports: [
     DecimalPipe,
+    DatePipe,
+    RelativeDatePipe,
     MatIconModule,
     BarLoaderComponent,
     MeasurementWithUnitPipe,

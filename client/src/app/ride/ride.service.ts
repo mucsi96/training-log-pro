@@ -28,8 +28,10 @@ export type PodiumMessage = {
   averageWattsPerKg?: number;
   fasterPosition?: number;
   gapToFaster?: number;
+  fasterStartDate?: string;
   slowerPosition?: number;
   gapToSlower?: number;
+  slowerStartDate?: string;
   latitudes?: number[];
   longitudes?: number[];
   distances?: number[];

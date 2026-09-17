@@ -1006,12 +1006,18 @@ components:
         gapToFaster:
           type: integer
           format: int32
+        fasterStartDate:
+          type: string
+          format: date-time
         slowerPosition:
           type: integer
           format: int32
         gapToSlower:
           type: integer
           format: int32
+        slowerStartDate:
+          type: string
+          format: date-time
         latitudes:
           type: array
           items:

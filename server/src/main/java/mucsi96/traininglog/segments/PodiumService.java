@@ -137,8 +137,10 @@ public class PodiumService {
         .averageWattsPerKg(averageWattsPerKg)
         .fasterPosition(faster != null ? position - 1 : null)
         .gapToFaster(faster != null ? effort.getElapsedTime() - faster.getElapsedTime() : null)
+        .fasterStartDate(faster != null ? faster.getStartDate().toOffsetDateTime() : null)
         .slowerPosition(slower != null ? position + 1 : null)
-        .gapToSlower(slower != null ? slower.getElapsedTime() - effort.getElapsedTime() : null);
+        .gapToSlower(slower != null ? slower.getElapsedTime() - effort.getElapsedTime() : null)
+        .slowerStartDate(slower != null ? slower.getStartDate().toOffsetDateTime() : null);
 
     segmentRepository.findById(effort.getSegmentId()).ifPresent(segment -> builder
         .latitudes(segment.getLatitudes())

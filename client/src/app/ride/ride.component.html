@@ -76,6 +76,11 @@
         >{{ formatPosition(podium.fasterPosition) }} place</span
       >
       <span class="gap-value">-{{ formatDuration(podium.gapToFaster) }}</span>
+      @if (podium.fasterStartDate) {
+      <time class="gap-date" [attr.datetime]="podium.fasterStartDate"
+        [title]="podium.fasterStartDate | date : 'medium'"
+        >{{ podium.fasterStartDate | relativeDate }}</time>
+      }
     </li>
     } @if (podium.gapToSlower != null && podium.slowerPosition) {
     <li data-testid="podium-gap-slower">
@@ -83,6 +88,11 @@
         >{{ formatPosition(podium.slowerPosition) }} place</span
       >
       <span class="gap-value">+{{ formatDuration(podium.gapToSlower) }}</span>
+      @if (podium.slowerStartDate) {
+      <time class="gap-date" [attr.datetime]="podium.slowerStartDate"
+        [title]="podium.slowerStartDate | date : 'medium'"
+        >{{ podium.slowerStartDate | relativeDate }}</time>
+      }
     </li>
     }
   </ul>

@@ -131,13 +131,20 @@ h2 {
 
 .podium-gaps li {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: 6px;
   font-size: 13px;
 }
 
-.gap-label {
+.gap-label,
+.gap-date {
   color: var(--bt-text-muted);
+}
+
+.gap-date::before {
+  content: '·';
+  margin-right: 6px;
 }
 
 .gap-value {
