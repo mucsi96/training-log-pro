@@ -117,7 +117,7 @@ test.describe('Reading', () => {
     await insertReadingProgress(bookId, 100, daysAgoAt(4, 8));
     await insertReadingProgress(bookId, 140, daysAgoAt(0, 12));
 
-    await page.goto('/');
+    await page.goto('/?view=health');
     const section = page.getByRole('region', { name: 'Reading' });
     const book = section.getByRole('button', {
       name: /Resumed Book, 140 of 300 pages/,
@@ -228,7 +228,7 @@ test.describe('Reading', () => {
     await insertReadingProgress(bookId, 0, daysAgoAt(4, 8));
     await insertReadingProgress(bookId, 100, daysAgoAt(0, 12));
 
-    await page.goto('/');
+    await page.goto('/?view=health');
     const section = page.getByRole('region', { name: 'Reading' });
     const book = section.getByRole('button', { name: /Long Book/ });
     await expect(book.getByText(/days? left/)).toBeVisible();

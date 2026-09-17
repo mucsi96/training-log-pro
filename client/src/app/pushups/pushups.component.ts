@@ -1,4 +1,5 @@
-import { Component, computed, inject, resource, signal } from '@angular/core';
+import { Component, computed, inject, input, resource, signal } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { EChartsOption } from 'echarts';
@@ -16,12 +17,13 @@ import {
 
 @Component({
   standalone: true,
-  imports: [NgxEchartsModule, BarLoaderComponent],
+  imports: [NgxEchartsModule, BarLoaderComponent, MatButtonModule],
   selector: 'app-pushups',
   templateUrl: './pushups.component.html',
   styleUrl: './pushups.component.css',
 })
 export class PushupsComponent {
+  readonly compact = input(false);
   private readonly pushupsService = inject(PushupsService);
   private readonly settingsService = inject(SettingsService);
   private readonly dialog = inject(MatDialog);
@@ -44,6 +46,12 @@ export class PushupsComponent {
   readonly periodSets = resource({
     params: () => ({ period: this.period(), version: this.pushupsService.version() }),
     loader: ({ params }) => this.pushupsService.getSets(params.period),
+  });
+
+  readonly todayTotal = computed(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    return this.periodSets.value()?.filter(set => set.createdAt.toISOString().slice(0, 10) === today)
+      .reduce((sum, set) => sum + set.count, 0) ?? 0;
   });
 
   readonly chartOptions = computed<EChartsOption | undefined>(() => {

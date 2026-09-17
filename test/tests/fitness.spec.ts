@@ -13,7 +13,7 @@ test.describe('Fitness diff', () => {
     await insertRide(7, 1740, 56000, 8400, 'Week ago', 'Ride', 1032, 200, 244);
     await insertRide(0, 1740, 56000, 8400, 'Today', 'Ride', 1032, 200, 244);
 
-    await page.goto('/');
+    await page.goto('/?view=training');
 
     const fitnessSection = page.locator('section').filter({ hasText: 'Fitness' });
     await expect(fitnessSection.getByRole('heading', { name: 'Fitness' })).toBeVisible();
@@ -31,7 +31,7 @@ test.describe('Fitness diff', () => {
     // so today's fitness is lower than yesterday's.
     await insertRide(2, 1740, 56000, 8400, 'Two days ago', 'Ride', 1032, 200, 244);
 
-    await page.goto('/');
+    await page.goto('/?view=training');
 
     const fitnessSection = page.locator('section').filter({ hasText: 'Fitness' });
     await expect(fitnessSection.getByRole('heading', { name: 'Fitness' })).toBeVisible();
@@ -46,7 +46,7 @@ test.describe('Fitness diff', () => {
     await insertRide(25, 1740, 56000, 8400, 'Month ago', 'Ride', 1032, 200, 244);
     await insertRide(0, 1740, 56000, 8400, 'Today', 'Ride', 1032, 200, 244);
 
-    await page.goto('/');
+    await page.goto('/?view=training');
     await page.getByRole('link', { name: 'Month' }).click();
 
     const fitnessSection = page.locator('section').filter({ hasText: 'Fitness' });
@@ -60,7 +60,7 @@ test.describe('Fitness diff', () => {
     // A ride only today: recompute persists exactly one fitness row.
     await insertRide(0, 1740, 56000, 8400, 'Today', 'Ride', 1032, 200, 244);
 
-    await page.goto('/');
+    await page.goto('/?view=training');
 
     const fitnessSection = page.locator('section').filter({ hasText: 'Fitness' });
     await expect(fitnessSection.getByRole('heading', { name: 'Fitness' })).toBeVisible();

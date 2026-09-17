@@ -37,7 +37,7 @@ test.describe('Withings', () => {
     await cleanupDb();
     await populateOAuthClients();
 
-    await page.goto('/');
+    await page.goto('/?view=health');
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
     await expect(page.getByText('87.2 kg')).toBeVisible();
     await expect(page.getByText('21.8 kg')).toBeVisible();
@@ -69,7 +69,7 @@ test.describe('Withings', () => {
       { value: 871532, type: 1, unit: -4 },
     ]);
 
-    await page.goto('/');
+    await page.goto('/?view=health');
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
     await expect(page.getByText('87.2 kg')).toBeVisible();
 

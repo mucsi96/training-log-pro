@@ -81,7 +81,7 @@ test.describe('Pushups', () => {
     await insertPushupSet(daysAgoAt(2, 18), 40);
     await insertPushupSet(daysAgoAt(0, 9), 25);
 
-    await page.goto('/');
+    await page.goto('/?view=training');
     const section = page.getByRole('region', { name: 'Pushups' });
     await expect(section.getByRole('img', { name: /chart/i })).toBeVisible();
     // Each populated day is drawn as a bar labelled with its total: 30 + 40 = 70
@@ -96,7 +96,7 @@ test.describe('Pushups', () => {
     await setTierRequirements('GOLD', { PUSHUPS: 50, ELEVATION: 250 });
     await insertPushupSet(daysAgoAt(0, 8), 20);
 
-    await page.goto('/');
+    await page.goto('/?view=training');
 
     const section = page.getByRole('region', { name: 'Pushups' });
     await expect(section.getByRole('button', { name: 'Add pushups' })).toBeVisible();

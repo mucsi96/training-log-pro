@@ -46,7 +46,7 @@ test.describe('Strava', () => {
     await cleanupDb();
     await populateOAuthClients();
 
-    await page.goto('/');
+    await page.goto('/?view=training');
     await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
     await expect(page.getByText('1 740').first()).toBeVisible();
     await expect(page.getByText('1 032 m').first()).toBeVisible();
@@ -55,7 +55,7 @@ test.describe('Strava', () => {
   });
 
   test('should persist suffer_score from synced activities', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?view=training');
     await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
     await expect(page.getByText('1 740').first()).toBeVisible();
 
@@ -71,7 +71,7 @@ test.describe('Strava', () => {
     // fitness = (1 - exp(-1/42)) * 244 ≈ 5.747
     // fatigue = (1 - exp(-1/7)) * 244 ≈ 32.483
     // form = fitness - fatigue ≈ -26.736
-    await page.goto('/');
+    await page.goto('/?view=training');
     await expect(page.getByRole('heading', { name: 'Fitness' })).toBeVisible();
 
     const rows = await getFitnessRows();
@@ -83,7 +83,7 @@ test.describe('Strava', () => {
   });
 
   test('should display fitness value and a chart', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?view=training');
     const fitnessSection = page.locator('section').filter({ hasText: 'Fitness' });
     await expect(fitnessSection.getByRole('heading', { name: 'Fitness' })).toBeVisible();
     await expect(fitnessSection.getByRole('heading', { name: 'Fatigue' })).toHaveCount(0);
@@ -94,7 +94,7 @@ test.describe('Strava', () => {
   });
 
   test('does not rewrite fitness rows when re-syncing produces the same values', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?view=training');
     await expect(page.getByRole('heading', { name: 'Fitness' })).toBeVisible();
 
     const firstRows = await getFitnessRows();
@@ -115,7 +115,7 @@ test.describe('Strava', () => {
     const yesterday = new Date(Date.now() - 86400000);
     await insertFitnessAt(yesterday, yesterday, 30, 40, -10);
 
-    await page.goto('/');
+    await page.goto('/?view=training');
     await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
     await expect(page.getByText('1 740').first()).toBeVisible();
 
@@ -130,7 +130,7 @@ test.describe('Fitness when Strava back-fills suffer_score', () => {
     // First sync: Strava has the ride but has not yet computed suffer_score.
     await pushStravaActivity({ sufferScore: null });
 
-    await page.goto('/');
+    await page.goto('/?view=training');
     await expect(page.getByRole('heading', { name: 'Fitness' })).toBeVisible();
 
     const initialRideRows = await getRideRows();
@@ -163,7 +163,7 @@ test.describe('Strava ride without power data', () => {
     // A ride recorded without a power meter has no weighted average watts.
     await pushStravaActivity({ weightedAverageWatts: null });
 
-    await page.goto('/');
+    await page.goto('/?view=training');
     await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
 
     const rows = await getRideRows();
@@ -181,7 +181,7 @@ test.describe('Fitness without a ride today', () => {
     await insertRide(1, 1740, 56000, 8400, 'Yesterday Ride 2', 'Ride', 1032, 200, 162);
     await insertFitnessAt(yesterday, yesterday, 5.747, 32.483, -26.736);
 
-    await page.goto('/');
+    await page.goto('/?view=training');
 
     // The fitness diagram is visible with today's decayed value.
     const fitnessSection = page.locator('section').filter({ hasText: 'Fitness' });
@@ -201,7 +201,7 @@ test.describe('Fitness without a ride today', () => {
     // Brand-new state: no rides have been recorded, no fitness rows exist.
     // The first sync of the day must still produce today's row so the UI can
     // render the section.
-    await page.goto('/');
+    await page.goto('/?view=training');
 
     const fitnessSection = page.locator('section').filter({ hasText: 'Fitness' });
     await expect(fitnessSection.getByRole('heading', { name: 'Fitness' })).toBeVisible();

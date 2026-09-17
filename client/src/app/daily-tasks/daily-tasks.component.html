@@ -8,8 +8,9 @@
         {{ completedCount() }} / {{ totalCount() }} done
       </p>
     </header>
-    <ul class="tasks">
-      @for (task of tasks.value(); track task.id) {
+    <mat-progress-bar mode="determinate" [value]="progress()" aria-label="Daily task completion" />
+    <ul class="tasks" id="today-task-list">
+      @for (task of visibleTasks(); track task.id) {
         <li class="task">
           <mat-checkbox
             [checked]="task.completed"
@@ -21,5 +22,10 @@
         </li>
       }
     </ul>
+    @if (totalCount() > 2) {
+      <button mat-button type="button" class="show-tasks" [attr.aria-expanded]="expanded()" aria-controls="today-task-list" (click)="expanded.set(!expanded())">
+        {{ expanded() ? 'Show fewer tasks' : 'View all ' + totalCount() + ' tasks' }}
+      </button>
+    }
   </section>
 }

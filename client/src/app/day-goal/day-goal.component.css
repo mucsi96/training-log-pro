@@ -1,7 +1,7 @@
 .day-goal {
   position: relative;
   display: grid;
-  gap: 12px;
+  gap: 8px;
   padding: 14px 16px;
   border-radius: 14px;
   background: linear-gradient(135deg, hsl(217, 28%, 18%), hsl(217, 28%, 14%));
@@ -160,7 +160,7 @@ dd {
 
 .stat-value {
   color: var(--mat-sys-on-primary);
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   line-height: 1;

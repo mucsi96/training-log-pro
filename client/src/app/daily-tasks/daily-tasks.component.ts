@@ -1,12 +1,14 @@
 import { Component, computed, inject, resource, signal } from '@angular/core';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatButtonModule } from '@angular/material/button';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { BarLoaderComponent } from '@mucsi96/angular-material-theme';
 import { DailyTasksService } from './daily-tasks.service';
 
 @Component({
   standalone: true,
   selector: 'app-daily-tasks',
-  imports: [MatCheckboxModule, BarLoaderComponent],
+  imports: [MatCheckboxModule, MatButtonModule, MatProgressBarModule, BarLoaderComponent],
   templateUrl: './daily-tasks.component.html',
   styleUrl: './daily-tasks.component.css',
 })
@@ -14,6 +16,7 @@ export class DailyTasksComponent {
   private readonly tasksService = inject(DailyTasksService);
 
   readonly togglingId = signal<string | null>(null);
+  readonly expanded = signal(false);
 
   readonly tasks = resource({
     params: () => this.tasksService.version(),
@@ -25,6 +28,10 @@ export class DailyTasksComponent {
     () => this.tasks.value()?.filter((t) => t.completed).length ?? 0
   );
   readonly totalCount = computed(() => this.tasks.value()?.length ?? 0);
+  readonly visibleTasks = computed(() =>
+    this.expanded() ? this.tasks.value() : this.tasks.value()?.slice(0, 2)
+  );
+  readonly progress = computed(() => this.totalCount() ? this.completedCount() / this.totalCount() * 100 : 0);
 
   async toggle(id: string, completed: boolean) {
     if (this.togglingId() !== null) {

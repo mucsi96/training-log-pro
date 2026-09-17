@@ -1,4 +1,5 @@
-import { Component, computed, inject, resource, signal } from '@angular/core';
+import { Component, computed, inject, input, resource, signal } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { BarLoaderComponent } from '@mucsi96/angular-material-theme';
 import {
@@ -10,12 +11,14 @@ import { Book, ReadingService } from './reading.service';
 
 @Component({
   standalone: true,
-  imports: [BarLoaderComponent],
+  imports: [BarLoaderComponent, MatButtonModule],
   selector: 'app-reading',
   templateUrl: './reading.component.html',
   styleUrl: './reading.component.css',
 })
 export class ReadingComponent {
+  readonly compact = input(false);
+  readonly expanded = signal(false);
   private readonly readingService = inject(ReadingService);
   private readonly dialog = inject(MatDialog);
 
@@ -32,6 +35,7 @@ export class ReadingComponent {
         (book) => book.totalPages !== null && !book.completedAt
       ) ?? []
   );
+  readonly visibleBooks = computed(() => this.compact() && !this.expanded() ? this.inProgressBooks().slice(0, 1) : this.inProgressBooks());
 
   bookProgressPercent(book: Book): number {
     return book.totalPages && book.totalPages > 0

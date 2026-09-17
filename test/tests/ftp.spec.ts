@@ -21,7 +21,7 @@ test.describe('FTP/kg diff', () => {
     // Today: a 60-minute effort at 240W (eFTP = 240W), lifting today's FTP/kg.
     await insertRide(0, 720, 32000, 3600, 'Today', 'Ride', 100, 240, 90);
 
-    await page.goto('/');
+    await page.goto('/?view=training');
 
     const ftpSection = page.locator('section').filter({ hasText: 'FTP/kg' });
     await expect(ftpSection.getByRole('heading', { name: 'FTP/kg' })).toBeVisible();
@@ -38,7 +38,7 @@ test.describe('FTP/kg diff', () => {
     // Only a ride today: recompute persists exactly one FTP row.
     await insertRide(0, 720, 32000, 3600, 'Today', 'Ride', 100, 240, 90);
 
-    await page.goto('/');
+    await page.goto('/?view=training');
 
     const ftpSection = page.locator('section').filter({ hasText: 'FTP/kg' });
     await expect(ftpSection.getByRole('heading', { name: 'FTP/kg' })).toBeVisible();
@@ -51,7 +51,7 @@ test.describe('FTP/kg diff', () => {
     // 10-minute ride: under the 20-minute minimum, so no eFTP estimate.
     await insertRide(0, 100, 5000, 600, 'Short', 'Ride', 20, 200, 20);
 
-    await page.goto('/');
+    await page.goto('/?view=training');
 
     // Wait for the dashboard to load by waiting for another section to appear.
     await expect(page.locator('section').filter({ hasText: 'Fitness' })).toBeVisible();

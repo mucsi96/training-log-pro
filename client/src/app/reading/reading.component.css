@@ -115,11 +115,12 @@ dd {
   align-items: baseline;
   gap: 4px;
   min-width: 0;
+  flex-wrap: wrap;
 }
 
 .stat-value {
   color: var(--mat-sys-on-primary);
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   line-height: 1;
@@ -128,7 +129,41 @@ dd {
 .stat-unit {
   color: var(--bt-text-muted);
   font-size: 12px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+}
+
+.compact {
+  gap: 8px;
+}
+
+.compact .header {
+  text-align: left;
+}
+
+.compact h2 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.compact .book {
+  gap: 8px;
+}
+
+.compact .book-title {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 16px;
+}
+
+.compact-progress {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  font-size: 12px;
+  color: var(--bt-text-muted);
+}
+
+.compact-progress span {
+  color: var(--mat-sys-on-surface);
 }
