@@ -52,6 +52,11 @@ h2, p { margin: 0; }
   font-size: 14px;
 }
 
+.measurement-date {
+  color: var(--bt-text-muted);
+  font-size: 12px;
+}
+
 .chart-wrapper {
   aspect-ratio: 1;
   min-width: 100px;

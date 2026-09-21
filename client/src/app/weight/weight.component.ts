@@ -1,4 +1,5 @@
 import { Component, computed, inject, resource } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { EChartsOption } from 'echarts';
@@ -41,6 +42,7 @@ function computeDiff(
     AbsoluteDiffPipe,
     DiffColorPipe,
     MeasurementWithUnitPipe,
+    DatePipe,
   ],
   selector: 'app-weight',
   templateUrl: './weight.component.html',
@@ -63,8 +65,9 @@ export class WeightComponent {
     loader: ({ params: period }) => this.weightService.getWeight(period),
   });
 
-  readonly today = computed<WeightMeasurement | undefined>(() => {
-    return this.todayHistory.value()?.measurements.at(-1);
+  readonly latest = computed<WeightMeasurement | undefined>(() => {
+    const history = this.todayHistory.value();
+    return history?.measurements.at(-1) ?? history?.baseline;
   });
 
   readonly todayDiff = computed<WeightDiff | undefined>(() => {
@@ -102,6 +105,22 @@ export class WeightComponent {
     const chartMeasurements: WeightMeasurement[] = history.baseline
       ? [history.baseline, ...history.measurements]
       : history.measurements;
+    const minIndex = chartMeasurements.reduce(
+      (index, measurement, current) =>
+        measurement.weight < chartMeasurements[index].weight ? current : index,
+      0,
+    );
+    const maxIndex = chartMeasurements.reduce(
+      (index, measurement, current) =>
+        measurement.weight > chartMeasurements[index].weight ? current : index,
+      0,
+    );
+    const referenceIndices = new Set([
+      0,
+      chartMeasurements.length - 1,
+      minIndex,
+      maxIndex,
+    ]);
 
     return {
       aria: {
@@ -109,10 +128,10 @@ export class WeightComponent {
       },
       animation: false,
       grid: {
-        top: 10,
-        right: 10,
-        bottom: 10,
-        left: 10,
+        top: 24,
+        right: 32,
+        bottom: 24,
+        left: 32,
       },
       dataset: {
         source: [
@@ -136,7 +155,19 @@ export class WeightComponent {
         {
           type: 'line',
           smooth: true,
-          showSymbol: false,
+          showSymbol: true,
+          symbolSize: (_value, params) => referenceIndices.has(params.dataIndex) ? 5 : 0,
+          label: {
+            show: true,
+            color: '#ddd',
+            fontSize: 11,
+            formatter: (params) => referenceIndices.has(params.dataIndex)
+              ? `${chartMeasurements[params.dataIndex].weight} kg`
+              : '',
+          },
+          labelLayout: {
+            moveOverlap: 'shiftY',
+          },
         },
       ],
     };
