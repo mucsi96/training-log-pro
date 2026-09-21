@@ -39,7 +39,10 @@ test.describe('Withings', () => {
 
     await page.goto('/?view=health');
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
-    await expect(page.getByText('87.2 kg')).toBeVisible();
+    const weight = page.getByRole('article').filter({
+      has: page.getByRole('heading', { name: 'Weight', exact: true }),
+    });
+    await expect(weight.getByText('87.2 kg', { exact: true })).toBeVisible();
     await expect(page.getByText('21.8 kg')).toBeVisible();
     await expect(page.getByText('35.3 %')).toBeVisible();
   });
@@ -71,7 +74,10 @@ test.describe('Withings', () => {
 
     await page.goto('/?view=health');
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
-    await expect(page.getByText('87.2 kg')).toBeVisible();
+    const weight = page.getByRole('article').filter({
+      has: page.getByRole('heading', { name: 'Weight', exact: true }),
+    });
+    await expect(weight.getByText('87.2 kg', { exact: true })).toBeVisible();
 
     const rows = await getWeightRows();
     expect(rows).toHaveLength(1);
