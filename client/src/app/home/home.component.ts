@@ -2,7 +2,8 @@ import { Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatTabsModule } from '@angular/material/tabs';
-import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { RideComponent } from '../ride/ride.component';
 import { WeightComponent } from '../weight/weight.component';
 import { FitnessComponent } from '../fitness/fitness.component';
@@ -17,7 +18,8 @@ import { DailyTasksComponent } from '../daily-tasks/daily-tasks.component';
   standalone: true,
   imports: [
     MatTabsModule,
-    MatIconModule,
+    MatFormFieldModule,
+    MatSelectModule,
     DayGoalComponent,
     DailyTasksComponent,
     RideComponent,
@@ -33,11 +35,16 @@ import { DailyTasksComponent } from '../daily-tasks/daily-tasks.component';
 export class HomeComponent {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  readonly selectedRange = this.route.snapshot.routeConfig!.path!;
   private readonly queryParams = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
   readonly selectedIndex = computed(() => {
     const view = this.queryParams().get('view');
     return view === 'training' ? 1 : view === 'health' ? 2 : 0;
   });
+
+  selectRange(range: string) {
+    this.router.navigate(['/', range], { queryParamsHandling: 'preserve' });
+  }
 
   selectView(index: number) {
     if (index === this.selectedIndex()) return;
