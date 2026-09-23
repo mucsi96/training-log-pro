@@ -25,7 +25,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mucsi96.traininglog.core.TokenService;
-import mucsi96.traininglog.weight.WeightService;
+import mucsi96.traininglog.core.DailySyncService;
 
 @RestController
 @RequestMapping("/withings")
@@ -33,8 +33,7 @@ import mucsi96.traininglog.weight.WeightService;
 @Slf4j
 public class WithingsController {
 
-  private final WithingsService withingsService;
-  private final WeightService weightService;
+  private final DailySyncService dailySyncService;
   private final OAuth2AuthorizedClientManager withingsAuthorizedClientManager;
   private final TokenService tokenService;
 
@@ -50,7 +49,7 @@ public class WithingsController {
 
     try {
       OAuth2AuthorizedClient authorizedClient = getAuthorizedClient(principal, servletRequest, servletResponse);
-      withingsService.getTodayWeight(authorizedClient, zoneId).ifPresent(weightService::saveWeight);
+      dailySyncService.syncWeight(authorizedClient, zoneId);
     } catch (OAuth2AuthorizationException ex) {
       String token = tokenService.generate(principal.getName());
       String authorizeUrl = ServletUriComponentsBuilder.fromRequestUri(servletRequest)

@@ -10,6 +10,8 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder;
 import org.springframework.security.oauth2.client.RemoveAuthorizedClientOAuth2AuthorizationFailureHandler;
@@ -127,6 +129,21 @@ public class StravaConfiguration {
         removeAuthorizedClientErrorCodes));
 
     return authorizedClientManager;
+  }
+
+  @Bean
+  AuthorizedClientServiceOAuth2AuthorizedClientManager stravaBackgroundClientManager(
+      ClientRegistrationRepository registrations,
+      OAuth2AuthorizedClientService clients) {
+    var manager = new AuthorizedClientServiceOAuth2AuthorizedClientManager(
+        registrations, clients);
+    manager.setAuthorizedClientProvider(OAuth2AuthorizedClientProviderBuilder.builder()
+        .refreshToken(configurer -> configurer.accessTokenResponseClient(stravaRefreshTokenResponseClient()))
+        .build());
+    manager.setAuthorizationFailureHandler(new RemoveAuthorizedClientOAuth2AuthorizationFailureHandler(
+        (registration, principal, attributes) -> clients.removeAuthorizedClient(registration, principal.getName()),
+        Set.of(OAuth2ErrorCodes.INVALID_GRANT, OAuth2ErrorCodes.INVALID_TOKEN, "invalid_token_response")));
+    return manager;
   }
 
   OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> stravaAccessTokenResponseClient() {

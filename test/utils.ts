@@ -131,9 +131,13 @@ export async function getCoinsResetAt(): Promise<Date> {
   return result.rows[0].coins_reset_at as Date;
 }
 
-export async function populateOAuthClients() {
+export async function populateOAuthClients(options: {
+  expired?: boolean;
+  withingsAccessToken?: string;
+} = {}) {
   const now = new Date().toISOString();
-  const tomorrow = new Date(Date.now() + 86400000).toISOString();
+  const issuedAt = new Date(Date.now() - 86400000).toISOString();
+  const expiresAt = new Date(Date.now() + (options.expired ? -3600000 : 86400000)).toISOString();
 
   await query(
     `INSERT INTO training_log.oauth2_authorized_client (
@@ -143,7 +147,7 @@ export async function populateOAuthClients() {
     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
     [
       'withings-client', '00000000-0000-0000-0000-000000000001', 'Bearer',
-      encryptToken('test-access-token'), now, tomorrow,
+      encryptToken(options.withingsAccessToken ?? 'test-access-token'), issuedAt, expiresAt,
       'user.metrics', encryptToken('test-refresh-token'), now, now,
     ]
   );
@@ -156,7 +160,7 @@ export async function populateOAuthClients() {
     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
     [
       'strava-client', '00000000-0000-0000-0000-000000000001', 'Bearer',
-      encryptToken('test-access-token'), now, tomorrow,
+      encryptToken('test-access-token'), issuedAt, expiresAt,
       'activity:read', encryptToken('test-refresh-token'), now, now,
     ]
   );
