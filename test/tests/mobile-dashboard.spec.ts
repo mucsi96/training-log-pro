@@ -47,10 +47,11 @@ test('daily overview stays compact with a long task list', async ({ page }, test
   await page.getByRole('tab', { name: 'Training', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Calories', exact: true })).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath('iphone-training.png'), fullPage: true });
-  await page.getByRole('button', { name: 'Open navigation' }).click();
-  await page.getByRole('menuitem', { name: 'Year', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Range' }).click();
+  await page.getByRole('option', { name: 'Year', exact: true }).click();
   await expect(page.getByRole('tab', { name: 'Training', exact: true })).toHaveAttribute('aria-selected', 'true');
   await page.reload();
+  await expect(page.getByRole('combobox', { name: 'Range' })).toHaveText('Year');
   await expect(page.getByRole('tab', { name: 'Training', exact: true })).toHaveAttribute('aria-selected', 'true');
   await page.getByRole('tab', { name: 'Health', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Weight', exact: true })).toBeVisible();

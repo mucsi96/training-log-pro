@@ -80,7 +80,8 @@ test.describe('Weight', () => {
 
   test('should display weight diff for year', async ({ page }) => {
     await page.goto('/?view=health');
-    await page.getByRole('link', { name: 'Year' }).click();
+    await page.getByRole('combobox', { name: 'Range' }).click();
+    await page.getByRole('option', { name: 'Year', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
     await expect(page.getByText('↓ 21.7 kg')).toBeVisible();
     await expect(page.getByText('↓ 16.8 kg')).toBeVisible();
@@ -89,7 +90,8 @@ test.describe('Weight', () => {
 
   test('should display weight chart for year', async ({ page }) => {
     await page.goto('/?view=health');
-    await page.getByRole('link', { name: 'Year' }).click();
+    await page.getByRole('combobox', { name: 'Range' }).click();
+    await page.getByRole('option', { name: 'Year', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
     const chart = page.locator('section:has-text("Weight") [role="img"]');
     await expect(chart).toHaveAttribute('aria-label', /This is a chart with type Line chart/);
@@ -104,7 +106,8 @@ test.describe('Weight', () => {
 
   test('should display weight diff for all time', async ({ page }) => {
     await page.goto('/?view=health');
-    await page.getByRole('link', { name: 'All time' }).click();
+    await page.getByRole('combobox', { name: 'Range' }).click();
+    await page.getByRole('option', { name: 'All time', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
     await expect(page.getByText('↓ 21.7 kg')).toBeVisible();
     await expect(page.getByText('↓ 16.8 kg')).toBeVisible();
@@ -113,7 +116,8 @@ test.describe('Weight', () => {
 
   test('should display weight chart for all time', async ({ page }) => {
     await page.goto('/?view=health');
-    await page.getByRole('link', { name: 'All time' }).click();
+    await page.getByRole('combobox', { name: 'Range' }).click();
+    await page.getByRole('option', { name: 'All time', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
     const chart = page.locator('section:has-text("Weight") [role="img"]');
     await expect(chart).toHaveAttribute('aria-label', /This is a chart with type Line chart/);

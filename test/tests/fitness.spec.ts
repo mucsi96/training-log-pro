@@ -47,7 +47,8 @@ test.describe('Fitness diff', () => {
     await insertRide(0, 1740, 56000, 8400, 'Today', 'Ride', 1032, 200, 244);
 
     await page.goto('/?view=training');
-    await page.getByRole('link', { name: 'Month' }).click();
+    await page.getByRole('combobox', { name: 'Range' }).click();
+    await page.getByRole('option', { name: 'Month', exact: true }).click();
 
     const fitnessSection = page.locator('section').filter({ hasText: 'Fitness' });
     await expect(fitnessSection.getByRole('heading', { name: 'Fitness' })).toBeVisible();

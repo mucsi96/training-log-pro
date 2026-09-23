@@ -34,7 +34,8 @@ test.describe('Ride', () => {
 
   test('should display ride stats for year', async ({ page }) => {
     await page.goto('/?view=training');
-    await page.getByRole('link', { name: 'Year' }).click();
+    await page.getByRole('combobox', { name: 'Range' }).click();
+    await page.getByRole('option', { name: 'Year', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
     await expect(page.getByText('4 970')).toBeVisible();
     await expect(page.getByText('3 072 m')).toBeVisible();
@@ -44,7 +45,8 @@ test.describe('Ride', () => {
 
   test('should display ride stats for all time', async ({ page }) => {
     await page.goto('/?view=training');
-    await page.getByRole('link', { name: 'All time' }).click();
+    await page.getByRole('combobox', { name: 'Range' }).click();
+    await page.getByRole('option', { name: 'All time', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
     await expect(page.getByText('5 616')).toBeVisible();
     await expect(page.getByText('3 480 m')).toBeVisible();
@@ -71,7 +73,8 @@ test.describe('Ride without activity in selected timerange', () => {
 
   test('should display ride stats when activity exists for all time', async ({ page }) => {
     await page.goto('/?view=training');
-    await page.getByRole('link', { name: 'All time' }).click();
+    await page.getByRole('combobox', { name: 'Range' }).click();
+    await page.getByRole('option', { name: 'All time', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible();
   });
 });
