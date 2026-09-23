@@ -25,11 +25,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mucsi96.traininglog.core.TokenService;
-import mucsi96.traininglog.fitness.FitnessService;
-import mucsi96.traininglog.ftp.FtpService;
-import mucsi96.traininglog.rides.RideService;
-import mucsi96.traininglog.segments.SegmentEffortService;
-import mucsi96.traininglog.segments.SegmentService;
+import mucsi96.traininglog.core.DailySyncService;
 
 @RestController
 @RequestMapping("/strava")
@@ -37,12 +33,7 @@ import mucsi96.traininglog.segments.SegmentService;
 @Slf4j
 public class StravaController {
 
-  private final StravaActivityService stravaActivityService;
-  private final RideService rideService;
-  private final SegmentService segmentService;
-  private final SegmentEffortService segmentEffortService;
-  private final FitnessService fitnessService;
-  private final FtpService ftpService;
+  private final DailySyncService dailySyncService;
   private final OAuth2AuthorizedClientManager stravaAuthorizedClientManager;
   private final TokenService tokenService;
 
@@ -58,12 +49,7 @@ public class StravaController {
 
     try {
       OAuth2AuthorizedClient authorizedClient = getAuthorizedClient(principal, servletRequest, servletResponse);
-      StravaSyncResult syncResult = stravaActivityService.getTodayRides(authorizedClient, zoneId);
-      syncResult.getRides().forEach(rideService::saveRide);
-      segmentService.saveAll(syncResult.getSegments());
-      segmentEffortService.saveAll(syncResult.getSegmentEfforts());
-      fitnessService.recompute(zoneId);
-      ftpService.recompute(zoneId);
+      dailySyncService.syncStrava(authorizedClient, zoneId);
     } catch (OAuth2AuthorizationException ex) {
       String token = tokenService.generate(principal.getName());
       String authorizeUrl = ServletUriComponentsBuilder.fromRequestUri(servletRequest)

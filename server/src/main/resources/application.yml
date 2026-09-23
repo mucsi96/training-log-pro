@@ -76,5 +76,8 @@ management:
         enabled: true
 withings:
   api-uri: https://wbsapi.withings.net
+daily-sync:
+  cron: ${DAILY_SYNC_CRON:0 0 21 * * *}
+  zone: ${DAILY_SYNC_ZONE:Europe/Budapest}
 strava:
   api-uri: https://www.strava.com
