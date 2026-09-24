@@ -4,7 +4,14 @@
   margin: 0 auto;
 }
 
+.range-toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .range-selector {
+  display: block;
+  margin-left: auto;
   --mat-form-field-container-height: 36px;
   --mat-form-field-container-vertical-padding: 6px;
   width: 180px;
