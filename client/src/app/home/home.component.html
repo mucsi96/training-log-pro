@@ -1,11 +1,13 @@
-<mat-form-field class="range-selector" appearance="outline" subscriptSizing="dynamic">
-  <mat-label>Range</mat-label>
-  <mat-select [value]="selectedRange" (selectionChange)="selectRange($event.value)">
-    <mat-option value="">Month</mat-option>
-    <mat-option value="year">Year</mat-option>
-    <mat-option value="all-time">All time</mat-option>
-  </mat-select>
-</mat-form-field>
+<div class="range-toolbar">
+  <mat-form-field class="range-selector" appearance="outline" subscriptSizing="dynamic">
+    <mat-label>Range</mat-label>
+    <mat-select [value]="selectedRange" (selectionChange)="selectRange($event.value)">
+      <mat-option value="">Month</mat-option>
+      <mat-option value="year">Year</mat-option>
+      <mat-option value="all-time">All time</mat-option>
+    </mat-select>
+  </mat-form-field>
+</div>
 
 <mat-tab-group animationDuration="0ms" mat-stretch-tabs [disablePagination]="true" [selectedIndex]="selectedIndex()" (selectedIndexChange)="selectView($event)">
   <mat-tab label="Today">
