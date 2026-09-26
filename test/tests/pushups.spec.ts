@@ -56,9 +56,9 @@ test.describe('Pushups', () => {
     await dialog.getByRole('button', { name: 'Add 7' }).click();
     await expect(dialog).toBeHidden();
 
-    const rows = await getPushupSetRows();
-    expect(rows).toHaveLength(1);
-    expect(rows[0].count).toBe(7);
+    await expect.poll(getPushupSetRows).toEqual([
+      expect.objectContaining({ count: 7 }),
+    ]);
   });
 
   test('cancel closes the dialog without adding a set', async ({ page }) => {
