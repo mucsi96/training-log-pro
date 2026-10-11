@@ -1,9 +1,35 @@
 # Training Log Pro
 
-## Docker images
+## Container images
 
-- [Server](https://hub.docker.com/repository/docker/mucsi96/training-log-pro-server)
-- [Client](https://hub.docker.com/repository/docker/mucsi96/training-log-pro-client)
+- [Server](https://github.com/users/mucsi96/packages/container/package/training-log-pro-server)
+- [Client](https://github.com/users/mucsi96/packages/container/package/training-log-pro-client)
+
+After tests pass, main pushes and manual `Pipeline` runs publish both images to
+GHCR with `GITHUB_TOKEN` and job-scoped `packages: write` permission, following
+`observatory-app`:
+
+```text
+ghcr.io/mucsi96/training-log-pro-server:sha-<full commit SHA>
+ghcr.io/mucsi96/training-log-pro-client:sha-<full commit SHA>
+```
+
+Both images are published for each run, including workflow-only changes.
+Component version detection controls GitHub releases only. Publication and
+rollout are serialized, and deployment uses the same commit's image pair.
+Make both GHCR packages public after their first publication, then rerun the
+deploy job so Kubernetes can pull them anonymously.
+
+For manual deployment, provide explicit immutable images:
+
+```bash
+AZURE_KEYVAULT_NAME=p07-training-log \
+SERVER_IMAGE=ghcr.io/mucsi96/training-log-pro-server:sha-<full-commit> \
+CLIENT_IMAGE=ghcr.io/mucsi96/training-log-pro-client:sha-<full-commit> \
+bash scripts/deploy.sh
+```
+
+The script also accepts GHCR images pinned by `@sha256:<digest>`.
 
 ## Azure Key Vault Secrets
 
@@ -38,7 +64,7 @@ podman build --build-arg SPRING_PROFILE=prod -t training-log-pro-server:prod ser
 ```
 
 `SPRING_PROFILES_ACTIVE` is not read at runtime; the pipeline builds the test
-image for the e2e job and the prod image when publishing to Docker Hub. Running
+image for the e2e job and the prod image when publishing to GHCR. Running
 the server on a JVM for local development is unaffected - `mvn spring-boot:run
 -Dspring-boot.run.profiles=local` still selects the profile the usual way.
 
