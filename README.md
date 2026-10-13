@@ -1,9 +1,9 @@
 # Training Log Pro
 
-## Docker images
+## Container images
 
-- [Server](https://hub.docker.com/repository/docker/mucsi96/training-log-pro-server)
-- [Client](https://hub.docker.com/repository/docker/mucsi96/training-log-pro-client)
+- [Server](https://github.com/users/mucsi96/packages/container/package/training-log-pro-server)
+- [Client](https://github.com/users/mucsi96/packages/container/package/training-log-pro-client)
 
 ## Azure Key Vault Secrets
 
@@ -38,7 +38,7 @@ podman build --build-arg SPRING_PROFILE=prod -t training-log-pro-server:prod ser
 ```
 
 `SPRING_PROFILES_ACTIVE` is not read at runtime; the pipeline builds the test
-image for the e2e job and the prod image when publishing to Docker Hub. Running
+image for the e2e job and the prod image when publishing to GHCR. Running
 the server on a JVM for local development is unaffected - `mvn spring-boot:run
 -Dspring-boot.run.profiles=local` still selects the profile the usual way.
 
