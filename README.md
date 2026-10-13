@@ -5,39 +5,6 @@
 - [Server](https://github.com/users/mucsi96/packages/container/package/training-log-pro-server)
 - [Client](https://github.com/users/mucsi96/packages/container/package/training-log-pro-client)
 
-After tests pass, main pushes and manual `Pipeline` runs publish changed components to
-GHCR with `GITHUB_TOKEN` and job-scoped `packages: write` permission, following
-`observatory-app` for registry authentication while retaining numbered versions:
-
-```text
-ghcr.io/mucsi96/training-log-pro-server:<server version>
-ghcr.io/mucsi96/training-log-pro-client:<client version>
-```
-
-Each component publishes only when `get_next_version.outputs.hasNextVersion`
-is `true`, using `get_next_version.outputs.version` as its image tag. The action
-always returns a version: the next number for changed components, or the last
-reachable `server-N` / `client-N` release number for unchanged components.
-Publication jobs forward that output directly to deployment.
-Publication and rollout are serialized. The GHCR source label added to each
-production Dockerfile triggers both first publications through normal version
-detection; subsequent workflow-only changes skip image publication.
-Merge [get-next-version#6](https://github.com/mucsi96/get-next-version/pull/6)
-before this application migration; the workflow consumes the action's `main` branch.
-Make both GHCR packages public after their first publication, then rerun the
-deploy job so Kubernetes can pull them anonymously.
-
-For manual deployment, provide explicit versioned images:
-
-```bash
-AZURE_KEYVAULT_NAME=p07-training-log \
-SERVER_IMAGE=ghcr.io/mucsi96/training-log-pro-server:42 \
-CLIENT_IMAGE=ghcr.io/mucsi96/training-log-pro-client:17 \
-bash scripts/deploy.sh
-```
-
-The script also accepts GHCR images pinned by `@sha256:<digest>`.
-
 ## Azure Key Vault Secrets
 
 All application secrets are pulled from Azure Key Vault using the Spring Cloud Azure Key Vault Secrets starter. The only environment variable required at runtime is `AZURE_KEYVAULT_ENDPOINT`.
