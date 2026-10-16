@@ -109,6 +109,45 @@ test.describe('KOReader sync', () => {
     expect(await getReadingProgressRows()).toHaveLength(1);
   });
 
+  test('shows the last book with changed KOReader progress on the home page', async ({ page }) => {
+    const firstBook = {
+      title: 'First Synced',
+      author: 'Author',
+      totalPages: 200,
+      currentPage: 30,
+    };
+    const secondBook = { ...firstBook, title: 'Last Synced', currentPage: 50 };
+    await insertBook(
+      randomUUID(),
+      firstBook.title,
+      firstBook.author,
+      firstBook.totalPages,
+      new Date(Date.now() - 2 * 86400000)
+    );
+    await insertBook(
+      randomUUID(),
+      secondBook.title,
+      secondBook.author,
+      secondBook.totalPages,
+      new Date(Date.now() - 86400000)
+    );
+    const apiKey = await createDeviceViaUI(page, 'Kobo');
+
+    expect((await sync(apiKey, firstBook)).status).toBe(204);
+    expect((await sync(apiKey, secondBook)).status).toBe(204);
+    await page.goto('/');
+    const section = page.getByRole('region', { name: 'Reading' });
+    await expect(section.getByRole('heading', { level: 3 })).toHaveText(['Last Synced']);
+
+    expect((await sync(apiKey, firstBook)).status).toBe(204);
+    await page.reload();
+    await expect(section.getByRole('heading', { level: 3 })).toHaveText(['Last Synced']);
+
+    expect((await sync(apiKey, { ...firstBook, currentPage: 31 })).status).toBe(204);
+    await page.reload();
+    await expect(section.getByRole('heading', { level: 3 })).toHaveText(['First Synced']);
+  });
+
   test('marks the book completed when the last page is reached', async ({
     page,
   }) => {

@@ -175,6 +175,12 @@ public class ReadingService {
         .collect(Collectors.groupingBy(ReadingProgressEntity::getBookId));
 
     return bookRepository.findAll(Sort.by(Sort.Direction.ASC, "createdAt")).stream()
+        .sorted(Comparator.comparing(
+            (BookEntity book) -> Optional.ofNullable(progressByBook.get(book.getId()))
+                .map(List::getLast)
+                .map(ReadingProgressEntity::getCreatedAt)
+                .orElse(null),
+            Comparator.nullsLast(Comparator.reverseOrder())))
         .map(book -> toSummary(book, progressByBook.getOrDefault(book.getId(), List.of())))
         .toList();
   }
