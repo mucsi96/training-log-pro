@@ -196,6 +196,58 @@ test.describe('Reading', () => {
     expect(progress.at(-1)?.current_page).toBe(125);
   });
 
+  test('shows the most recently tracked book first on the home page', async ({ page }) => {
+    const earlierRead = randomUUID();
+    const recentRead = randomUUID();
+    await insertBook(earlierRead, 'Earlier Read', 'Author', 300, daysAgoAt(7, 8));
+    await insertBook(recentRead, 'Recent Read', 'Author', 300, daysAgoAt(6, 8));
+    await insertBook(randomUUID(), 'Not Started', 'Author', 300, daysAgoAt(0, 8));
+    await insertReadingProgress(earlierRead, 100, daysAgoAt(3, 8));
+    await insertReadingProgress(earlierRead, 120, daysAgoAt(2, 12));
+    await insertReadingProgress(recentRead, 10, daysAgoAt(5, 8));
+    await insertReadingProgress(recentRead, 40, daysAgoAt(1, 12));
+
+    await page.goto('/');
+    const section = page.getByRole('region', { name: 'Reading' });
+    await expect(section.getByRole('heading', { level: 3 })).toHaveText(['Recent Read']);
+
+    await section.getByRole('button', { name: 'View all 3 books' }).click();
+    await expect(section.getByRole('heading', { level: 3 })).toHaveText([
+      'Recent Read',
+      'Earlier Read',
+      'Not Started',
+    ]);
+
+    await section.getByRole('button', { name: 'Show fewer books' }).click();
+    await page.reload();
+    await expect(section.getByRole('heading', { level: 3 })).toHaveText(['Recent Read']);
+  });
+
+  test('promotes a newly tracked book over books without progress', async ({ page }) => {
+    await insertBook(randomUUID(), 'First Added', 'Author', 200, daysAgoAt(2, 8));
+    await insertBook(randomUUID(), 'Newly Tracked', 'Author', 200, daysAgoAt(1, 8));
+
+    await page.goto('/');
+    const section = page.getByRole('region', { name: 'Reading' });
+    await expect(section.getByRole('heading', { level: 3 })).toHaveText(['First Added']);
+    await section.getByRole('button', { name: 'View all 2 books' }).click();
+    await section.getByRole('button', { name: /Newly Tracked, 0 of 200 pages/ }).click();
+
+    const dialog = page.getByRole('dialog', { name: 'Newly Tracked' });
+    await dialog.getByRole('slider', { name: 'Page' }).focus();
+    await page.keyboard.press('PageUp');
+    await dialog.getByRole('button', { name: 'Save 1', exact: true }).click();
+    await expect(dialog).toBeHidden();
+    await expect(
+      section.getByRole('button', { name: /Newly Tracked, 1 of 200 pages/ })
+    ).toBeVisible();
+
+    await section.getByRole('button', { name: 'Show fewer books' }).click();
+    await expect(section.getByRole('heading', { level: 3 })).toHaveText(['Newly Tracked']);
+    await page.reload();
+    await expect(section.getByRole('heading', { level: 3 })).toHaveText(['Newly Tracked']);
+  });
+
   test('aggregates pages read across books toward the daily goal', async ({ page }) => {
     await setTierRequirements('GOLD', { PUSHUPS: 100, ELEVATION: 250, READING_PAGES: 30 });
     const bookA = randomUUID();
