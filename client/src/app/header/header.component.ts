@@ -6,6 +6,7 @@ import { RouterLink } from '@angular/router';
 import { UserProfileService } from '../user-profile.service';
 import { MatMenuModule } from '@angular/material/menu';
 import { CoinsCounterComponent } from '../coins/coins-counter.component';
+import { PomodoroComponent } from '../pomodoro/pomodoro.component';
 
 @Component({
   selector: 'app-header',
@@ -16,6 +17,7 @@ import { CoinsCounterComponent } from '../coins/coins-counter.component';
     MatMenuModule,
     RouterLink,
     CoinsCounterComponent,
+    PomodoroComponent,
   ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',

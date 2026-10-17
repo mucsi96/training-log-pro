@@ -1,5 +1,19 @@
 # Training Log Pro
 
+## Pomodoro timer
+
+On desktop, click **Start Pomodoro** in the header to start a 25-minute focus
+session. The remaining time appears in the header and browser tab, and the tab's
+donut favicon shrinks from green through orange to red as time runs out. The
+timer continues across in-app navigation and catches up after a background tab
+or computer sleep.
+
+At completion, the tab title and favicon flash until you click **Dismiss
+Pomodoro**. You can cancel a running session with its close button. On supported
+desktop browsers over HTTPS (or localhost), starting a session also requests
+notification permission; allowing it enables a system notification at completion.
+Clicking that notification focuses the tab and dismisses the alert.
+
 ## Container images
 
 - [Server](https://github.com/users/mucsi96/packages/container/package/training-log-pro-server)
