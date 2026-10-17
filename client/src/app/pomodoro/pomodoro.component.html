@@ -1,0 +1,21 @@
+@switch (state()) {
+  @case ('idle') {
+    <button mat-flat-button bt-color="primary" (click)="start()" matTooltip="Start a 25-minute focus session">
+      <mat-icon>timer</mat-icon>
+      Start Pomodoro
+    </button>
+  }
+  @case ('running') {
+    <span role="timer" aria-label="Pomodoro time remaining" aria-live="off">{{ countdown() }}</span>
+    <button mat-icon-button aria-label="Cancel Pomodoro" matTooltip="Cancel Pomodoro" (click)="reset()">
+      <mat-icon>close</mat-icon>
+    </button>
+  }
+  @case ('completed') {
+    <span class="completion" role="status">Focus session complete</span>
+    <button mat-flat-button bt-color="success" (click)="reset()" matTooltip="Dismiss the tab alert">
+      <mat-icon>check</mat-icon>
+      Dismiss Pomodoro
+    </button>
+  }
+}
