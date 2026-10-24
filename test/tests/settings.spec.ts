@@ -95,7 +95,7 @@ test.describe('Settings', () => {
     await expect(page.getByText('Settings saved')).toBeVisible();
 
     expect(await getRequirements()).toEqual({
-      GOLD: { PUSHUPS: 80, ELEVATION: 200, READING_PAGES: 20, DAILY_TASKS: 3 },
+      GOLD: { PUSHUPS: 80, ELEVATION: 200, READING_MINUTES: 20, DAILY_TASKS: 3 },
       SILVER: { PUSHUPS: 50 },
       BRONZE: { ELEVATION: 100, DAILY_TASKS: 1 },
     });
@@ -197,7 +197,7 @@ test.describe('Settings', () => {
     const dayGoal = page.getByRole('region', { name: 'Day goal' });
     await expect(dayGoal.getByText('0/80 pushups')).toBeVisible();
     await expect(dayGoal.getByText('0/150 m')).toBeVisible();
-    await expect(dayGoal.getByText('0/20 pages')).toBeVisible();
+    await expect(dayGoal.getByText('0/20 min')).toBeVisible();
   });
 
   test('marks today gold under lower requirements once updated', async ({ page }) => {

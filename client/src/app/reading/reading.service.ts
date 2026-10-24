@@ -95,12 +95,12 @@ export class ReadingService {
     }
   }
 
-  async updateProgress(bookId: string, currentPage: number): Promise<Book> {
+  async updateProgress(bookId: string, currentPage: number, minutes: number): Promise<Book> {
     try {
       const book = await fetchJson<BookDto>(
         this.http,
         `/api/reading/books/${bookId}/progress`,
-        { method: 'post', body: { currentPage } }
+        { method: 'post', body: { currentPage, minutes } }
       );
       this.version.update((v) => v + 1);
       return toBook(book);

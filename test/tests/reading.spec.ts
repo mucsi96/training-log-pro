@@ -29,7 +29,7 @@ test.describe('Reading', () => {
   });
 
   test('shows empty state when no books exist', async ({ page }) => {
-    await setTierRequirements('GOLD', { PUSHUPS: 100, ELEVATION: 250, READING_PAGES: 30 });
+    await setTierRequirements('GOLD', { PUSHUPS: 100, ELEVATION: 250, READING_MINUTES: 30 });
     await page.goto('/');
 
     const section = page.getByRole('region', { name: 'Reading' });
@@ -130,10 +130,10 @@ test.describe('Reading', () => {
     await expect(details.getByText('days left')).toBeVisible();
   });
 
-  test('only counts pages read past the starting page toward the daily goal', async ({
+  test('counts recorded minutes rather than pages toward the daily goal', async ({
     page,
   }) => {
-    await setTierRequirements('GOLD', { PUSHUPS: 100, ELEVATION: 250, READING_PAGES: 30 });
+    await setTierRequirements('GOLD', { PUSHUPS: 100, ELEVATION: 250, READING_MINUTES: 30 });
     const bookId = randomUUID();
     await insertBook(
       bookId,
@@ -144,11 +144,11 @@ test.describe('Reading', () => {
       null,
       100
     );
-    await insertReadingProgress(bookId, 115, daysAgoAt(0, 12));
+    await insertReadingProgress(bookId, 115, daysAgoAt(0, 12), 25);
 
     await page.goto('/');
     const dayGoal = page.getByRole('region', { name: 'Day goal' });
-    await expect(dayGoal.getByText('15/30 pages')).toBeVisible();
+    await expect(dayGoal.getByText('25/30 min')).toBeVisible();
   });
 
   test('does not expose book add or remove controls on the dashboard', async ({
@@ -168,6 +168,7 @@ test.describe('Reading', () => {
   });
 
   test('updates reading progress for a book', async ({ page }) => {
+    await setTierRequirements('GOLD', { READING_MINUTES: 1 });
     const bookId = randomUUID();
     await insertBook(bookId, 'Clean Code', 'Robert Martin', 400, daysAgoAt(2, 8));
     await insertReadingProgress(bookId, 120, daysAgoAt(1, 8));
@@ -178,12 +179,23 @@ test.describe('Reading', () => {
 
     const dialog = page.getByRole('dialog', { name: 'Clean Code' });
     const dial = dialog.getByRole('slider', { name: 'Page' });
+    const minutes = dialog.getByRole('slider', { name: 'Minutes' });
+    const save = dialog.getByRole('button', { name: /^Save/ });
+    await expect(save).toBeDisabled();
+    await minutes.focus();
+    await page.keyboard.press('PageUp');
+    await expect(save).toBeDisabled();
+    await page.keyboard.press('Home');
     await expect(dial).toHaveAttribute('aria-valuenow', '120');
     await dial.focus();
     for (let i = 0; i < 5; i++) {
       await page.keyboard.press('PageUp');
     }
     await expect(dial).toHaveAttribute('aria-valuenow', '125');
+    await expect(save).toBeDisabled();
+    await minutes.focus();
+    await page.keyboard.press('PageUp');
+    await expect(minutes).toHaveAttribute('aria-valuenow', '1');
     await dialog.getByRole('button', { name: 'Save 125' }).click();
     await expect(dialog).toBeHidden();
 
@@ -194,6 +206,61 @@ test.describe('Reading', () => {
     const progress = await getReadingProgressRows();
     expect(progress).toHaveLength(2);
     expect(progress.at(-1)?.current_page).toBe(125);
+    expect(progress.at(-1)?.minutes).toBe(1);
+    await expect(page.getByRole('region', { name: 'Day goal' }).getByText('Today is a gold day')).toBeVisible();
+    await page.reload();
+    await expect(section.getByRole('button', { name: /Clean Code, 125 of 400 pages/ })).toBeVisible();
+  });
+
+  test('does not infer minutes from historical page-only progress', async ({ page }) => {
+    await setTierRequirements('GOLD', { READING_MINUTES: 30 });
+    const bookId = randomUUID();
+    await insertBook(bookId, 'Legacy Book', 'Author', 300, daysAgoAt(1, 8));
+    await insertReadingProgress(bookId, 100, daysAgoAt(0, 8));
+    await page.goto('/');
+    await expect(page.getByRole('region', { name: 'Day goal' }).getByText('0/30 min')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Legacy Book, 100 of 300 pages/ })).toBeVisible();
+  });
+
+  test('rejects invalid reading sessions on the server without persisting progress', async ({ page }) => {
+    const bookId = randomUUID();
+    await insertBook(bookId, 'Validated Book', 'Author', 300, daysAgoAt(1, 8), null, 100);
+    const booksRequest = page.waitForRequest('**/api/reading/books');
+    await page.goto('/');
+    const headers = await (await booksRequest).allHeaders();
+    for (const data of [
+      { currentPage: 110 },
+      { currentPage: 110, minutes: null },
+      { currentPage: 110, minutes: 0 },
+      { currentPage: 110, minutes: -1 },
+      { currentPage: 110, minutes: 1441 },
+      { minutes: 10 },
+      { currentPage: 0, minutes: 10 },
+      { currentPage: 100, minutes: 10 },
+      { currentPage: 99, minutes: 10 },
+      { currentPage: 301, minutes: 10 },
+    ]) {
+      const response = await page.request.post(`/api/reading/books/${bookId}/progress`, { headers, data });
+      expect(response.status(), JSON.stringify(data)).toBe(400);
+    }
+    expect(await getReadingProgressRows()).toHaveLength(0);
+  });
+
+  test('cancels a reading session on mobile without recording pages or minutes', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await insertBook(randomUUID(), 'Mobile Book', 'Author', 300, daysAgoAt(1, 8));
+    await page.goto('/');
+    await page.getByRole('button', { name: /Mobile Book, 0 of 300 pages/ }).click();
+    const dialog = page.getByRole('dialog', { name: 'Mobile Book' });
+    for (const name of ['Page', 'Minutes']) {
+      const dial = dialog.getByRole('slider', { name });
+      await dial.focus();
+      await page.keyboard.press('PageUp');
+    }
+    await expect(dialog.getByRole('button', { name: 'Save 1', exact: true })).toBeEnabled();
+    await dialog.getByRole('button', { name: 'Cancel' }).click();
+    await expect(dialog).toBeHidden();
+    expect(await getReadingProgressRows()).toHaveLength(0);
   });
 
   test('shows the most recently tracked book first on the home page', async ({ page }) => {
@@ -236,6 +303,8 @@ test.describe('Reading', () => {
     const dialog = page.getByRole('dialog', { name: 'Newly Tracked' });
     await dialog.getByRole('slider', { name: 'Page' }).focus();
     await page.keyboard.press('PageUp');
+    await dialog.getByRole('slider', { name: 'Minutes' }).focus();
+    await page.keyboard.press('PageUp');
     await dialog.getByRole('button', { name: 'Save 1', exact: true }).click();
     await expect(dialog).toBeHidden();
     await expect(
@@ -248,32 +317,33 @@ test.describe('Reading', () => {
     await expect(section.getByRole('heading', { level: 3 })).toHaveText(['Newly Tracked']);
   });
 
-  test('aggregates pages read across books toward the daily goal', async ({ page }) => {
-    await setTierRequirements('GOLD', { PUSHUPS: 100, ELEVATION: 250, READING_PAGES: 30 });
+  test('aggregates minutes across books and sessions toward the daily goal', async ({ page }) => {
+    await setTierRequirements('GOLD', { PUSHUPS: 100, ELEVATION: 250, READING_MINUTES: 30 });
     const bookA = randomUUID();
     const bookB = randomUUID();
     await insertBook(bookA, 'Book A', 'Author A', 200, daysAgoAt(1, 8));
     await insertBook(bookB, 'Book B', 'Author B', 200, daysAgoAt(1, 9));
-    await insertReadingProgress(bookA, 0, daysAgoAt(1, 8));
+    await insertReadingProgress(bookA, 1, daysAgoAt(1, 8), 30);
     await insertReadingProgress(bookB, 0, daysAgoAt(1, 9));
-    await insertReadingProgress(bookA, 12, daysAgoAt(0, 7));
-    await insertReadingProgress(bookB, 8, daysAgoAt(0, 12));
+    await insertReadingProgress(bookA, 12, daysAgoAt(0, 7), 5);
+    await insertReadingProgress(bookA, 14, daysAgoAt(0, 8), 7);
+    await insertReadingProgress(bookB, 8, daysAgoAt(0, 12), 8);
 
     await page.goto('/');
     const dayGoal = page.getByRole('region', { name: 'Day goal' });
-    await expect(dayGoal.getByText('20/30 pages')).toBeVisible();
+    await expect(dayGoal.getByText('20/30 min')).toBeVisible();
   });
 
-  test('shows daily goal reached when total pages match the goal', async ({ page }) => {
-    await setTierRequirements('GOLD', { PUSHUPS: 100, ELEVATION: 250, READING_PAGES: 30 });
+  test('shows daily goal reached when total minutes match the goal', async ({ page }) => {
+    await setTierRequirements('GOLD', { READING_MINUTES: 30 });
     const bookId = randomUUID();
     await insertBook(bookId, 'Book', 'Author', 200, daysAgoAt(1, 8));
     await insertReadingProgress(bookId, 0, daysAgoAt(1, 8));
-    await insertReadingProgress(bookId, 30, daysAgoAt(0, 12));
+    await insertReadingProgress(bookId, 10, daysAgoAt(0, 12), 30);
 
     await page.goto('/');
     const dayGoal = page.getByRole('region', { name: 'Day goal' });
-    await expect(dayGoal.getByText('30/30 pages')).toBeVisible();
+    await expect(dayGoal.getByText('Today is a gold day')).toBeVisible();
   });
 
   test('shows estimated days to finish based on reading velocity', async ({ page }) => {
@@ -303,6 +373,8 @@ test.describe('Reading', () => {
     await dial.focus();
     await page.keyboard.press('End');
     await expect(dial).toHaveAttribute('aria-valuenow', '100');
+    await dialog.getByRole('slider', { name: 'Minutes' }).focus();
+    await page.keyboard.press('PageUp');
     await dialog.getByRole('button', { name: 'Save 100' }).click();
     await expect(dialog).toBeHidden();
 
@@ -660,14 +732,14 @@ test.describe('Reading', () => {
   });
 
   test('reflects the configured daily reading goal', async ({ page }) => {
-    await setTierRequirements('GOLD', { PUSHUPS: 100, ELEVATION: 250, READING_PAGES: 50 });
+    await setTierRequirements('GOLD', { PUSHUPS: 100, ELEVATION: 250, READING_MINUTES: 50 });
     const bookId = randomUUID();
     await insertBook(bookId, 'Book', 'Author', 200, daysAgoAt(1, 8));
     await insertReadingProgress(bookId, 0, daysAgoAt(1, 8));
-    await insertReadingProgress(bookId, 20, daysAgoAt(0, 12));
+    await insertReadingProgress(bookId, 20, daysAgoAt(0, 12), 15);
 
     await page.goto('/');
     const dayGoal = page.getByRole('region', { name: 'Day goal' });
-    await expect(dayGoal.getByText('20/50 pages')).toBeVisible();
+    await expect(dayGoal.getByText('15/50 min')).toBeVisible();
   });
 });

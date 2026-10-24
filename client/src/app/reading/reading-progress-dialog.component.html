@@ -4,11 +4,20 @@
   <bt-donut-slider
     class="slider"
     [(value)]="page"
-    [min]="book.startingPage"
+    [min]="book.currentPage"
     [max]="totalPages"
     [valuePerTurn]="10"
     label="Page"
     [unit]="pageUnit"
+  />
+  <bt-donut-slider
+    class="slider"
+    [(value)]="minutes"
+    [min]="0"
+    [max]="1440"
+    [valuePerTurn]="10"
+    label="Minutes"
+    unit="min"
   />
 </mat-dialog-content>
 <mat-dialog-actions align="end">

@@ -122,7 +122,7 @@ public class DayGoalService {
         totalByDay(pushupSetRepository.findAll(), PushupSet::getCreatedAt, PushupSet::getCount, zoneId),
         DayGoalMetric.ELEVATION,
         totalByDay(rideRepository.findAll(), Ride::getCreatedAt, Ride::getTotalElevationGain, zoneId),
-        DayGoalMetric.READING_PAGES, readingService.getPagesReadByDay(zoneId),
+        DayGoalMetric.READING_MINUTES, readingService.getMinutesReadByDay(zoneId),
         DayGoalMetric.DAILY_TASKS, dailyTaskService.getCompletionCountByDay());
   }
 

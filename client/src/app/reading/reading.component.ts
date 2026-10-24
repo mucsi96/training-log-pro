@@ -81,17 +81,17 @@ export class ReadingComponent {
       autoFocus: 'dialog',
       restoreFocus: true,
     });
-    ref.afterClosed().subscribe((page) => {
-      if (typeof page === 'number' && page !== book.currentPage) {
-        this.updateProgress(book, page);
+    ref.afterClosed().subscribe((progress) => {
+      if (progress) {
+        this.updateProgress(book, progress.currentPage, progress.minutes);
       }
     });
   }
 
-  private async updateProgress(book: Book, page: number) {
+  private async updateProgress(book: Book, page: number, minutes: number) {
     this.busy.set(true);
     try {
-      await this.readingService.updateProgress(book.id, page);
+      await this.readingService.updateProgress(book.id, page, minutes);
     } finally {
       this.busy.set(false);
     }

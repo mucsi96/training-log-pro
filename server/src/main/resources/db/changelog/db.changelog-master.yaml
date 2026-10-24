@@ -1068,3 +1068,20 @@ databaseChangeLog:
             tableName: achieved_day
             columnName: tier
             columnDataType: varchar(16)
+  - changeSet:
+      id: 37-time-based-reading-goals
+      author: mucsi96
+      changes:
+        - addColumn:
+            tableName: reading_progress
+            columns:
+              - column:
+                  name: minutes
+                  type: integer
+        - sql:
+            dbms: postgresql
+            sql: |
+              ALTER TABLE training_log.reading_progress
+                ADD CONSTRAINT reading_progress_minutes_check CHECK (minutes BETWEEN 1 AND 1440);
+              UPDATE training_log.day_goal_requirement
+                SET metric = 'READING_MINUTES' WHERE metric = 'READING_PAGES';

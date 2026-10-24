@@ -30,4 +30,7 @@ public class ReadingProgressEntity {
 
   @Column(name = "current_page", nullable = false)
   private int currentPage;
+
+  @Column(name = "minutes")
+  private Integer minutes;
 }

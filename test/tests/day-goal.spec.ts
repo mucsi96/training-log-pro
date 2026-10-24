@@ -139,7 +139,7 @@ test.describe('Day goal', () => {
   });
 
   test('shows progress towards the least demanding attainable tier', async ({ page }) => {
-    await setTierRequirements('SILVER', { PUSHUPS: 50, READING_PAGES: 10 });
+    await setTierRequirements('SILVER', { PUSHUPS: 50, READING_MINUTES: 10 });
     await setTierRequirements('BRONZE', { PUSHUPS: 20 });
     await insertPushupSet(daysAgoAt(0, 8), 5);
 
@@ -148,7 +148,7 @@ test.describe('Day goal', () => {
     const section = dayGoal(page);
     await expect(section.getByText('Next: bronze')).toBeVisible();
     await expect(section.getByText('5/20 pushups')).toBeVisible();
-    await expect(section.getByText(/pages$/)).toBeHidden();
+    await expect(section.getByText(/ min$/)).toBeHidden();
     await expect(section.getByText(/ m$/)).toBeHidden();
 
     await addPushupsThroughDialog(page, 15);
@@ -156,7 +156,7 @@ test.describe('Day goal', () => {
     await expect(section.getByText('Today is a bronze day')).toBeVisible();
     await expect(section.getByText('Next: silver')).toBeVisible();
     await expect(section.getByText('20/50 pushups')).toBeVisible();
-    await expect(section.getByText('0/10 pages')).toBeVisible();
+    await expect(section.getByText('0/10 min')).toBeVisible();
   });
 
   test('upgrades today when a higher tier is reached and never downgrades it', async ({ page }) => {

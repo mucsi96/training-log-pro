@@ -18,7 +18,7 @@ export type ReadingProgressDialogData = {
   book: Book;
 };
 
-export type ReadingProgressDialogResult = number | null;
+export type ReadingProgressDialogResult = { currentPage: number; minutes: number } | null;
 
 @Component({
   standalone: true,
@@ -37,7 +37,8 @@ export class ReadingProgressDialogComponent {
   readonly book = this.data.book;
   readonly totalPages = this.book.totalPages ?? 0;
   readonly page = signal(this.book.currentPage);
-  readonly canSave = computed(() => this.page() !== this.book.currentPage);
+  readonly minutes = signal(0);
+  readonly canSave = computed(() => this.page() > this.book.currentPage && this.minutes() > 0);
   readonly pageUnit = `/ ${this.totalPages}`;
 
   cancel(): void {
@@ -48,6 +49,6 @@ export class ReadingProgressDialogComponent {
     if (!this.canSave()) {
       return;
     }
-    this.dialogRef.close(this.page());
+    this.dialogRef.close({ currentPage: this.page(), minutes: this.minutes() });
   }
 }

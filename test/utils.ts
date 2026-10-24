@@ -74,7 +74,7 @@ export async function cleanupDb() {
 }
 
 export type DayGoalTier = 'GOLD' | 'SILVER' | 'BRONZE';
-export type DayGoalMetric = 'PUSHUPS' | 'ELEVATION' | 'READING_PAGES' | 'DAILY_TASKS';
+export type DayGoalMetric = 'PUSHUPS' | 'ELEVATION' | 'READING_MINUTES' | 'DAILY_TASKS';
 export type TierRequirements = Partial<Record<DayGoalMetric, number>>;
 export type AchievedDay = { date: string; tier: DayGoalTier };
 
@@ -321,11 +321,12 @@ export async function insertBook(
 export async function insertReadingProgress(
   bookId: string,
   currentPage: number,
-  createdAt: Date
+  createdAt: Date,
+  minutes: number | null = null
 ) {
   await query(
-    'INSERT INTO training_log.reading_progress (id, created_at, book_id, current_page) VALUES ($1, $2, $3, $4)',
-    [randomUUID(), createdAt, bookId, currentPage]
+    'INSERT INTO training_log.reading_progress (id, created_at, book_id, current_page, minutes) VALUES ($1, $2, $3, $4, $5)',
+    [randomUUID(), createdAt, bookId, currentPage, minutes]
   );
 }
 
@@ -389,7 +390,7 @@ export async function getDeviceBookRows() {
 
 export async function getReadingProgressRows() {
   const result = await query(
-    'SELECT id, created_at, book_id, current_page FROM training_log.reading_progress ORDER BY created_at ASC'
+    'SELECT id, created_at, book_id, current_page, minutes FROM training_log.reading_progress ORDER BY created_at ASC'
   );
   return result.rows;
 }
