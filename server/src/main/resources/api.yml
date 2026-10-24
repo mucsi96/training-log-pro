@@ -308,11 +308,16 @@ paths:
               type: object
               required:
                 - currentPage
+                - minutes
               properties:
                 currentPage:
                   type: integer
-                  minimum: 0
+                  minimum: 1
                   maximum: 100000
+                minutes:
+                  type: integer
+                  minimum: 1
+                  maximum: 1440
       responses:
         '200':
           description: OK
@@ -723,7 +728,7 @@ components:
       enum:
         - PUSHUPS
         - ELEVATION
-        - READING_PAGES
+        - READING_MINUTES
         - DAILY_TASKS
     MetricGoal:
       type: object

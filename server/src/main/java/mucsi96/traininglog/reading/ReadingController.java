@@ -70,7 +70,7 @@ public class ReadingController {
       @PathVariable UUID id,
       @Valid @RequestBody UpdateBookProgressRequest request,
       @RequestHeader("X-Timezone") ZoneId zoneId) {
-    BookSummary updated = readingService.updateProgress(id, request.getCurrentPage());
+    BookSummary updated = readingService.updateProgress(id, request.currentPage(), request.minutes());
     return toResponse(updated, zoneId);
   }
 
@@ -117,11 +117,7 @@ public class ReadingController {
     private Integer startingPage;
   }
 
-  @Data
-  public static class UpdateBookProgressRequest {
-    @NotNull
-    @Min(0)
-    @Max(100000)
-    private Integer currentPage;
-  }
+  public record UpdateBookProgressRequest(
+      @NotNull @Min(1) @Max(100000) Integer currentPage,
+      @NotNull @Min(1) @Max(1440) Integer minutes) {}
 }

@@ -1,6 +1,6 @@
 export type DayGoalTier = 'GOLD' | 'SILVER' | 'BRONZE';
 
-export type DayGoalMetric = 'PUSHUPS' | 'ELEVATION' | 'READING_PAGES' | 'DAILY_TASKS';
+export type DayGoalMetric = 'PUSHUPS' | 'ELEVATION' | 'READING_MINUTES' | 'DAILY_TASKS';
 
 export type MetricGoal = {
   readonly metric: DayGoalMetric;
@@ -44,7 +44,7 @@ export const TIERS: Record<DayGoalTier, { readonly label: string; readonly color
 export const METRICS: Record<DayGoalMetric, { readonly label: string; readonly unit: string }> = {
   PUSHUPS: { label: 'Pushups', unit: 'pushups' },
   ELEVATION: { label: 'Ride elevation', unit: 'm' },
-  READING_PAGES: { label: 'Reading', unit: 'pages' },
+  READING_MINUTES: { label: 'Reading', unit: 'min' },
   DAILY_TASKS: { label: 'Daily tasks', unit: 'tasks' },
 };
 

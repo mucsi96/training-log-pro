@@ -1,5 +1,17 @@
 # Training Log Pro
 
+## Reading goals
+
+Click a book on the dashboard to record your new page and reading minutes using
+the two dials. Saving requires advancing past the last recorded page and entering
+1–1440 minutes. Daily reading goals in Settings use minutes, summed across books
+and sessions in your local timezone. Book completion and reading pace still use pages.
+
+The migration keeps existing reading-goal numbers as minute targets; adjust them
+in Settings as needed. Existing page history and achieved days are preserved.
+Historical entries and KOReader page-only syncs have no recorded duration and do
+not contribute minutes to daily goals.
+
 ## Pomodoro timer
 
 On desktop, click **Start Pomodoro** in the header to start a 25-minute focus
