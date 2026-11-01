@@ -64,7 +64,7 @@ Training and fitness tracking application demonstrating patterns for:
 - Deployment (Docker images published to registry)
 - Client (Angular with Material UI)
 - Server (Spring Boot with Java)
-- Authentication (Azure AD / MSAL)
+- Authentication (Entra/oauth2-proxy gateway; backend JWT/role validation)
 - Configuration (Azure Key Vault, Spring profiles)
 - Database (PostgreSQL with JPA)
 - Testing (Playwright E2E)
@@ -72,7 +72,7 @@ Training and fitness tracking application demonstrating patterns for:
 
 ## Architecture
 
-- **client/** - Angular SPA with Material UI, MSAL authentication
+- **client/** - Angular SPA with Material UI, gateway session display data
 - **server/** - Spring Boot REST API with PostgreSQL
 - **test/** - Playwright E2E tests
 - **scripts/** - Build and deployment scripts
@@ -83,7 +83,7 @@ Training and fitness tracking application demonstrating patterns for:
 - Spring Boot 4, Java 21 (built into a GraalVM native image)
 - Angular with Material UI
 - PostgreSQL
-- Azure AD (MSAL) authentication
+- Entra gateway authentication with server-side Redis sessions
 - Azure Key Vault for secrets
 - Traefik reverse proxy
 - Podman for container management
@@ -133,7 +133,7 @@ scripts/deploy.sh             # Deploy to Kubernetes via Helm
 ### Spring Profiles
 - **prod** - Production with Azure Key Vault and AAD
 - **local** - Local development with Podman dev DB
-- **test** - Testing with disabled auth
+- **test** - Mock issuer with real JWT/role/CSRF enforcement; Playwright supplies gateway identity
 
 ## Native image and the baked-in Spring profile
 
@@ -292,7 +292,7 @@ than Jackson want `BindableRuntimeHintsRegistrar`, which registers exactly what
 
 ### Release and image publishing
 
-`publish-server` and `publish-client` publish numbered GHCR images only when
+`publish-server` publishes numbered GHCR images only when
 `get_next_version.outputs.hasNextVersion == 'true'`, tagging them with
 `get_next_version.outputs.version`. Authentication uses `GITHUB_TOKEN` with
 job-scoped `packages: write`. Release tags use `target_commitish: ${{ github.sha }}`.
@@ -301,11 +301,17 @@ release when unchanged; `hasNextVersion` alone controls publication. Forward its
 version output directly to deployment without a consumer-side tag lookup.
 The workflow serializes publication and rollout; require numbered GHCR tags or
 digests.
-The production Dockerfiles carry GHCR source labels, triggering both initial
-publications through normal component version detection.
-Both packages must be public for anonymous Kubernetes pulls.
+The server Dockerfile carries its GHCR source label.
+The server package must be public for anonymous Kubernetes pulls. `publish-client`
+releases the tested static archive. Deployment uploads assets before index to Azure
+Storage, retains old bundles, and replaces the client workload with
+`static-client-app` 5.0.0. Use `spring-app` 37.0.0 and `--reset-values` on both.
+The app-owned `deploy/integrations` chart preserves API-key/one-time-token routes;
+do not put browser session authentication in front of those routes. See README.md
+for the p07 prerequisite and rollout order.
 
 ### Environment Config
-- Server exposes `/api/environment` endpoint
+- Server exposes an authenticated `/api/environment` endpoint for map configuration
 - Client fetches config before bootstrap
-- Conditionally enables MSAL based on `mockAuth` flag
+- Browser OAuth credentials are forbidden; use `/oauth2/userinfo` for display data
+- Faro name and same-origin collector path are compiled into the client

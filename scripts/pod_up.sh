@@ -9,14 +9,21 @@ if [ "${SKIP_BUILD:-}" = "1" ]; then
   echo "Skipping image build (SKIP_BUILD=1)..."
 else
   echo "Building container images..."
+  BUILD_PIDS=()
   # The Spring profile is baked into the native executable during AOT
   # processing, so the pod image has to be built with the test profile.
   podman build --build-arg SPRING_PROFILE=test \
     -t localhost/training-log-pro-server:test "$PROJECT_DIR/server" &
-  podman build -t localhost/training-log-pro-client:test "$PROJECT_DIR/client" &
+  BUILD_PIDS+=("$!")
+  (cd "$PROJECT_DIR/client" && npm ci && npm run build) &
+  BUILD_PIDS+=("$!")
   podman build -t localhost/training-log-pro-mock-withings:test "$PROJECT_DIR/mock_withings_server" &
+  BUILD_PIDS+=("$!")
   podman build -t localhost/training-log-pro-mock-strava:test "$PROJECT_DIR/mock_strava_server" &
-  wait
+  BUILD_PIDS+=("$!")
+  for pid in "${BUILD_PIDS[@]}"; do
+    wait "$pid"
+  done
 fi
 
 echo "Cleaning up existing pod..."
