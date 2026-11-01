@@ -51,9 +51,11 @@ const mockNotifications = async (
 };
 
 const openTimer = async (page: Page) => {
+  // Install before Zone/Faro capture timer functions; replacing them after
+  // startup mixes real and fake interval IDs and cancels unrelated callbacks.
+  await page.clock.install();
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Start Pomodoro' })).toBeVisible();
-  await page.clock.install();
   await page.clock.pauseAt(new Date(Date.now() + 1000));
 };
 
