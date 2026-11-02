@@ -304,7 +304,7 @@ digests.
 The server Dockerfile carries its GHCR source label.
 The server package must be public for anonymous Kubernetes pulls. `publish-client`
 releases the tested static archive. Deployment uploads assets before index to Azure
-Storage, retains old bundles, and replaces the client workload with
+Storage after emptying `$web` and `assets` (intentional downtime), and replaces the client workload with
 `static-client-app` 5.0.0. Use `spring-app` 37.0.0 and `--reset-values` on both.
 The app-owned `deploy/integrations` chart preserves API-key/one-time-token routes;
 do not put browser session authentication in front of those routes. See README.md

@@ -44,7 +44,9 @@ The pipeline builds one static client artifact and tests it before publication.
 Azure's public `assets` Blob container serves bundles, lazy chunks, local fonts,
 icons and the manifest using exact app-origin CORS. The document retains its
 app-origin base URL and the manifest's navigation URLs target the app origin.
-Uploads retain old bundles and publish `$web/index.html` only after all assets.
+Deployment empties `$web` and `assets`, then uploads only the latest assets with
+one-year caching and publishes `$web/index.html` last with `no-store`.
+Downtime is intentional; old bundles are removed.
 The `static-client-app` 5.0.0 chart replaces the client Deployment with an
 authenticated HTTPS website origin; `spring-app` 37.0.0 gates API sessions.
 
