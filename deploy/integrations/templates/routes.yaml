@@ -1,0 +1,29 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  parentRefs:
+    - name: traefik
+      namespace: traefik
+      sectionName: websecure
+  hostnames:
+    - {{ required "host is required" .Values.host | quote }}
+  rules:
+    - matches:
+        - path: { type: Exact, value: /api/strava/authorize }
+          method: GET
+        - path: { type: Exact, value: /api/withings/authorize }
+          method: GET
+        - path: { type: Exact, value: /api/reading/koreader-sync }
+          method: POST
+        - path: { type: PathPrefix, value: /api/device/books }
+          method: GET
+        - path: { type: PathPrefix, value: /api/device/books }
+          method: DELETE
+      # Do not substitute a browser JWT for the device's Authorization header.
+      # Each of these handlers authenticates independently in the backend.
+      backendRefs:
+        - name: training-log-server
+          port: 8080

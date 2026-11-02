@@ -222,12 +222,14 @@ test.describe('Reading', () => {
     await expect(page.getByRole('button', { name: /Legacy Book, 100 of 300 pages/ })).toBeVisible();
   });
 
-  test('rejects invalid reading sessions on the server without persisting progress', async ({ page }) => {
+  test('rejects invalid reading sessions on the server without persisting progress', async ({ page, apiHeaders }) => {
     const bookId = randomUUID();
     await insertBook(bookId, 'Validated Book', 'Author', 300, daysAgoAt(1, 8), null, 100);
-    const booksRequest = page.waitForRequest('**/api/reading/books');
     await page.goto('/');
-    const headers = await (await booksRequest).allHeaders();
+    await expect(page.getByRole('button', { name: 'Open profile menu' })).toBeVisible();
+    const csrfCookie = (await page.context().cookies()).find(cookie => cookie.name === 'XSRF-TOKEN');
+    expect(csrfCookie).toBeDefined();
+    const headers = { ...apiHeaders, 'X-XSRF-TOKEN': decodeURIComponent(csrfCookie!.value) };
     for (const data of [
       { currentPage: 110 },
       { currentPage: 110, minutes: null },

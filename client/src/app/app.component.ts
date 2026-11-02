@@ -26,7 +26,6 @@ export class AppComponent {
   private readonly withingsService = inject(WithingsService);
 
   readonly isAuthenticated = this.authService.isAuthenticated;
-  readonly authError = this.authService.authError;
 
   readonly isReady = computed(
     () => this.stravaService.isSynced() && this.withingsService.isSynced()
@@ -40,7 +39,4 @@ export class AppComponent {
     });
   }
 
-  retryLogin(): void {
-    this.authService.login();
-  }
 }

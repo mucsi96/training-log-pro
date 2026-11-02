@@ -4,52 +4,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import lombok.RequiredArgsConstructor;
-
 @RestController
-@RequiredArgsConstructor
 public class EnvironmentController {
-
-  @Value("${tenant-id:}")
-  private String tenantId;
-
-  @Value("${api-client-id:}")
-  private String clientId;
-
-  @Value("${spa-client-id:}")
-  private String uiClientId;
-
-  @Value("${mock-oauth2-server-uri:}")
-  private String mockOAuth2ServerUri;
-
-  @Value("${client-log-url:}")
-  private String clientLogUrl;
-
-  @Value("${client-app-name:}")
-  private String clientAppName;
-
   @Value("${thunderforest-api-key:}")
   private String thunderforestApiKey;
 
   @GetMapping("/environment")
   public ConfigResponse getConfig() {
-    return new ConfigResponse(
-        tenantId,
-        uiClientId,
-        clientId,
-        mockOAuth2ServerUri,
-        clientLogUrl,
-        clientAppName,
-        thunderforestApiKey);
+    return new ConfigResponse(thunderforestApiKey);
   }
 
-  public record ConfigResponse(
-      String tenantId,
-      String clientId,
-      String apiClientId,
-      String mockOAuth2ServerUri,
-      String clientLogUrl,
-      String clientAppName,
-      String thunderforestApiKey) {
-  }
+  public record ConfigResponse(String thunderforestApiKey) {}
 }

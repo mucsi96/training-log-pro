@@ -10,6 +10,7 @@ import { provideRouter, withComponentInputBinding } from '@angular/router';
 import {
   provideHttpClient,
   withInterceptors,
+  withXsrfConfiguration,
 } from '@angular/common/http';
 import {
   MAT_RIPPLE_GLOBAL_OPTIONS,
@@ -22,9 +23,7 @@ import { routes } from './app.routes';
 import { errorInterceptor } from './utils/error.interceptor';
 import { authRetryInterceptor } from './utils/auth-retry.interceptor';
 import { timezoneInterceptor } from './utils/timezone.interceptor';
-import { tokenInterceptor } from './utils/token.interceptor';
 import { AuthService } from './auth.service';
-import { provideOidcAuth } from './auth.config';
 import {
   EnvironmentConfig,
   ENVIRONMENT_CONFIG,
@@ -47,10 +46,10 @@ export function getAppConfig(environment: EnvironmentConfig): ApplicationConfig 
       provideZoneChangeDetection({ eventCoalescing: true }),
       provideRouter(routes, withComponentInputBinding()),
       provideHttpClient(
+        withXsrfConfiguration({ cookieName: window.location.protocol === 'https:' ? '__Host-XSRF-TOKEN' : 'XSRF-TOKEN' }),
         withInterceptors([
           errorInterceptor,
           authRetryInterceptor,
-          tokenInterceptor,
           timezoneInterceptor,
         ])
       ),
@@ -58,7 +57,6 @@ export function getAppConfig(environment: EnvironmentConfig): ApplicationConfig 
       provideAngularMaterialTheme(),
       { provide: ENVIRONMENT_CONFIG, useValue: environment },
       provideECharts(),
-      provideOidcAuth(environment),
       provideAppInitializer(() => inject(AuthService).init()),
     ],
   };
