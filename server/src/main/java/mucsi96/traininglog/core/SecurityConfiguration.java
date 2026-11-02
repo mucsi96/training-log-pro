@@ -4,9 +4,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
+import jakarta.servlet.DispatcherType;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.config.ObjectPostProcessor;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.convert.converter.Converter;
 
@@ -19,6 +22,8 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfFilter;
 
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
@@ -35,13 +40,29 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http,
+            @Value("${app.csrf.cookie-name:__Host-XSRF-TOKEN}") String cookieName,
+            @Value("${app.csrf.secure:true}") boolean secure) throws Exception {
+        var csrfTokens = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        csrfTokens.setCookieName(cookieName);
+        csrfTokens.setCookieCustomizer(cookie -> cookie.path("/").secure(secure).sameSite("Lax"));
+        http.csrf(csrf -> {
+            csrf.spa().csrfTokenRepository(csrfTokens);
+            csrf.addObjectPostProcessor(new ObjectPostProcessor<CsrfFilter>() {
+                @Override
+                public <O extends CsrfFilter> O postProcess(O filter) {
+                    // The gateway derives bearer credentials from a browser cookie.
+                    filter.setRequireCsrfProtectionMatcher(CsrfFilter.DEFAULT_CSRF_MATCHER);
+                    return filter;
+                }
+            });
+        });
         http.oauth2ResourceServer(oauth2 -> oauth2
                 .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
 
         http.authorizeHttpRequests(requests -> requests
+                .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                 .requestMatchers(
-                        "/environment",
                         "/actuator/**",
                         "/strava/authorize",
                         "/withings/authorize")

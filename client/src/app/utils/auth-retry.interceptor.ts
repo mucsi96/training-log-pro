@@ -1,78 +1,18 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { catchError, from, NEVER, switchMap, tap, throwError } from 'rxjs';
+import { catchError, NEVER, throwError } from 'rxjs';
 import { AuthService } from '../auth.service';
 
-const isApiRequest = (url: string): boolean => /\/api(\/|$)/.test(url);
-
-// A 401 with this link means "external provider needs authorization" - not an OIDC token issue.
-const isExternalOAuthChallenge = (error: HttpErrorResponse): boolean =>
-  !!error.error?._links?.oauth2Login?.href;
-
-/**
- * Recovers from an expired access token without forcing a full re-login.
- *
- * If a request to the API comes back 401 (typically because the token expired
- * while the app was backgrounded on mobile), silently refresh the session and
- * retry the request once. Only if that retry also fails does the error
- * propagate to the error interceptor.
- *
- * Sits outside the bearer-token interceptor so the retried request is re-issued
- * with the freshly refreshed token, and inside the error interceptor so a
- * successful retry never surfaces a spurious error notification.
- */
 export const authRetryInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
-
-  return next(req).pipe(
-    catchError((error: unknown) => {
-      const is401 = error instanceof HttpErrorResponse && error.status === 401;
-
-      if (
-        !is401 ||
-        !isApiRequest(req.url) ||
-        isExternalOAuthChallenge(error as HttpErrorResponse)
-      ) {
-        return throwError(() => error);
-      }
-
-      console.warn(
-        '[auth] API request returned 401 - refreshing token via refresh token and retrying',
-        JSON.stringify({ url: req.url })
-      );
-
-      return from(auth.refresh('http-401')).pipe(
-        tap((result) =>
-          console.info(
-            '[auth] Token refreshed after 401 - retrying original request',
-            JSON.stringify({
-              url: req.url,
-              isAuthenticated: !!result && !result.expired,
-            })
-          )
-        ),
-        catchError((refreshError: unknown) => {
-          if (auth.reauthenticateAfterRefreshFailure(refreshError)) {
-            console.warn(
-              '[auth] Token refresh after 401 requires full re-authentication - waiting for redirect',
-              JSON.stringify({ url: req.url })
-            );
-            return NEVER;
-          }
-          console.warn(
-            '[auth] Token refresh after 401 failed - propagating original error',
-            JSON.stringify({
-              url: req.url,
-              error:
-                refreshError instanceof Error
-                  ? refreshError.message
-                  : String(refreshError),
-            })
-          );
-          return throwError(() => error);
-        }),
-        switchMap(() => next(req))
-      );
-    })
-  );
+  const url = new URL(req.url, window.location.origin);
+  return next(req).pipe(catchError((error: unknown) => {
+    if (error instanceof HttpErrorResponse && error.status === 401 &&
+        url.origin === window.location.origin && url.pathname.startsWith('/api/') &&
+        !error.error?._links?.oauth2Login?.href) {
+      auth.login();
+      return NEVER;
+    }
+    return throwError(() => error);
+  }));
 };

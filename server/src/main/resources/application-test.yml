@@ -27,6 +27,10 @@ spring:
           issuer-uri: http://localhost:8089/default
           audiences: mock-api-client-id
 mock-oauth2-server-uri: ${MOCK_OAUTH2_SERVER_URI:}
+app:
+  csrf:
+    cookie-name: XSRF-TOKEN
+    secure: false
 token-encryption-key: 8JSyUeV1b093C24h4nNiQXvL+RoOgb4VoBJn7RUVxbI=
 withings:
   api-uri: http://localhost:3080/withings
