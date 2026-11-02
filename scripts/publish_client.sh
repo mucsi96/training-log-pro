@@ -5,14 +5,15 @@ config=$(az keyvault secret show --vault-name "$AZURE_KEYVAULT_NAME" --name clie
 account=$(jq -er '.account_name | select(test("^[a-z0-9]{3,24}$"))' <<< "$config")
 assets_url=$(jq -er '.assets_base_url | select(test("^https://[a-z0-9]+\\.blob\\.core\\.windows\\.net/assets/$"))' <<< "$config")
 hostname=$(az keyvault secret show --vault-name "$AZURE_KEYVAULT_NAME" --name hostname --query value -o tsv)
-node scripts/prepare-client.mjs client-static client-publish "$assets_url" "https://$hostname"
-# Retain old content-hashed bundles so already-open clients keep working.
+asset_prefix="releases/${GITHUB_RUN_ID:?Set the workflow run ID}-${GITHUB_RUN_ATTEMPT:?Set the workflow run attempt}"
+node scripts/prepare-client.mjs client-static client-publish "${assets_url}${asset_prefix}/" "https://$hostname"
+# Retain old releases so already-open clients keep working.
 az storage blob upload-batch --auth-mode login --account-name "$account" \
-  --destination assets --source client-publish/assets --overwrite true \
-  --content-cache-control no-cache --only-show-errors --output none
+  --destination assets --destination-path "$asset_prefix" --source client-publish/assets --overwrite true \
+  --content-cache-control 'public, max-age=31536000, immutable' --only-show-errors --output none
 az storage blob upload --auth-mode login --account-name "$account" \
-  --container-name assets --name manifest.webmanifest --file client-publish/assets/manifest.webmanifest \
-  --overwrite true --content-type application/manifest+json --content-cache-control no-cache \
+  --container-name assets --name "$asset_prefix/manifest.webmanifest" --file client-publish/assets/manifest.webmanifest \
+  --overwrite true --content-type application/manifest+json --content-cache-control 'public, max-age=31536000, immutable' \
   --only-show-errors --output none
 # Commit the document only after every asset upload has succeeded.
 az storage blob upload --auth-mode login --account-name "$account" \
