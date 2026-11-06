@@ -48,10 +48,10 @@ helm upgrade training-log-integrations "$(dirname "$0")/../deploy/integrations" 
 
 echo "Deploying server: $SERVER_IMAGE using spring-app chart $springAppChartVersion"
 
-# Over 36h in production the native server's RSS averaged 102Mi and peaked at
-# 120Mi; the 229Mi working-set peak includes reclaimable executable pages. The
-# request covers the resident baseline, while the limit leaves room for the
-# 256Mi heap cap and native overhead.
+# The 2026-11-06 p07 audit measured a 199Mi median working set over 75h.
+# Reserve 256Mi (29% above that baseline), including active file-backed pages.
+# The separate 384Mi limit covers the measured 310Mi peak and retains room
+# for the 256Mi heap cap plus native overhead.
 
 helm upgrade $SERVER_RELEASE_NAME mucsi96/spring-app \
     --install \
@@ -65,7 +65,7 @@ helm upgrade $SERVER_RELEASE_NAME mucsi96/spring-app \
     --set clientId=$API_CLIENT_ID \
     --set serviceAccountName=training-log-api-workload-identity \
     --set env.AZURE_KEYVAULT_ENDPOINT=$AZURE_KEYVAULT_ENDPOINT \
-    --set resources.requests.memory=128Mi \
+    --set resources.requests.memory=256Mi \
     --set resources.requests.cpu=100m \
     --set resources.limits.memory=384Mi \
     --set resources.limits.cpu=500m \
