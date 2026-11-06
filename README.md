@@ -72,8 +72,8 @@ browser sessions. No database migration or token re-encryption is needed.
 
 Infrastructure provisioning must precede the app deployment. Production Entra,
 Azure CORS and Gateway API routing require rollout checks; the Playwright app
-suite supplies gateway identity while exercising the real JWT/CSRF backend and
-cross-origin static assets. Shared gateway behavior is owned by the pinned charts.
+suite supplies gateway identity while exercising the real JWT/CSRF backend.
+Shared gateway behavior is owned by the pinned charts.
 
 For local development, use an authenticated gateway in front of the Angular dev
 server and API, forwarding `/oauth2` to oauth2-proxy. Direct standalone browser
