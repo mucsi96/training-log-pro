@@ -11,14 +11,15 @@ export function DayGoal() {
   const query = useApi('/api/day-goal', dayGoalSchema, 'strava');
   const client = useQueryClient();
   const notifications = useNotifications();
-  const celebrated = useRef(false);
+  const celebrated = useRef<string | null>(null);
   useEffect(() => {
     if (!query.data) return;
     void client.invalidateQueries({ queryKey: ['/api/coins'] });
-    if (query.data.celebrateToday && !celebrated.current) {
-      celebrated.current = true;
+    const achievement = `${new Date().toDateString()}:${query.data.todayTier}`;
+    if (query.data.celebrateToday && celebrated.current !== achievement) {
+      celebrated.current = achievement;
       void send('/api/day-goal/celebrate', emptySchema, 'POST').catch((error) => {
-        celebrated.current = false;
+        if (celebrated.current === achievement) celebrated.current = null;
         notifications.error(error.message);
       });
     }
@@ -63,7 +64,7 @@ export function DayGoal() {
               !stats.todayTier && <p>No tier has requirements yet. Configure them in settings.</p>
             )}
             {stats.celebrateToday && (
-              <div className={styles.confetti} aria-hidden="true">
+              <div key={stats.todayTier} className={styles.confetti} aria-hidden="true">
                 {Array.from({ length: 24 }, (_, i) => (
                   <i
                     key={i}
