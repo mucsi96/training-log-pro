@@ -54,5 +54,5 @@ settings:
     api_url: <%= get_env(name="WITHINGS_API_URL", default="http://localhost:3080/withings") %>
     scope: user.metrics
   daily_sync:
-    cron: <%= get_env(name="DAILY_SYNC_CRON", default="0 0 21 * * *") %>
+    cron: '<%= get_env(name="DAILY_SYNC_CRON", default="0 0 21 * * *") %>'
     zone: <%= get_env(name="DAILY_SYNC_ZONE", default="Europe/Budapest") %>

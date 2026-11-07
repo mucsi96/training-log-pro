@@ -48,5 +48,5 @@ settings:
     api_url: https://wbsapi.withings.net
     scope: user.metrics
   daily_sync:
-    cron: <%= get_env(name="DAILY_SYNC_CRON", default="0 0 21 * * *") %>
+    cron: '<%= get_env(name="DAILY_SYNC_CRON", default="0 0 21 * * *") %>'
     zone: <%= get_env(name="DAILY_SYNC_ZONE", default="Europe/Budapest") %>
