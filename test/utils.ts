@@ -57,8 +57,9 @@ export async function withMigrationDatabase(run: (db: Pool, migrate: () => Promi
   const db = new Pool({ host: 'localhost', port: 5480, database, user: 'postgres', password: 'postgres' });
   const migrate = async () => {
     await promisify(execFile)('podman', [
-      'run', '--rm', '--pod', 'training-log-pro-test',
-      '-e', 'LOCO_ENV=test', '-e', `DATABASE_URL=postgres://postgres:postgres@localhost:5432/${database}`,
+      // Keep one-shot CLI processes outside the kube pod and its restart policy.
+      'run', '--rm', '--restart=no', '--network', 'host',
+      '-e', 'LOCO_ENV=test', '-e', `DATABASE_URL=postgres://postgres:postgres@localhost:5480/${database}`,
       'localhost/training-log-pro-server:test', 'db', 'migrate',
     ], { timeout: 30_000 });
   };
