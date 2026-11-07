@@ -1,10 +1,13 @@
-# Training Log Pro - Development Guidelines
+# Training Log Pro — Development Guidelines
 
-## Code Review Rules
+## Code review
 
-- Review the PR diff for actionable correctness, security, data-loss, and deployment regressions; cite the changed file/line and concrete impact.
-- Preserve authentication boundaries, persisted data compatibility, and the project's documented build/test/deploy contracts. Adapt shared patterns to this project's stack.
-- Report missing behavioral coverage where it would catch a specific regression; leave formatting and mechanical checks to CI.
+- Review actionable correctness, security, data-loss and deployment regressions;
+  cite the changed file/line and concrete impact.
+- Preserve authentication boundaries, persisted data compatibility and documented
+  build/test/deploy contracts. Adapt reference patterns to this application's domain.
+- Report missing behavioral coverage when it catches a specific regression;
+  leave formatting and mechanical checks to CI.
 
 ## Codex automation
 
@@ -12,305 +15,72 @@ Use native Codex GitHub reviews and `@codex` PR tasks with ChatGPT sign-in.
 Setup: https://github.com/mucsi96/skeleton-app/blob/main/docs/codex-automation.md
 Skeleton sync: follow `.github/prompts/sync-skeleton.md` in a weekly scheduled task.
 
-## General Code Style
+## Style and architecture
 
-- Avoid fallbacks, prefer failing fast
-- Prefer functional programming patterns
-- Prefer immutable data structures
+- Fail fast; prefer functional patterns and immutable data.
+- `server/`: Rust/Loco lifecycle and CLI, thin Axum controllers, typed Serde
+  requests/settings, typed service errors, SeaORM models/migrations, structured tracing.
+- `client/`: React/Vite, TanStack Query and Zod at API boundaries.
+- TypeScript uses `const`, spread, functional collection methods and string literals.
+- Use `@mucsi96/react-ui` documented APIs (`onPress`, `isDisabled`, semantic `tone`).
+  Colocate styles in CSS Modules; global CSS contains tokens, resets and typography.
+- Preserve accessible names, keyboard navigation, dark theme, skeleton loaders,
+  actionable errors and retry states.
+- API and telemetry URLs stay on the application origin. Browser OAuth credentials
+  are forbidden; `/oauth2/userinfo` supplies display data, `/api/environment` map config.
 
-## Java Style
+## Verification
 
-- Use Lombok annotations (@Data, @Builder, @RequiredArgsConstructor)
-- Constructor injection (via @RequiredArgsConstructor)
-- Use Stream API for collections
-- Use records for DTOs/responses
-
-## TypeScript Style
-
-- Use `const` by default
-- Prefer spread operator for object/array operations
-- Use functional array methods (map, filter, reduce)
-- Use string literals over enums
-
-## Testing Style
-
-- Write tests from user perspective
-- Use role-based selectors (getByRole)
-- Use semantic selectors (getByText, getByLabel)
-- E2E tests with Playwright (in `test/`) are the only test layer; do not add Java unit tests in `server/`
-- Cover server behaviour by driving the running stack via Playwright and asserting on the UI or, when the behaviour is not user-visible, on the database via the helpers in `test/utils.ts`
-- Extend the mock servers under `mock_strava_server/` and `mock_withings_server/` to shape the data needed by a test instead of stubbing in Java
-
-## React Style
-
-- Use function components and hooks, TanStack Query for server state, and Zod validation at API boundaries.
-- Use `@mucsi96/react-ui` components and its documented APIs (`onPress`, `isDisabled`, semantic `tone`).
-- Colocate styles in CSS Modules. Keep only tokens, resets, and typography defaults in global CSS.
-- Preserve accessible names, keyboard navigation, dark theme, skeleton loaders, and actionable error/retry states.
-- Use Playwright for behavioral coverage; do not add React unit/component tests.
-- Keep API and telemetry URLs on the application origin. OAuth credentials belong at the gateway.
-
-## Design
-
-- Shared React UI dark theme
-- Skeleton loaders for loading states
-
-## Project Overview
-
-Training and fitness tracking application demonstrating patterns for:
-- CI/CD pipeline (GitHub Actions)
-- Deployment (Docker images published to registry)
-- Client (React with shared React UI)
-- Server (Spring Boot with Java)
-- Authentication (Entra/oauth2-proxy gateway; backend JWT/role validation)
-- Configuration (Azure Key Vault, Spring profiles)
-- Database (PostgreSQL with JPA)
-- Testing (Playwright E2E)
-- External API Integration (Strava, Withings)
-
-## Architecture
-
-- **client/** - React/Vite SPA with shared React UI, gateway session display data
-- **server/** - Spring Boot REST API with PostgreSQL
-- **test/** - Playwright E2E tests
-- **scripts/** - Build and deployment scripts
-- **.github/workflows/** - CI/CD pipelines
-
-## Key Technologies
-
-- Spring Boot 4, Java 21 (built into a GraalVM native image)
-- React, Vite, TanStack Query, Zod, and `@mucsi96/react-ui`
-- PostgreSQL
-- Entra gateway authentication with server-side Redis sessions
-- Azure Key Vault for secrets
-- Traefik reverse proxy
-- Podman for container management
-- Helm for Kubernetes deployment
-- Playwright for E2E testing
-
-## Development Commands
-
-### Setup
-```bash
-scripts/install_dependencies.sh  # Install all dependencies (Ubuntu)
-```
-
-### Frontend
-```bash
-cd client && npm start        # Start dev server
-cd client && npm run build    # Production build
-cd client && npm run lint && npm run typecheck
-```
-
-### Backend
-```bash
-scripts/dev_up.sh             # Start dev pod (database)
-scripts/dev_down.sh           # Stop dev pod
-cd server && mvn spring-boot:run -Dspring-boot.run.profiles=local  # Start with local profile
-```
-
-Local development still runs on a plain JVM. The native image is built only by
-the container build - see **Native image and the baked-in Spring profile**
-below.
-
-### Testing
-```bash
-scripts/pod_up.sh             # Start test stack (Podman pod)
-scripts/pod_down.sh           # Stop test stack
-cd test && npm test           # Run E2E tests
-cd test && npx playwright test --ui  # Interactive test runner
-```
-
-### Deployment
-```bash
-scripts/pull_kubeconfig.sh    # Fetch kubeconfig from Azure Key Vault
-scripts/deploy.sh             # Deploy to Kubernetes via Helm
-```
-
-## Configuration Patterns
-
-### Spring Profiles
-- **prod** - Production with Azure Key Vault and AAD
-- **local** - Local development with Podman dev DB
-- **test** - Mock issuer with real JWT/role/CSRF enforcement; Playwright supplies gateway identity
-
-## Native image and the baked-in Spring profile
-
-The server is compiled ahead of time into a GraalVM native executable linked
-against musl, so there is no JRE in the runtime image and startup is in the tens
-of milliseconds rather than seconds.
-
-Ahead-of-time processing resolves bean definitions at build time, which means
-the active Spring profile is decided by the build, not by the environment:
-Spring AOT emits an `EnvironmentPostProcessor` that activates the profile the
-image was built with. `SPRING_PROFILES_ACTIVE` is no longer read at runtime, and
-`test/test-pod.yaml` no longer sets it. Build one image per profile with the
-`SPRING_PROFILE` build argument - `test` for the e2e pod, `prod` for the image
-published to GHCR:
+Playwright E2E tests in `test/` are the only behavioral test layer. Do not add
+Rust unit/integration tests or React unit/component tests. Drive the running stack
+and assert UI behavior, or use the database helpers in `test/utils.ts` for behavior
+that is not visible. Use role/text/label selectors. Extend the mock Strava/Withings
+servers rather than stubbing application services.
 
 ```bash
-podman build --build-arg SPRING_PROFILE=test \
-  -t localhost/training-log-pro-server:test server
+cd server && cargo fmt --all -- --check
+cd server && cargo clippy --locked --all-targets -- -D warnings
+cd server && cargo build --locked
+cd client && npm run lint && npm run typecheck && npm run build
+scripts/pod_up.sh
+cd test && npm test
+scripts/pod_down.sh
 ```
 
-Build-time details that live in `server/pom.xml` and are easy to trip over:
+## Runtime and persistence contracts
 
-- AOT processing refreshes the application context, so every placeholder an
-  auto-configuration condition reads has to resolve during the build. The
-  `process-aot` execution supplies build-time stand-ins for them and turns the
-  Key Vault property source off, so the build never reaches out to Azure. The
-  stand-ins are not baked into the image; they only have to make the same
-  conditions match as the real values do at runtime. A new required environment
-  placeholder read by a condition means adding it there too. Placeholders that
-  are only read while creating beans (`${db-url}`, `${withings-client-id}`) are
-  resolved at runtime as before and need nothing.
-- Spring AOT generates bean-definition classes into the packages of the
-  configuration classes it processes, including the signed Spring Cloud Azure
-  jars. Mixing generated (unsigned) and signed classes in one package makes the
-  native-image builder throw `SecurityException: ... signer information does not
-  match`, so the builder is pointed at `server/native-image.security`, which
-  disables jar signature verification.
-- Jars can ship a `META-INF/native-image/.../native-image.properties` that forces
-  classes to build-time initialization. When such a class holds on to objects of
-  types that are still initialized at run time, the builder fails with
-  `UnsupportedFeatureException: An object of type ... was found in the image
-  heap`. `--initialize-at-build-time` in the `native-maven-plugin` config covers
-  the Jackson core classes `azure-core` leaves behind that way. Note that a build
-  cannot undo such a directive: `exclude-config` does not apply to
-  `native-image.properties`, and `initialize-at-run-time` for the same class is
-  rejected outright. That is why `azure-core` is pinned ahead of the version the
-  Azure BOM selects - the BOM's 1.58.0 forces SLF4J and logback to build-time
-  initialization, which is irreconcilable with Spring Boot setting logging up at
-  run time. Check this again when the Azure BOM moves.
-- The Azure SDK's `ExpandableStringEnum` constants are built by instantiating the
-  subclass reflectively, and `fromString` returns `null` rather than failing when
-  it cannot. Missing reflection metadata therefore surfaces as every constant of
-  a class being `null` and a `NullPointerException` far from the cause.
-  `AzureNativeHints` registers the subclasses azure-identity does not ship
-  metadata for.
-- azure-core decides how to read a response body by asking the model class
-  whether it declares the `fromXml` / `fromJson` pair azure-xml and azure-json
-  generate, and it asks with `Class.getDeclaredMethods()`. In a native image that
-  returns nothing for a class with no reachability metadata, so the answer is
-  silently "no" and azure-core falls back to Jackson - for XML that means an
-  `XmlMapper`, and jackson-dataformat-xml is not on the classpath, so the call
-  dies with a `NoClassDefFoundError`. The SDK ships metadata for most of its
-  models but not all. `AzureNativeHints` scans `com.azure` and registers every
-  `XmlSerializable`, `JsonSerializable` and `HttpResponseException` instead of
-  naming the ones missing today, so an SDK upgrade cannot reintroduce this.
-- The Key Vault property source is configured by an `EnvironmentPostProcessor`
-  that runs before there is an application context and reads its own settings
-  with a plain `Binder` over `AzureKeyVaultSecretProperties`. Nothing in the
-  framework infers that, and the auto-configuration that would otherwise
-  contribute the binding metadata for that type never matches here - it is
-  conditional on `spring.cloud.azure.keyvault[.secret].endpoint`, while this
-  application configures the endpoint under `...secret.property-sources[0]`. With
-  no members in the image the binder binds nothing, and an absent binding is
-  indistinguishable from an empty configuration, so the post-processor quietly
-  concludes there is no property source to add. Nothing fails at that point: the
-  image starts and then dies much later on the first secret-backed placeholder.
-  `KeyVaultPropertySourceNativeHints` supplies the metadata. Only the prod
-  profile reads secrets from Key Vault, so no test covers this - after changing
-  anything about the Key Vault configuration, check that the generated
-  `target/spring-aot/main/resources/META-INF/native-image/**/reachability-metadata.json`
-  still carries `AzureKeyVaultSecretProperties` and
-  `AzureKeyVaultPropertySourceProperties` with their accessors.
-- Liquibase turns the changelog into objects by introspecting the change class
-  and calling the setter named after each attribute, so what needs reflection is
-  decided by `db.changelog-master.yaml`, not by any code. The community metadata
-  `metadataRepository` pulls in was collected against some other changelog and
-  misses `AbstractSQLChange.setDbms`, which the two raw SQL changesets here use;
-  the image then dies at startup with a `MissingReflectionRegistrationError`
-  naming the attribute. `LiquibaseChangeNativeHints` registers the whole
-  `liquibase.change` package, so the next attribute added to the changelog needs
-  no change there.
-- Hibernate builds a multi-id loader for every entity while the session factory
-  starts and allocates an array of the identifier type reflectively. Array
-  instantiation is registered separately from the component type, and the
-  framework registers the entities but not those arrays, so the image fails with
-  `Cannot reflectively instantiate the array class 'java.time.ZonedDateTime[]'`.
-  `EntityIdentifierArrayNativeHints` reads the identifier types off the
-  `@Entity` classes, so a new entity needs no change there either.
-- The Withings and Strava models the OpenAPI generator produces are read back
-  through a `RestTemplate` and, for the Withings token response, a plain
-  `ObjectMapper`. Neither leaves anything for AOT processing to follow, so
-  without hints Jackson finds no accessors and every field of every response is
-  `null` in the native image. `ExternalApiModelNativeHints` scans the two
-  generated packages for `@JsonPropertyOrder` - what marks a generated model -
-  and registers binding hints for each. The models of `api.yml` need nothing:
-  they are controller parameter and return types, which the framework's own AOT
-  processing covers, as do JPA entities and Spring Data repositories.
+- The same native image runs test and production; `LOCO_ENV` selects configuration
+  at runtime. `/healthz` checks database readiness. `--healthcheck` is the native
+  container probe; `--help` checks that the executable starts without infrastructure.
+- Production configuration loads Azure Key Vault with workload identity before
+  database connection. Preserve existing secret names and JDBC URL compatibility.
+- `training_log` remains the schema; existing UUID/timestamp keys, UTC timestamp
+  columns, OAuth principal `oid`, registration IDs, and AES-256-GCM wire format
+  (Base64 of IV/ciphertext/tag) must remain compatible.
+- The baseline adopts databases through Liquibase change 37 without altering data.
+  Fresh databases alone receive initial settings. Never replay historical clearing
+  migrations, reset/reseed existing data, or enable destructive Loco database options.
+- Browser APIs validate JWT signature, issuer, audience, expiry, scope and roles.
+  Mutations require double-submit CSRF even with gateway-injected bearer tokens.
+- Device delivery/KOReader routes authenticate device API keys and check ownership.
+  OAuth callbacks use expiring single-use state tied to the initiating principal.
+- Scheduled sync runs Withings before Strava in `DAILY_SYNC_ZONE` using
+  `DAILY_SYNC_CRON`, isolates provider failures, and refreshes encrypted credentials.
 
-Spring Cloud Azure needs one addition in application code:
-`AzureGlobalPropertiesConfiguration` declares the `AzureGlobalProperties` bean.
-Spring Cloud Azure registers its own from an `ImportBeanDefinitionRegistrar`
-using a lambda instance supplier, which AOT cannot turn into generated code, and
-the library ships a `BeanRegistrationExcludeFilter` that drops that bean from
-AOT processing by name rather than let it fail there. So an AOT-processed
-application has to bring its own, or it does not start: "required a bean of type
-AzureGlobalProperties that could not be found". This is by design upstream, not
-a gap waiting to be fixed. See the class comment for why the bean needs its own
-name and why a plain JVM run binds what it did before.
-
-What is not contracted is that arrangement staying put, so smoke-test the image
-whenever `spring-cloud-azure-dependencies` moves, and read the release notes for
-anything about the global-properties bean. Nothing in the pipeline would catch a
-change: the test profile does not need the bean, so the e2e pod stays green, and
-`publish-server`'s check of the prod executable exits before Spring starts.
-
-The image is deliberately not built with `--static`. A fully static binary links
-but then segfaults the moment it starts in the container - before GraalVM
-installs its own segfault handler, so with no output whatsoever, which looks
-exactly like a container that silently never starts.
-
-### Reproducing AOT problems without a native build
-
-Most AOT problems reproduce without waiting for a native compile (which takes
-several minutes). Run the AOT-processed application on a normal JVM:
-
-```bash
-cd server
-mvn -Pnative package -DskipTests -Dapp.profile=test
-SPRING_ACTUATOR_PORT=8182 DB_URL=jdbc:postgresql://localhost:5480/test \
-  DB_USERNAME=postgres DB_PASSWORD=postgres \
-  java -Dspring.aot.enabled=true -jar target/training-log-0.0.1-SNAPSHOT.jar
-```
-
-That exercises the generated context - missing bean definitions, profile and
-condition mismatches - in seconds. Only class-initialization and reflection
-problems need the real `mvn -Pnative native:compile`.
-
-Types that are only ever bound reflectively need explicit hints. Controller
-request/response types, JPA entities and Spring Data repositories are covered by
-the framework's own AOT processing and need nothing. Types read with a plain
-`ObjectMapper` or a `RestTemplate` want `@RegisterReflectionForBinding` or a
-registrar like `ExternalApiModelNativeHints`; types bound by a `Binder` rather
-than Jackson want `BindableRuntimeHintsRegistrar`, which registers exactly what
-`JavaBeanBinder` looks for over the whole class hierarchy - see
-`KeyVaultPropertySourceNativeHints`.
-
-### Release and image publishing
+## Release and deployment
 
 `publish-server` publishes numbered GHCR images only when
-`get_next_version.outputs.hasNextVersion == 'true'`, tagging them with
-`get_next_version.outputs.version`. Authentication uses `GITHUB_TOKEN` with
-job-scoped `packages: write`. Release tags use `target_commitish: ${{ github.sha }}`.
-The action always returns `version` and `tag`, including the current reachable
-release when unchanged; `hasNextVersion` alone controls publication. Forward its
-version output directly to deployment without a consumer-side tag lookup.
-The workflow serializes publication and rollout; require numbered GHCR tags or
-digests.
-The server Dockerfile carries its GHCR source label.
-The server package must be public for anonymous Kubernetes pulls. `publish-client`
-releases the tested static archive. Deployment uploads assets before index to Azure
-Storage after emptying `$web` and `assets` (intentional downtime), and replaces the client workload with
-`static-client-app` 5.0.0. Use `spring-app` 37.0.0 and `--reset-values` on both.
-The app-owned `deploy/integrations` chart preserves API-key/one-time-token routes;
-do not put browser session authentication in front of those routes. See README.md
-for the p07 prerequisite and rollout order.
+`get_next_version.outputs.hasNextVersion == 'true'`, tagging its `version` output.
+Use job-scoped `packages: write` with `GITHUB_TOKEN`. Release tags target
+`${{ github.sha }}`. Forward the version output directly to deployment; do not
+perform consumer-side tag lookups. Serialize publication/rollout and require
+numbered tags or digests. Keep the source label and public package visibility.
 
-### Environment Config
-- Server exposes an authenticated `/api/environment` endpoint for map configuration
-- Client fetches config before bootstrap
-- Browser OAuth credentials are forbidden; use `/oauth2/userinfo` for display data
-- Faro name and same-origin collector path are compiled into the client
+Keep release/service name `training-log-server`, workload identity and existing
+integration routes. Use `rust-app` 7.0.0 and `static-client-app` 5.0.0 with
+`--reset-values`. `deploy/integrations` preserves API-key/one-time-token routes;
+never put browser session authentication in front of them. See README for rollout.
+
+`publish-client` releases the tested static archive. Deployment empties `$web` and
+`assets`, uploads assets first and index last (intentional downtime). Faro name and
+same-origin collector path remain compiled into the client.
