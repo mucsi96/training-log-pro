@@ -41,20 +41,18 @@ Skeleton sync: follow `.github/prompts/sync-skeleton.md` in a weekly scheduled t
 - Cover server behaviour by driving the running stack via Playwright and asserting on the UI or, when the behaviour is not user-visible, on the database via the helpers in `test/utils.ts`
 - Extend the mock servers under `mock_strava_server/` and `mock_withings_server/` to shape the data needed by a test instead of stubbing in Java
 
-## Angular Style
+## React Style
 
-- Use Angular Material components
-- Follow `@mucsi96/angular-material-theme`'s documented button-color API: use `bt-color="primary|success|warn|error"` on `mat-flat-button`, `mat-raised-button`, `mat-fab` (including extended FABs), and `mat-mini-fab`, including anchor buttons. Use `[attr.bt-color]` for dynamic tones; no directive import is needed.
-- Solid buttons default to primary. Use `error` for destructive actions, `warn` for caution, and `success` for positive outcomes. Material's legacy `color="warn"` means error/red, not the theme's orange `bt-color="warn"`; migrate solid buttons accordingly.
-- For an arbitrary solid-button color, set only `--bt-button-bg` without `bt-color`. Let the theme derive label contrast and hover colors; do not override Material container/label/state-layer color tokens, `--mat-sys-primary`, or button `background`, `color`, and `:hover` separately. Keep the intended button variant; raised buttons support the same API and retain elevation.
-- The `bt-color` API does not cover text, outlined, icon, or menu buttons. Use their documented Material APIs instead; do not apply solid-button color workarounds to them. Check the installed theme README when upgrading or changing component styles.
-- Use signals and resources (not rxjs where possible)
-- Use string literals over enums
-- Standalone components
+- Use function components and hooks, TanStack Query for server state, and Zod validation at API boundaries.
+- Use `@mucsi96/react-ui` components and its documented APIs (`onPress`, `isDisabled`, semantic `tone`).
+- Colocate styles in CSS Modules. Keep only tokens, resets, and typography defaults in global CSS.
+- Preserve accessible names, keyboard navigation, dark theme, skeleton loaders, and actionable error/retry states.
+- Use Playwright for behavioral coverage; do not add React unit/component tests.
+- Keep API and telemetry URLs on the application origin. OAuth credentials belong at the gateway.
 
 ## Design
 
-- Material UI dark theme
+- Shared React UI dark theme
 - Skeleton loaders for loading states
 
 ## Project Overview
@@ -62,7 +60,7 @@ Skeleton sync: follow `.github/prompts/sync-skeleton.md` in a weekly scheduled t
 Training and fitness tracking application demonstrating patterns for:
 - CI/CD pipeline (GitHub Actions)
 - Deployment (Docker images published to registry)
-- Client (Angular with Material UI)
+- Client (React with shared React UI)
 - Server (Spring Boot with Java)
 - Authentication (Entra/oauth2-proxy gateway; backend JWT/role validation)
 - Configuration (Azure Key Vault, Spring profiles)
@@ -72,7 +70,7 @@ Training and fitness tracking application demonstrating patterns for:
 
 ## Architecture
 
-- **client/** - Angular SPA with Material UI, gateway session display data
+- **client/** - React/Vite SPA with shared React UI, gateway session display data
 - **server/** - Spring Boot REST API with PostgreSQL
 - **test/** - Playwright E2E tests
 - **scripts/** - Build and deployment scripts
@@ -81,7 +79,7 @@ Training and fitness tracking application demonstrating patterns for:
 ## Key Technologies
 
 - Spring Boot 4, Java 21 (built into a GraalVM native image)
-- Angular with Material UI
+- React, Vite, TanStack Query, Zod, and `@mucsi96/react-ui`
 - PostgreSQL
 - Entra gateway authentication with server-side Redis sessions
 - Azure Key Vault for secrets
@@ -101,6 +99,7 @@ scripts/install_dependencies.sh  # Install all dependencies (Ubuntu)
 ```bash
 cd client && npm start        # Start dev server
 cd client && npm run build    # Production build
+cd client && npm run lint && npm run typecheck
 ```
 
 ### Backend

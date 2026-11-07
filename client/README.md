@@ -1,37 +1,44 @@
-# Client
+# Training Log Pro client
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 16.1.6.
+React function components, React Router, TanStack Query, Zod, and
+`@mucsi96/react-ui`, built with Vite. Component styles are colocated CSS Modules.
+The existing Spring backend and its persisted data contracts are unchanged.
 
-## Development server
+## Development and verification
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4280/`. The application will automatically reload if you change any of the source files.
+Use Node 24 or newer and the committed npm lockfile:
 
-## Code scaffolding
+```sh
+npm ci
+npm start          # Vite on 4280; API proxy to 8081, gateway proxy to 8180
+npm run lint
+npm run typecheck
+npm run build      # static artifact in dist/
+```
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+Use an authenticated gateway for local browser sessions. Behavioral coverage is
+the repository's Playwright suite: from the repository root run
+`scripts/pod_up.sh`, then `cd test && npm test`. No client unit test runner is used.
 
-## Build
+## Data and authentication
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+`api.ts` validates responses with the schemas in `schemas.ts`, sends the user's
+timezone, and attaches CSRF proof to same-origin mutations. Bootstrap reads the
+authenticated `/api/environment` map configuration before starting queries that
+mutate data. `/oauth2/userinfo` is display-only; session expiry returns to the
+gateway with the current deep link. External provider authorization remains a
+backend-owned flow, with Withings syncing before Strava. Query keys deduplicate
+sync and measurements; mutations invalidate the affected resources and goals.
 
-## Running unit tests
+Routes `/`, `/year`, and `/all-time` preserve the `view=training|health` query
+parameter. `/settings` and `/devices` load on demand. The header timer survives
+client-side navigation. ECharts and MapLibre instances are disposed on unmount.
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+## Static delivery
 
-## Running end-to-end tests
-
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
-
-# Kubetools version: 31
-
-# Resources
-
-- https://flowbite.com/docs/components/tables/
-- https://hslpicker.com/
-- https://softchris.github.io/books/rxjs/cascading-calls/
-- https://github.com/search?q=%40ungap%2Fcustom-elements+language%3ATypeScript&type=code&l=TypeScript
-- https://github.com/milieuinfo/uigov-web-components?tab=readme-ov-file#documentatie
+Vite uses relative asset URLs so lazy chunks, CSS and map assets work on the
+public Blob asset origin. `scripts/prepare-client.mjs` rewrites HTML references
+while retaining the application's `/` document base. API and Faro URLs resolve
+against `window.location.origin`, never the asset origin. The same `dist/`
+artifact is mounted into nginx for E2E, attached to the client release, and
+published by the existing static-hosting deployment.

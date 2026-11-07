@@ -1,0 +1,49 @@
+.page,
+.form,
+.coins {
+  display: grid;
+  gap: 20px;
+}
+.page > header p {
+  margin-top: 12px;
+  max-width: 800px;
+  color: var(--bt-text-muted);
+}
+.tiers {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.tiers fieldset {
+  border: 1px solid var(--bt-outline);
+  border-radius: 12px;
+  padding: 16px;
+  min-width: 0;
+}
+.tiers legend {
+  font-weight: 600;
+  padding: 0 8px;
+}
+.tiers p {
+  font-size: 0.85rem;
+  color: var(--bt-text-muted);
+}
+.requirement {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.coins {
+  padding: 20px;
+  background: var(--bt-surface-1);
+  border-radius: 16px;
+}
+.form > button,
+.coins > button {
+  justify-self: start;
+}
+@media (max-width: 700px) {
+  .tiers {
+    grid-template-columns: 1fr;
+  }
+}

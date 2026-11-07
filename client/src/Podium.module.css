@@ -1,0 +1,47 @@
+.panel {
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid #76622c;
+  background: #282315;
+  min-width: 0;
+}
+.panel header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.panel header > span {
+  font-size: 2rem;
+}
+.panel header p + p {
+  font-size: 0.85rem;
+  margin-top: 5px;
+  color: var(--bt-text-muted);
+}
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.stats dt {
+  color: var(--bt-text-muted);
+  font-size: 0.8rem;
+}
+.stats dd {
+  margin: 5px 0;
+}
+.gaps {
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+.gaps li {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.gaps time {
+  color: var(--bt-text-muted);
+}

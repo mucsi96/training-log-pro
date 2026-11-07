@@ -1,0 +1,38 @@
+.card {
+  position: relative;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--bt-surface-1);
+  display: grid;
+  gap: 10px;
+}
+.count {
+  position: absolute;
+  top: 18px;
+  right: 16px;
+  font-size: 0.8rem;
+  color: var(--bt-text-muted);
+}
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+.list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.form {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}

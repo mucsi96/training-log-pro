@@ -1,0 +1,10 @@
+.brand {
+  text-decoration: none;
+  font-size: 1.3rem;
+  color: var(--bt-text-strong);
+}
+.coins {
+  white-space: nowrap;
+  color: #facb2e;
+  font-weight: 600;
+}

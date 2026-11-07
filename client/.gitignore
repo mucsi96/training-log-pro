@@ -3,8 +3,7 @@
 # Compiled output
 /dist
 /tmp
-/out-tsc
-/bazel-out
+*.tsbuildinfo
 
 # Node
 /node_modules
@@ -29,12 +28,10 @@ yarn-error.log
 .history/*
 
 # Miscellaneous
-/.angular/cache
-.sass-cache/
+/.angular/
 /connect.lock
 /coverage
 /libpeerconnection.log
-testem.log
 /typings
 
 # System files
