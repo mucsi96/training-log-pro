@@ -1,6 +1,5 @@
 {
-  "java.compile.nullAnalysis.mode": "disabled",
-  "java.configuration.updateBuildConfiguration": "interactive",
+  "rust-analyzer.linkedProjects": ["server/Cargo.toml"],
   "vs-kubernetes": {
     "vs-kubernetes.namespace": "training-log",
     "vs-kubernetes.kubeconfig": "${workspaceFolder}/.kube/config"
@@ -9,8 +8,8 @@
     "KUBECONFIG": "${workspaceFolder}/.kube/config"
   },
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "[java]": {
-    "editor.defaultFormatter": "redhat.java"
+  "[rust]": {
+    "editor.defaultFormatter": "rust-lang.rust-analyzer"
   },
   "search.exclude": {
     "**/node_modules": true,

@@ -10,9 +10,7 @@ if [ "${SKIP_BUILD:-}" = "1" ]; then
 else
   echo "Building container images..."
   BUILD_PIDS=()
-  # The Spring profile is baked into the native executable during AOT
-  # processing, so the pod image has to be built with the test profile.
-  podman build --build-arg SPRING_PROFILE=test \
+  podman build \
     -t localhost/training-log-pro-server:test "$PROJECT_DIR/server" &
   BUILD_PIDS+=("$!")
   (cd "$PROJECT_DIR/client" && npm ci && npm run build) &

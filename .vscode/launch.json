@@ -2,15 +2,13 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "type": "java",
+      "type": "lldb",
       "name": "Start server",
       "request": "launch",
+      "cargo": { "args": ["build", "--manifest-path", "server/Cargo.toml"] },
       "cwd": "${workspaceFolder}/server",
-      "mainClass": "mucsi96.traininglog.TrainingLogApplication",
-      "args": "--spring.profiles.active=local",
-      "env": {
-        "AZURE_KEYVAULT_ENDPOINT": "https://p07-training-log.vault.azure.net"
-      }
+      "args": ["start", "--environment", "development"],
+      "envFile": "${workspaceFolder}/server/.env"
     }
   ]
 }

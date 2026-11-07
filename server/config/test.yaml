@@ -1,0 +1,58 @@
+logger:
+  enable: true
+  level: info
+  format: compact
+server:
+  binding: <%= get_env(name="BINDING", default="0.0.0.0") %>
+  port: <%= get_env(name="PORT", default="8080") %>
+  host: http://localhost
+  middlewares:
+    limit_payload:
+      body_limit: 100mb
+    etag:
+      enable: false
+    fallback:
+      enable: false
+    secure_headers:
+      enable: true
+      preset: empty
+      overrides:
+        Cache-Control: no-store
+        X-Content-Type-Options: nosniff
+workers:
+  mode: BackgroundAsync
+database:
+  uri: <%= get_env(name="DATABASE_URL") %>
+  enable_logging: false
+  min_connections: 1
+  max_connections: 10
+  connect_timeout: 30000
+  idle_timeout: 300000
+  auto_migrate: true
+  dangerously_truncate: false
+  dangerously_recreate: false
+  run_on_start: CREATE SCHEMA IF NOT EXISTS training_log
+settings:
+  oidc:
+    issuer: http://localhost:8089/default
+    audience: mock-api-client-id
+  csrf_secure: false
+  token_encryption_key: 8JSyUeV1b093C24h4nNiQXvL+RoOgb4VoBJn7RUVxbI=
+  thunderforest_api_key: ""
+  strava:
+    client_id: strava-client-id
+    client_secret: strava-client-secret
+    authorize_url: http://localhost:8180/strava/oauth/authorize
+    token_url: <%= get_env(name="STRAVA_TOKEN_URL", default="http://localhost:3081/strava/oauth/token") %>
+    api_url: <%= get_env(name="STRAVA_API_URL", default="http://localhost:3081/strava") %>
+    scope: activity:read
+  withings:
+    client_id: withings-client-id
+    client_secret: withings-client-secret
+    authorize_url: http://localhost:8180/withings/oauth2_user/authorize2
+    token_url: <%= get_env(name="WITHINGS_TOKEN_URL", default="http://localhost:3080/withings/v2/oauth2") %>
+    api_url: <%= get_env(name="WITHINGS_API_URL", default="http://localhost:3080/withings") %>
+    scope: user.metrics
+  daily_sync:
+    cron: <%= get_env(name="DAILY_SYNC_CRON", default="0 0 21 * * *") %>
+    zone: <%= get_env(name="DAILY_SYNC_ZONE", default="Europe/Budapest") %>

@@ -1,7 +1,9 @@
 import { createCipheriv, createDecipheriv, randomBytes, randomUUID } from 'crypto';
 import { Pool } from 'pg';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 
-// Must match token-encryption-key in server/src/main/resources/application-test.yml
+// Must match token_encryption_key in server/config/test.yaml
 const TOKEN_ENCRYPTION_KEY = Buffer.from(
   '8JSyUeV1b093C24h4nNiQXvL+RoOgb4VoBJn7RUVxbI=',
   'base64'
@@ -46,6 +48,22 @@ export async function query(text: string, params?: any[]) {
   } finally {
     client.release();
   }
+}
+
+/** An isolated database for exercising the shipped migration CLI. */
+export async function withMigrationDatabase(run: (db: Pool, migrate: () => Promise<void>) => Promise<void>) {
+  const database = `migration_${randomUUID().replaceAll('-', '')}`;
+  await query(`CREATE DATABASE ${database}`);
+  const db = new Pool({ host: 'localhost', port: 5480, database, user: 'postgres', password: 'postgres' });
+  const migrate = async () => {
+    await promisify(execFile)('podman', [
+      'run', '--rm', '--pod', 'training-log-pro-test',
+      '-e', 'LOCO_ENV=test', '-e', `DATABASE_URL=postgres://postgres:postgres@localhost:5432/${database}`,
+      'localhost/training-log-pro-server:test', 'db', 'migrate',
+    ], { timeout: 30_000 });
+  };
+  try { await run(db, migrate); }
+  finally { await db.end(); await query(`DROP DATABASE ${database} WITH (FORCE)`); }
 }
 
 export async function cleanupDb() {

@@ -52,39 +52,17 @@ if [ "$(uname -s)" = "Linux" ] && [ -f /etc/os-release ]; then
         loginctl enable-linger "$(whoami)" 2>/dev/null || true
         systemctl --user enable --now podman.socket
 
-        # Check and install SDKMAN
-        if [ ! -d "$HOME/.sdkman" ]; then
-            echo "Installing SDKMAN..."
-            curl -s "https://get.sdkman.io" | bash
-        else
-            echo "SDKMAN is already installed."
-        fi
-
-        # Source SDKMAN
-        export SDKMAN_DIR="$HOME/.sdkman"
-        [ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ] && . "$SDKMAN_DIR/bin/sdkman-init.sh"
-
-        # Check and install JDK via SDKMAN
-        if ! sdk list java | grep -q "21\.0\.[0-9]*.*tem.*installed"; then
-            echo "Installing JDK 21.0.x via SDKMAN..."
-            sdk install java 21.0.9-tem
-        else
-            echo "JDK 21.0.x is already installed."
-        fi
-
-        # Check and install Maven via SDKMAN
-        if ! command -v mvn >/dev/null 2>&1; then
-            echo "Installing Maven via SDKMAN..."
-            sdk install maven
-        else
-            echo "Maven is already installed."
-        fi
+        sudo apt-get install -y build-essential pkg-config cmake
 
     fi
 fi
 
 echo "Building server..."
-cd server && mvn clean install && cd ..
+if ! command -v rustup >/dev/null 2>&1; then
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
+    . "$HOME/.cargo/env"
+fi
+cd server && cargo build --locked && cd ..
 
 echo "Installing client dependencies..."
 cd client && npm ci && cd ..

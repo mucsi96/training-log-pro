@@ -2,7 +2,7 @@
 
 React function components, React Router, TanStack Query, Zod, and
 `@mucsi96/react-ui`, built with Vite. Component styles are colocated CSS Modules.
-The existing Spring backend and its persisted data contracts are unchanged.
+The Rust/Loco backend preserves the application's API and persisted data contracts.
 
 ## Development and verification
 
