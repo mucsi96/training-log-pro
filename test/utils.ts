@@ -116,6 +116,14 @@ export async function getAchievedDates(): Promise<string[]> {
   return (await getAchievedDays()).map((day) => day.date);
 }
 
+export async function getCelebratedDays(): Promise<AchievedDay[]> {
+  const result = await query(
+    `SELECT to_char(date, 'YYYY-MM-DD') AS date, tier FROM training_log.achieved_day
+     WHERE celebrated_at IS NOT NULL ORDER BY date ASC`
+  );
+  return result.rows.map((row) => ({ date: row.date as string, tier: row.tier as DayGoalTier }));
+}
+
 export async function insertAchievedDay(date: Date | string, tier: DayGoalTier = 'GOLD') {
   await query(
     `INSERT INTO training_log.achieved_day (date, tier, achieved_at)

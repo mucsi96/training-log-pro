@@ -16,7 +16,7 @@
     "**/node_modules": true,
     "**/bower_components": true,
     "**/*.code-search": true,
-    "client/.angular": true
+    "client/dist": true
   },
   "[xml]": {
     "editor.defaultFormatter": "redhat.vscode-xml"

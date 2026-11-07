@@ -80,13 +80,6 @@ if [ "$(uname -s)" = "Linux" ] && [ -f /etc/os-release ]; then
             echo "Maven is already installed."
         fi
 
-        # Check and install angular-cli
-        if ! command -v ng >/dev/null 2>&1; then
-            echo "Installing Angular CLI..."
-            sudo npm install -g @angular/cli
-        else
-            echo "Angular CLI is already installed."
-        fi
     fi
 fi
 
@@ -94,16 +87,13 @@ echo "Building server..."
 cd server && mvn clean install && cd ..
 
 echo "Installing client dependencies..."
-cd client && npm install && cd ..
+cd client && npm ci && cd ..
 
 echo "Installing mock Strava server dependencies..."
 cd mock_strava_server && npm install && cd ..
 
 echo "Installing mock Withings server dependencies..."
 cd mock_withings_server && npm install && cd ..
-
-echo "Installing mock Anthropic server dependencies..."
-cd mock_anthropic_server && npm install && cd ..
 
 echo "Installing test dependencies..."
 cd test && npm install && npx playwright install --with-deps chromium && cd ..

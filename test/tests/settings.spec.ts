@@ -44,7 +44,7 @@ const tierGroup = (page: Page, tier: 'Gold' | 'Silver' | 'Bronze') =>
 
 const requireMetric = async (page: Page, tier: 'Gold' | 'Silver' | 'Bronze', metric: string, goal: number) => {
   const group = tierGroup(page, tier);
-  await group.getByRole('checkbox', { name: metric }).check();
+  await group.getByText(metric, { exact: true }).click();
   await group.getByLabel(`${metric} goal`).fill(String(goal));
 };
 
@@ -109,7 +109,7 @@ test.describe('Settings', () => {
     await page.goto('/settings');
 
     const gold = tierGroup(page, 'Gold');
-    await gold.getByRole('checkbox', { name: 'Ride elevation' }).uncheck();
+    await gold.getByText('Ride elevation', { exact: true }).click();
     await expect(gold.getByLabel('Ride elevation goal')).toHaveCount(0);
     await page.getByRole('button', { name: 'Save' }).click();
     await expect(page.getByText('Settings saved')).toBeVisible();
@@ -119,13 +119,17 @@ test.describe('Settings', () => {
       SILVER: {},
       BRONZE: {},
     });
+
+    await gold.getByText('Ride elevation', { exact: true }).click();
+    await expect(gold.getByLabel('Ride elevation goal')).toHaveValue('');
+    await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeDisabled();
   });
 
   test('does not save while a required metric has no goal', async ({ page }) => {
     await page.goto('/settings');
 
     const silver = tierGroup(page, 'Silver');
-    await silver.getByRole('checkbox', { name: 'Pushups' }).check();
+    await silver.getByText('Pushups', { exact: true }).click();
     await expect(silver.getByLabel('Pushups goal')).toHaveValue('');
     await expect(page.getByRole('button', { name: 'Save' })).toBeDisabled();
 

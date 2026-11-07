@@ -29,7 +29,7 @@ Clicking that notification focuses the tab and dismisses the alert.
 ## Gateway authentication and static hosting
 
 Production documents are authenticated by the per-app Entra/oauth2-proxy gateway
-before Angular starts. OAuth tokens stay in the server-side Redis session; the
+before React starts. OAuth tokens stay in the server-side Redis session; the
 browser uses a host-only HttpOnly session cookie. The API still validates the JWT
 audience, scope and application roles, and preserves the `oid` principal used by
 stored Strava/Withings credentials. Browser mutations require a CSRF header and
@@ -75,7 +75,7 @@ Azure CORS and Gateway API routing require rollout checks; the Playwright app
 suite supplies gateway identity while exercising the real JWT/CSRF backend.
 Shared gateway behavior is owned by the pinned charts.
 
-For local development, use an authenticated gateway in front of the Angular dev
+For local development, use an authenticated gateway in front of the Vite dev
 server and API, forwarding `/oauth2` to oauth2-proxy. Direct standalone browser
 OIDC login is no longer supported. `scripts/pod_up.sh` plus `cd test && npm test`
 provides the isolated app test stack, with gateway identity supplied by fixtures.
@@ -145,5 +145,5 @@ All host-bound ports use the 80-89 range to avoid conflicts.
 | 8089 | Mock OAuth2 provider | Test pod |
 | 8180 | Traefik HTTP | Test pod |
 | 8181 | Traefik dashboard | Test pod |
-| 4280 | Angular dev server | Local dev |
+| 4280 | Vite dev server | Local dev |
 | 8182 | Spring Boot actuator | Test pod / Local dev |

@@ -78,7 +78,9 @@ test.describe('Daily tasks', () => {
     const checkbox = checklist.getByRole('checkbox', { name: 'Water flower' });
     await expect(checkbox).not.toBeChecked();
 
-    await checkbox.check();
+    // React Aria's native input is visually hidden; exercise keyboard access.
+    await checkbox.focus();
+    await page.keyboard.press('Space');
 
     await expect(checklist.getByText('1 / 1 done')).toBeVisible();
     let completions = await getDailyTaskCompletionRows();
@@ -86,7 +88,8 @@ test.describe('Daily tasks', () => {
     expect(completions[0].task_id).toBe(taskId);
     expect(completions[0].date).toBe(isoDate(0));
 
-    await checkbox.uncheck();
+    await checkbox.focus();
+    await page.keyboard.press('Space');
     await expect(checklist.getByText('0 / 1 done')).toBeVisible();
     completions = await getDailyTaskCompletionRows();
     expect(completions).toHaveLength(0);
@@ -145,11 +148,11 @@ test.describe('Daily tasks', () => {
     await expect(section.getByText('Today is a gold day')).toBeHidden();
 
     const checklist = page.getByRole('region', { name: 'Daily tasks' });
-    await checklist.getByRole('checkbox', { name: 'Learn German' }).check();
+    await checklist.getByText('Learn German', { exact: true }).click();
     await expect(section.getByText('1/2 tasks')).toBeVisible();
     await expect(section.getByText('Today is a gold day')).toBeHidden();
 
-    await checklist.getByRole('checkbox', { name: 'Water flower' }).check();
+    await checklist.getByText('Water flower', { exact: true }).click();
     await expect(section.getByText('Today is a gold day')).toBeVisible();
     expect(await getAchievedDates()).toContain(isoDate(0));
   });

@@ -26,11 +26,11 @@ test.describe('FTP/kg diff', () => {
     const ftpSection = page.locator('section').filter({ hasText: 'FTP/kg' });
     await expect(ftpSection.getByRole('heading', { name: 'FTP/kg' })).toBeVisible();
 
-    const todayDiff = ftpSection.locator('.today-diff');
+    const todayDiff = ftpSection.getByLabel('Today change');
     await expect(todayDiff).toHaveText(/↑/);
     await expect(todayDiff).toHaveClass(/green/);
 
-    const periodValue = ftpSection.locator('.period-value');
+    const periodValue = ftpSection.getByLabel('Period change');
     await expect(periodValue).toHaveText(/↑/);
   });
 
@@ -43,8 +43,8 @@ test.describe('FTP/kg diff', () => {
     const ftpSection = page.locator('section').filter({ hasText: 'FTP/kg' });
     await expect(ftpSection.getByRole('heading', { name: 'FTP/kg' })).toBeVisible();
 
-    await expect(ftpSection.locator('.today-diff')).toHaveCount(0);
-    await expect(ftpSection.locator('.period-value')).toHaveText('-');
+    await expect(ftpSection.getByLabel('Today change')).toHaveCount(0);
+    await expect(ftpSection.getByLabel('Period change')).toHaveText('-');
   });
 
   test('does not render FTP when rides are too short to estimate', async ({ page }) => {
