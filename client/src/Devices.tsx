@@ -54,7 +54,7 @@ export default function Devices() {
           when a device is added — store it on the device.
         </p>
       </header>
-      <QueryState query={query}>
+      <QueryState query={query} label="Loading devices">
         {(devices) => (
           <>
             <form

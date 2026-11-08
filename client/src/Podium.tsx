@@ -2,7 +2,8 @@ import { lazy, Suspense, useState } from 'react';
 import { useApi } from './api';
 import { podiumSchema } from './schemas';
 import { duration, measurement, position, relativeDate } from './format';
-import { LoadingSkeleton, QueryState } from './QueryState';
+import { QueryState } from './QueryState';
+import { LoadingArea } from '@mucsi96/react-ui';
 import { Chart } from './Chart';
 import styles from './Podium.module.css';
 
@@ -11,7 +12,7 @@ export function PodiumBanner() {
   const query = useApi('/api/ride/podium', podiumSchema, 'strava');
   const [expanded, setExpanded] = useState(false);
   return (
-    <QueryState query={query}>
+    <QueryState query={query} label="Loading podium">
       {(podium) =>
         podium && (
           <section
@@ -47,7 +48,7 @@ export function PodiumBanner() {
                 ))}
               </dl>
               {expanded && podium.latitudes?.length && podium.longitudes?.length ? (
-                <Suspense fallback={<LoadingSkeleton />}>
+                <Suspense fallback={<LoadingArea label="Loading route map" />}>
                   <RouteMap latitudes={podium.latitudes} longitudes={podium.longitudes} />
                   {podium.distances?.length && podium.altitudes?.length ? (
                     <div data-testid="podium-elevation-chart">

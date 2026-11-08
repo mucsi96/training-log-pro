@@ -24,7 +24,7 @@ Skeleton sync: follow `.github/prompts/sync-skeleton.md` in a weekly scheduled t
 - TypeScript uses `const`, spread, functional collection methods and string literals.
 - Use `@mucsi96/react-ui` documented APIs (`onPress`, `isDisabled`, semantic `tone`).
   Colocate styles in CSS Modules; global CSS contains tokens, resets and typography.
-- Preserve accessible names, keyboard navigation, dark theme, skeleton loaders,
+- Preserve accessible names, keyboard navigation, dark theme, shared LoadingArea loaders centered in their page or section,
   actionable errors and retry states.
 - API and telemetry URLs stay on the application origin. Browser OAuth credentials
   are forbidden; `/oauth2/userinfo` supplies display data, `/api/environment` map config.

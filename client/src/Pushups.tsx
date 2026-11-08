@@ -43,7 +43,7 @@ export function Pushups({ period, compact = false }: { period: number; compact?:
           </Dialog>
         </DialogTrigger>
       </header>
-      <QueryState query={query}>
+      <QueryState query={query} label="Loading pushups">
         {(sets) => {
           const totals = sets.reduce<Record<string, number>>((result, set) => {
             const day = new Date(set.createdAt).toISOString().slice(0, 10);

@@ -38,9 +38,9 @@ function TrainingMetric({ period, kind }: { period: number; kind: 'fitness' | 'f
   const valueOf = (value: { fitness: number } | { ftpPerKg: number }) =>
     'fitness' in value ? value.fitness : value.ftpPerKg;
   return (
-    <QueryState query={recent}>
+    <QueryState query={recent} label="Loading recent measurements">
       {(recentData) => (
-        <QueryState query={history}>
+        <QueryState query={history} label="Loading measurement history">
           {(data) => {
             const latest = recentData.measurements.at(-1);
             if (!latest) return null;
@@ -88,9 +88,9 @@ export function Training({ period }: { period: number }) {
   return (
     <>
       <PodiumBanner />
-      <QueryState query={today}>
+      <QueryState query={today} label="Loading today's measurements">
         {(current) => (
-          <QueryState query={history}>
+          <QueryState query={history} label="Loading measurement history">
             {(stats) =>
               (stats.time ?? 0) > 0 && (
                 <div className={styles.grid}>
@@ -126,9 +126,9 @@ export function Health({ period }: { period: number }) {
   const recent = useApi(periodPath('/api/weight', 1), weightHistorySchema, 'withings');
   const history = useApi(periodPath('/api/weight', period), weightHistorySchema, 'withings');
   return (
-    <QueryState query={recent}>
+    <QueryState query={recent} label="Loading recent measurements">
       {(today) => (
-        <QueryState query={history}>
+        <QueryState query={history} label="Loading measurement history">
           {(data) => {
             const latest = today.measurements.at(-1) ?? today.baseline;
             if (!latest) return <p>No weight measurements yet.</p>;
