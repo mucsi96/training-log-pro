@@ -94,10 +94,10 @@ export default function Settings() {
           meets. Changes apply from today onwards and never take away a tier a day has already earned.
         </p>
       </header>
-      <QueryState query={settings}>{(data) => <GoalSettings initial={data} />}</QueryState>
+      <QueryState query={settings} label="Loading goals">{(data) => <GoalSettings initial={data} />}</QueryState>
       <section aria-label="Golden coins" className={styles.coins}>
         <h2>Golden coins</h2>
-        <QueryState query={coins}>
+        <QueryState query={coins} label="Loading coins">
           {(data) => (
             <>
               <p>{data.totalPoints} points</p>

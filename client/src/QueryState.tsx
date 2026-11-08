@@ -1,14 +1,9 @@
-import { Alert, Button } from '@mucsi96/react-ui';
+import { Alert, Button, LoadingArea } from '@mucsi96/react-ui';
 import type { UseQueryResult } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import styles from './QueryState.module.css';
 
-export function LoadingSkeleton() {
-  return <div className={styles.skeleton} role="status" aria-label="Loading" />;
-}
-
-export function QueryState<T>({ query, children }: { query: UseQueryResult<T>; children: (data: T) => ReactNode }) {
-  if (query.isPending) return <LoadingSkeleton />;
+export function QueryState<T>({ query, children, label, fill = false }: { query: UseQueryResult<T>; children: (data: T) => ReactNode; label: string; fill?: boolean }) {
+  if (query.isPending) return <LoadingArea label={label} fill={fill} />;
   if (query.isError)
     return (
       <Alert tone="error" title="Unable to load data">

@@ -1,5 +1,5 @@
 import { createCipheriv, createDecipheriv, randomBytes, randomUUID } from 'crypto';
-import { Pool } from 'pg';
+import { Client, Pool } from 'pg';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 
@@ -51,10 +51,10 @@ export async function query(text: string, params?: any[]) {
 }
 
 /** An isolated database for exercising the shipped migration CLI. */
-export async function withMigrationDatabase(run: (db: Pool, migrate: () => Promise<void>) => Promise<void>) {
+export async function withMigrationDatabase(run: (db: Client, migrate: () => Promise<void>) => Promise<void>) {
   const database = `migration_${randomUUID().replaceAll('-', '')}`;
   await query(`CREATE DATABASE ${database}`);
-  const db = new Pool({ host: 'localhost', port: 5480, database, user: 'postgres', password: 'postgres' });
+  const db = new Client({ host: 'localhost', port: 5480, database, user: 'postgres', password: 'postgres' });
   const migrate = async () => {
     await promisify(execFile)('podman', [
       // Keep one-shot CLI processes outside the kube pod and its restart policy.
@@ -63,8 +63,13 @@ export async function withMigrationDatabase(run: (db: Pool, migrate: () => Promi
       'localhost/training-log-pro-server:test', 'db', 'migrate',
     ], { timeout: 30_000 });
   };
-  try { await run(db, migrate); }
-  finally { await db.end(); await query(`DROP DATABASE ${database} WITH (FORCE)`); }
+  try {
+    await db.connect();
+    await run(db, migrate);
+  } finally {
+    await db.end();
+    await query(`DROP DATABASE ${database}`);
+  }
 }
 
 export async function cleanupDb() {

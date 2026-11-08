@@ -115,7 +115,7 @@ export function Reading() {
   return (
     <section aria-label="Reading" className={styles.card}>
       <h2>Reading</h2>
-      <QueryState query={query}>
+      <QueryState query={query} label="Loading reading progress">
         {(books) => {
           const progress = books.filter((book) => book.totalPages != null && !book.completedAt);
           return (

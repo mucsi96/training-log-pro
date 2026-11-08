@@ -27,7 +27,7 @@ export function DayGoal() {
   return (
     <section className={styles.card} aria-label="Day goal">
       <h2>Day goal</h2>
-      <QueryState query={query}>
+      <QueryState query={query} label="Loading daily goal">
         {(stats) => (
           <>
             {stats.todayTier && (

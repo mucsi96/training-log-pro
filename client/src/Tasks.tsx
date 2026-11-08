@@ -16,7 +16,7 @@ export function DailyTasks() {
   return (
     <section className={styles.card} aria-label="Daily tasks">
       <h2>Daily tasks</h2>
-      <QueryState query={query}>
+      <QueryState query={query} label="Loading tasks">
         {(tasks) => (
           <>
             <span className={styles.count}>
@@ -86,7 +86,7 @@ export function TaskLibrary() {
   return (
     <section className={styles.card} aria-label="Daily tasks">
       <h2>Daily tasks</h2>
-      <QueryState query={query}>
+      <QueryState query={query} label="Loading tasks">
         {(tasks) => (
           <>
             {!tasks.length && !editing && <p>No tasks yet. Add things you want to do every day.</p>}

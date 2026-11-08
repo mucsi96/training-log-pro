@@ -1,10 +1,11 @@
 import { lazy, Suspense } from 'react';
-import { AppMain } from '@mucsi96/react-ui';
+import { AppMain, LoadingArea } from '@mucsi96/react-ui';
 import { Link, Route, Routes } from 'react-router-dom';
 import { useApi } from './api';
 import { environmentSchema } from './schemas';
-import { LoadingSkeleton, QueryState } from './QueryState';
+import { QueryState } from './QueryState';
 import { Header } from './Header';
+import styles from './App.module.css';
 
 const Dashboard = lazy(() => import('./Dashboard'));
 const Settings = lazy(() => import('./Settings'));
@@ -13,12 +14,12 @@ const Devices = lazy(() => import('./Devices'));
 export function App() {
   const environment = useApi('/api/environment', environmentSchema);
   return (
-    <QueryState query={environment}>
-      {() => (
-        <>
-          <Header />
-          <AppMain>
-            <Suspense fallback={<LoadingSkeleton />}>
+    <div className={styles.layout}>
+      <Header />
+      <AppMain className={styles.main}>
+        <QueryState query={environment} label="Loading application settings" fill>
+          {() => (
+            <Suspense fallback={<LoadingArea label="Opening page" fill />}>
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/year" element={<Dashboard />} />
@@ -35,9 +36,9 @@ export function App() {
                 />
               </Routes>
             </Suspense>
-          </AppMain>
-        </>
-      )}
-    </QueryState>
+          )}
+        </QueryState>
+      </AppMain>
+    </div>
   );
 }

@@ -149,7 +149,7 @@ export function BookLibrary() {
   return (
     <section aria-label="Books" className={styles.library}>
       <h2>Books</h2>
-      <QueryState query={query}>
+      <QueryState query={query} label="Loading books">
         {(books) => (
           <>
             {!books.length && editing !== 'new' && <p>No books yet. Add your first one to get started.</p>}
