@@ -41,8 +41,11 @@ test('initializes a fresh database and adopts existing rows without reseeding or
     await db.query('CREATE TABLE training_log.databasechangelog (id varchar(255))');
     await db.query(`INSERT INTO training_log.databasechangelog VALUES ('37-time-based-reading-goals')`);
     const tables = ['book', 'reading_progress', 'device', 'achieved_day', 'settings', 'day_goal_requirement'];
-    const snapshot = async () => Promise.all(tables.map(async table =>
-      (await db.query(`SELECT row_to_json(t) AS row FROM training_log.${table} t ORDER BY row_to_json(t)::text`)).rows));
+    const snapshot = () => tables.reduce<Promise<unknown[]>>(async (previous, table) => {
+      const rows = await previous;
+      const result = await db.query(`SELECT row_to_json(t) AS row FROM training_log.${table} t ORDER BY row_to_json(t)::text`);
+      return [...rows, result.rows];
+    }, Promise.resolve([]));
     const before = await snapshot();
     await migrate();
     await migrate();
@@ -61,8 +64,8 @@ test('rejects an older database without clearing existing data', async () => {
 test('serializes concurrent reading sessions so the same pages count only once', async ({ page, apiHeaders }) => {
   const id = randomUUID();
   await insertBook(id, 'Concurrent reading', 'Author', 200, new Date(), null, 0);
-  await page.goto('/');
-  await expect(page.getByRole('button', { name: 'Open profile menu' })).toBeVisible();
+  const bootstrap = await page.request.get('/api/environment', { headers: apiHeaders });
+  expect(bootstrap.ok()).toBeTruthy();
   const csrf = (await page.context().cookies()).find(cookie => cookie.name === 'XSRF-TOKEN')!;
   const headers = { ...apiHeaders, 'X-XSRF-TOKEN': csrf.value, 'X-Timezone': 'Europe/Budapest' };
   const responses = await Promise.all([1, 2].map(() => page.request.post(`/api/reading/books/${id}/progress`, {
