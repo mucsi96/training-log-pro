@@ -22,10 +22,10 @@
   color: var(--bt-text-muted);
 }
 .green {
-  color: var(--bt-success);
+  color: var(--bt-success-soft);
 }
 .red {
-  color: var(--bt-error);
+  color: var(--bt-error-soft);
 }
 .date {
   font-size: 0.75rem;
