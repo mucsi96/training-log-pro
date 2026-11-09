@@ -98,9 +98,9 @@ public class ReadingService {
     int latestPage = previousProgress.isEmpty()
         ? book.getStartingPage()
         : previousProgress.getLast().getCurrentPage();
-    if (currentPage <= latestPage || minutes <= 0 || minutes > 1440) {
+    if (currentPage < latestPage || minutes <= 0 || minutes > 1440) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-          "Progress requires new pages and between 1 and 1440 minutes of reading");
+          "Progress cannot move backwards and requires between 1 and 1440 minutes of reading");
     }
     ZonedDateTime timestamp = now();
     progressRepository.save(ReadingProgressEntity.builder()

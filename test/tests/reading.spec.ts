@@ -184,7 +184,7 @@ test.describe('Reading', () => {
     await expect(save).toBeDisabled();
     await minutes.focus();
     await page.keyboard.press('PageUp');
-    await expect(save).toBeDisabled();
+    await expect(save).toBeEnabled();
     await page.keyboard.press('Home');
     await expect(dial).toHaveAttribute('aria-valuenow', '120');
     await dial.focus();
@@ -225,6 +225,7 @@ test.describe('Reading', () => {
   test('rejects invalid reading sessions on the server without persisting progress', async ({ page, apiHeaders }) => {
     const bookId = randomUUID();
     await insertBook(bookId, 'Validated Book', 'Author', 300, daysAgoAt(1, 8), null, 100);
+    await insertReadingProgress(bookId, 105, daysAgoAt(1, 9));
     await page.goto('/');
     await expect(page.getByRole('button', { name: 'Open profile menu' })).toBeVisible();
     const csrfCookie = (await page.context().cookies()).find(cookie => cookie.name === 'XSRF-TOKEN');
@@ -238,14 +239,17 @@ test.describe('Reading', () => {
       { currentPage: 110, minutes: 1441 },
       { minutes: 10 },
       { currentPage: 0, minutes: 10 },
-      { currentPage: 100, minutes: 10 },
+      { currentPage: 104, minutes: 10 },
       { currentPage: 99, minutes: 10 },
       { currentPage: 301, minutes: 10 },
     ]) {
       const response = await page.request.post(`/api/reading/books/${bookId}/progress`, { headers, data });
       expect(response.status(), JSON.stringify(data)).toBe(400);
     }
-    expect(await getReadingProgressRows()).toHaveLength(0);
+    const progress = await getReadingProgressRows();
+    expect(progress).toHaveLength(1);
+    expect(progress[0].current_page).toBe(105);
+    expect(progress[0].minutes).toBeNull();
   });
 
   test('cancels a reading session on mobile without recording pages or minutes', async ({ page }) => {
