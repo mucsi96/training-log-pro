@@ -30,11 +30,11 @@ url = "2"
 uuid = { version = "1", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 chrono-tz = { version = "0.10", features = ["serde"] }
-aes-gcm = "0.10"
-base64 = "0.22"
+aes-gcm = "0.11"
+base64 = "0.23"
 percent-encoding = "2"
 subtle = "2"
-cron = "0.15"
+cron = "0.17"
 
 [profile.release]
 lto = "thin"
