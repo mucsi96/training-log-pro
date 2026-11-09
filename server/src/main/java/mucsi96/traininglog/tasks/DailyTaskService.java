@@ -12,7 +12,6 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +29,7 @@ public class DailyTaskService {
 
   @Transactional(readOnly = true)
   public List<DailyTaskEntity> listTasks() {
-    return taskRepository.findAll(Sort.by(Sort.Direction.ASC, "createdAt"));
+    return taskRepository.findAllByLatestCompletion();
   }
 
   @Transactional
