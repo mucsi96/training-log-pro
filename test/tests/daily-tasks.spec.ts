@@ -5,6 +5,7 @@ import {
   getDailyTaskRows,
   getAchievedDates,
   insertDailyTask,
+  insertDailyTaskCompletion,
   insertPushupSet,
   insertRide,
   populateOAuthClients,
@@ -90,6 +91,52 @@ test.describe('Daily tasks', () => {
     await expect(checklist.getByText('0 / 1 done')).toBeVisible();
     completions = await getDailyTaskCompletionRows();
     expect(completions).toHaveLength(0);
+  });
+
+  test('sorts tasks by latest completion across days in the checklist and settings', async ({ page }) => {
+    const older = randomUUID();
+    const recent = randomUUID();
+    const tied = randomUUID();
+    await insertDailyTask(randomUUID(), 'Never completed first', daysAgoAt(10, 8));
+    await insertDailyTask(randomUUID(), 'Never completed second', daysAgoAt(9, 8));
+    await insertDailyTask(older, 'Older completion', daysAgoAt(8, 8));
+    await insertDailyTask(recent, 'Latest completion', daysAgoAt(7, 8));
+    await insertDailyTask(tied, 'Tied completion', daysAgoAt(6, 8));
+    await insertDailyTaskCompletion(recent, isoDate(4), daysAgoAt(4, 8));
+    await insertDailyTaskCompletion(older, isoDate(1), daysAgoAt(1, 8));
+    await insertDailyTaskCompletion(recent, isoDate(1), daysAgoAt(1, 9));
+    await insertDailyTaskCompletion(tied, isoDate(1), daysAgoAt(1, 9));
+
+    const order = [
+      'Latest completion', 'Tied completion', 'Older completion',
+      'Never completed first', 'Never completed second',
+    ];
+    await page.goto('/');
+    const checklist = page.getByRole('region', { name: 'Daily tasks' });
+    await expect(checklist.getByRole('listitem')).toHaveText(order.slice(0, 2));
+    await checklist.getByRole('button', { name: 'View all 5 tasks' }).click();
+    await expect(checklist.getByRole('listitem')).toHaveText(order);
+
+    await checklist.getByRole('checkbox', { name: 'Older completion' }).check();
+    await expect(checklist.getByRole('listitem')).toHaveText([
+      'Older completion', ...order.filter((name) => name !== 'Older completion'),
+    ]);
+    await checklist.getByRole('checkbox', { name: 'Older completion' }).uncheck();
+    await expect(checklist.getByRole('listitem')).toHaveText(order);
+
+    await checklist.getByRole('checkbox', { name: 'Never completed second' }).check();
+    await expect(checklist.getByRole('listitem').first()).toHaveText('Never completed second');
+    await checklist.getByRole('checkbox', { name: 'Never completed second' }).uncheck();
+    await expect(checklist.getByRole('listitem')).toHaveText(order);
+    await page.reload();
+    await expect(checklist.getByRole('listitem')).toHaveText(order.slice(0, 2));
+
+    await page.goto('/settings');
+    const library = page.getByRole('region', { name: 'Daily tasks' });
+    await expect(library.getByRole('listitem')).toHaveCount(order.length);
+    for (const [index, name] of order.entries()) {
+      await expect(library.getByRole('listitem').nth(index)).toHaveAccessibleName(name);
+    }
   });
 
   test('renames a task in settings and reflects it on the home checklist', async ({ page }) => {
