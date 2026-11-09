@@ -1,6 +1,6 @@
 use aes_gcm::{
     Aes256Gcm, KeyInit, Nonce,
-    aead::{Aead, AeadCore, OsRng},
+    aead::{Aead, Generate},
 };
 use base64::{Engine, engine::general_purpose::STANDARD};
 
@@ -19,7 +19,7 @@ impl Cipher {
     }
     /// Compatible with Java's Base64(12-byte IV || ciphertext || 16-byte tag).
     pub fn encrypt(&self, text: &str) -> anyhow::Result<String> {
-        let nonce = Aes256Gcm::generate_nonce(&mut OsRng);
+        let nonce = Nonce::generate();
         let ciphertext = self
             .0
             .encrypt(&nonce, text.as_bytes())

@@ -57,10 +57,12 @@ pub async fn create(
     input: DeviceInput,
     zone: Tz,
 ) -> Result<Value> {
-    use aes_gcm::aead::{OsRng, rand_core::RngCore};
+    use aes_gcm::aead::{
+        Generate,
+        array::{Array, typenum::U48},
+    };
     use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
-    let mut bytes = [0u8; 48];
-    OsRng.fill_bytes(&mut bytes);
+    let bytes = Array::<u8, U48>::generate();
     let key = URL_SAFE_NO_PAD.encode(bytes);
     let d = device::ActiveModel {
         id: Set(Uuid::new_v4()),
