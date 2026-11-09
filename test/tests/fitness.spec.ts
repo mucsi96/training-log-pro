@@ -18,11 +18,11 @@ test.describe('Fitness diff', () => {
     const fitnessSection = page.locator('section').filter({ hasText: 'Fitness' });
     await expect(fitnessSection.getByRole('heading', { name: 'Fitness' })).toBeVisible();
 
-    const todayDiff = fitnessSection.getByLabel('Today change');
+    const todayDiff = fitnessSection.locator('.today-diff');
     await expect(todayDiff).toHaveText(/↑/);
     await expect(todayDiff).toHaveClass(/green/);
 
-    const periodValue = fitnessSection.getByLabel('Period change');
+    const periodValue = fitnessSection.locator('.period-value');
     await expect(periodValue).toHaveText(/↑/);
   });
 
@@ -36,7 +36,7 @@ test.describe('Fitness diff', () => {
     const fitnessSection = page.locator('section').filter({ hasText: 'Fitness' });
     await expect(fitnessSection.getByRole('heading', { name: 'Fitness' })).toBeVisible();
 
-    const todayDiff = fitnessSection.getByLabel('Today change');
+    const todayDiff = fitnessSection.locator('.today-diff');
     await expect(todayDiff).toHaveText(/↓/);
     await expect(todayDiff).toHaveClass(/red/);
   });
@@ -47,13 +47,13 @@ test.describe('Fitness diff', () => {
     await insertRide(0, 1740, 56000, 8400, 'Today', 'Ride', 1032, 200, 244);
 
     await page.goto('/?view=training');
-    await page.getByRole('button', { name: /Range/ }).click();
+    await page.getByRole('combobox', { name: 'Range' }).click();
     await page.getByRole('option', { name: 'Month', exact: true }).click();
 
     const fitnessSection = page.locator('section').filter({ hasText: 'Fitness' });
     await expect(fitnessSection.getByRole('heading', { name: 'Fitness' })).toBeVisible();
 
-    const periodValue = fitnessSection.getByLabel('Period change');
+    const periodValue = fitnessSection.locator('.period-value');
     await expect(periodValue).toHaveText(/↑/);
   });
 
@@ -66,7 +66,7 @@ test.describe('Fitness diff', () => {
     const fitnessSection = page.locator('section').filter({ hasText: 'Fitness' });
     await expect(fitnessSection.getByRole('heading', { name: 'Fitness' })).toBeVisible();
 
-    await expect(fitnessSection.getByLabel('Today change')).toHaveCount(0);
-    await expect(fitnessSection.getByLabel('Period change')).toHaveText('-');
+    await expect(fitnessSection.locator('.today-diff')).toHaveCount(0);
+    await expect(fitnessSection.locator('.period-value')).toHaveText('-');
   });
 });

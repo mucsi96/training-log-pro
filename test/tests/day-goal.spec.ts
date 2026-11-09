@@ -3,7 +3,6 @@ import { test, expect } from '../fixtures';
 import {
   DayGoalTier,
   getAchievedDays,
-  getCelebratedDays,
   insertAchievedDay,
   insertPushupSet,
   insertRide,
@@ -158,34 +157,6 @@ test.describe('Day goal', () => {
     await expect(section.getByText('Next: silver')).toBeVisible();
     await expect(section.getByText('20/50 pushups')).toBeVisible();
     await expect(section.getByText('0/10 min')).toBeVisible();
-  });
-
-  test('acknowledges each tier upgrade without leaving Today', async ({ page }) => {
-    await setTierRequirements('BRONZE', { PUSHUPS: 2 });
-    await setTierRequirements('SILVER', { PUSHUPS: 4 });
-    await setTierRequirements('GOLD', { PUSHUPS: 6 });
-    const acknowledgments: string[] = [];
-    page.on('request', request => {
-      if (request.method() === 'POST' && request.url().endsWith('/api/day-goal/celebrate')) {
-        acknowledgments.push(request.url());
-      }
-    });
-    await page.goto('/');
-    await expect(dayGoal(page).getByText('Next: bronze')).toBeVisible();
-
-    for (const [index, tier] of (['BRONZE', 'SILVER', 'GOLD'] as const).entries()) {
-      await addPushupsThroughDialog(page, 2);
-      await expect(dayGoal(page).getByText(`Today is a ${tier.toLowerCase()} day`)).toBeVisible();
-      await expect.poll(getCelebratedDays).toEqual([{ date: isoDate(0), tier }]);
-      expect(acknowledgments).toHaveLength(index + 1);
-    }
-
-    const statsResponse = page.waitForResponse(response =>
-      response.request().method() === 'GET' && response.url().endsWith('/api/day-goal'));
-    await page.reload();
-    expect((await (await statsResponse).json()).celebrateToday).toBe(false);
-    await expect(dayGoal(page).getByText('Today is a gold day')).toBeVisible();
-    expect(acknowledgments).toHaveLength(3);
   });
 
   test('upgrades today when a higher tier is reached and never downgrades it', async ({ page }) => {

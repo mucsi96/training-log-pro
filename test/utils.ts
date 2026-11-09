@@ -1,9 +1,7 @@
 import { createCipheriv, createDecipheriv, randomBytes, randomUUID } from 'crypto';
-import { Client, Pool } from 'pg';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
+import { Pool } from 'pg';
 
-// Must match token_encryption_key in server/config/test.yaml
+// Must match token-encryption-key in server/src/main/resources/application-test.yml
 const TOKEN_ENCRYPTION_KEY = Buffer.from(
   '8JSyUeV1b093C24h4nNiQXvL+RoOgb4VoBJn7RUVxbI=',
   'base64'
@@ -47,28 +45,6 @@ export async function query(text: string, params?: any[]) {
     return await client.query(text, params);
   } finally {
     client.release();
-  }
-}
-
-/** An isolated database for exercising the shipped migration CLI. */
-export async function withMigrationDatabase(run: (db: Client, migrate: () => Promise<void>) => Promise<void>) {
-  const database = `migration_${randomUUID().replaceAll('-', '')}`;
-  await query(`CREATE DATABASE ${database}`);
-  const db = new Client({ host: 'localhost', port: 5480, database, user: 'postgres', password: 'postgres' });
-  const migrate = async () => {
-    await promisify(execFile)('podman', [
-      // Keep one-shot CLI processes outside the kube pod and its restart policy.
-      'run', '--rm', '--restart=no', '--network', 'host',
-      '-e', 'LOCO_ENV=test', '-e', `DATABASE_URL=postgres://postgres:postgres@localhost:5480/${database}`,
-      'localhost/training-log-pro-server:test', 'db', 'migrate',
-    ], { timeout: 30_000 });
-  };
-  try {
-    await db.connect();
-    await run(db, migrate);
-  } finally {
-    await db.end();
-    await query(`DROP DATABASE ${database}`);
   }
 }
 
@@ -138,14 +114,6 @@ export async function getAchievedDays(): Promise<AchievedDay[]> {
 
 export async function getAchievedDates(): Promise<string[]> {
   return (await getAchievedDays()).map((day) => day.date);
-}
-
-export async function getCelebratedDays(): Promise<AchievedDay[]> {
-  const result = await query(
-    `SELECT to_char(date, 'YYYY-MM-DD') AS date, tier FROM training_log.achieved_day
-     WHERE celebrated_at IS NOT NULL ORDER BY date ASC`
-  );
-  return result.rows.map((row) => ({ date: row.date as string, tier: row.tier as DayGoalTier }));
 }
 
 export async function insertAchievedDay(date: Date | string, tier: DayGoalTier = 'GOLD') {

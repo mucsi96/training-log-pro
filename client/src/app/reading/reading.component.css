@@ -1,0 +1,190 @@
+section {
+  display: grid;
+  gap: 16px;
+  justify-items: stretch;
+}
+
+.header {
+  display: grid;
+  gap: 4px;
+  text-align: center;
+}
+
+h2 {
+  color: var(--mat-sys-on-primary);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.books {
+  display: grid;
+  gap: 12px;
+}
+
+.empty {
+  color: var(--bt-text-muted);
+  text-align: center;
+  font-size: 14px;
+}
+
+.book {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, hsl(217, 28%, 18%), hsl(217, 28%, 14%));
+  border: 1px solid hsl(217, 19%, 27%);
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 180ms ease-out, transform 180ms ease-out;
+}
+
+.book:hover,
+.book:focus-visible {
+  border-color: var(--mat-sys-primary);
+  outline: none;
+}
+
+.book:active {
+  transform: scale(0.997);
+}
+
+.book[aria-disabled='true'] {
+  cursor: progress;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.book-header {
+  display: grid;
+  gap: 2px;
+}
+
+.book-title {
+  margin: 0;
+  color: var(--mat-sys-on-primary);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.book-author {
+  margin: 0;
+  color: var(--bt-text-muted);
+  font-size: 12px;
+}
+
+.book-progress-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: hsl(217, 19%, 27%);
+  overflow: hidden;
+}
+
+.book-progress-fill {
+  height: 100%;
+  background: var(--mat-sys-primary);
+  transition: width 250ms ease-out;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 0;
+}
+
+.stat {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+dt {
+  color: var(--bt-text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+dd {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.stat-value {
+  color: var(--mat-sys-on-primary);
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.stat-unit {
+  color: var(--bt-text-muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.compact {
+  gap: 8px;
+}
+
+.compact .header {
+  text-align: left;
+}
+
+.compact h2 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.compact .book {
+  gap: 8px;
+}
+
+.compact .book-title {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 16px;
+}
+
+.compact-progress {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  font-size: 12px;
+  color: var(--bt-text-muted);
+}
+
+.compact-progress span {
+  color: var(--mat-sys-on-surface);
+}
+
+.book-details {
+  padding: 0 16px;
+}
+
+.book-details summary {
+  min-height: 44px;
+  align-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--bt-text-muted);
+}
+
+.book-details summary:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+
+.book-details .stats {
+  padding: 8px 0 16px;
+}

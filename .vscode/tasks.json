@@ -20,15 +20,30 @@
       },
       "isBackground": true,
       "problemMatcher": {
-        "owner": "typescript",
-        "pattern": "$tsc",
+        "pattern": [
+          {
+            "regexp": "^X \\[(ERROR)\\] ((TS|NG)\\d+): (.*)$",
+            "severity": 1,
+            "code": 2,
+            "message": 4
+          },
+          {
+            "regexp": ""
+          },
+          {
+            "regexp": "^\\s*(.*):(\\d+):(\\d+):$",
+            "file": 1,
+            "line": 2,
+            "column": 3
+          }
+        ],
         "background": {
           "activeOnStart": true,
           "beginsPattern": {
-            "regexp": "VITE"
+            "regexp": "Changes detected\\. Rebuilding\\.\\.\\."
           },
           "endsPattern": {
-            "regexp": "Local:"
+            "regexp": "Application bundle generation (complete|failed)"
           }
         }
       }

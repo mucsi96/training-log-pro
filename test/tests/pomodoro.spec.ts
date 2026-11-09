@@ -51,7 +51,7 @@ const mockNotifications = async (
 };
 
 const openTimer = async (page: Page) => {
-  // Install before Faro captures timer functions; replacing them after
+  // Install before Zone/Faro capture timer functions; replacing them after
   // startup mixes real and fake interval IDs and cancels unrelated callbacks.
   await page.clock.install();
   await page.goto('/');
@@ -61,7 +61,7 @@ const openTimer = async (page: Page) => {
 
 const startTimer = async (page: Page) => {
   await page.getByRole('button', { name: 'Start Pomodoro' }).click();
-  // Allow the scheduled render while keeping the countdown clock controlled.
+  // Allow Angular's scheduled render while keeping the countdown clock controlled.
   await page.clock.runFor(20);
 };
 

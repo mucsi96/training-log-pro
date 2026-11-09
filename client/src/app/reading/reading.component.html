@@ -1,0 +1,73 @@
+@if (books.isLoading()) {
+<div class="page-loading"><bt-bar-loader /></div>
+} @else {
+<section class="reading" [class.compact]="compact()" aria-labelledby="reading-heading">
+  <header class="header">
+    <h2 id="reading-heading">Reading</h2>
+  </header>
+
+  <div class="books">
+    @if (inProgressBooks().length === 0) {
+    <p class="empty">No books in progress. Add a book in Settings.</p>
+    } @for (book of visibleBooks(); track book.id) {
+    <article class="book-entry" [attr.aria-label]="book.title">
+    <div
+      class="book"
+      role="button"
+      [attr.tabindex]="busy() ? -1 : 0"
+      [attr.aria-label]="ariaForBook(book)"
+      [attr.aria-disabled]="busy()"
+      (click)="openProgressDialog(book)"
+      (keydown.enter)="openProgressDialog(book); $event.preventDefault()"
+      (keydown.space)="openProgressDialog(book); $event.preventDefault()"
+    >
+      <header class="book-header">
+        <h3 class="book-title">{{ book.title }}</h3>
+        <p class="book-author">{{ book.author }}</p>
+      </header>
+
+      <div class="book-progress-bar" aria-hidden="true">
+        <div
+          class="book-progress-fill"
+          [style.width.%]="bookProgressPercent(book)"
+        ></div>
+      </div>
+
+      @if (compact()) {
+        <p class="compact-progress">{{ book.currentPage }} / {{ book.totalPages }} pages <span>Update progress →</span></p>
+      }
+    </div>
+    <details class="book-details">
+      <summary>Reading details</summary>
+      <dl class="stats">
+        <div class="stat">
+          <dt>Page</dt>
+          <dd>
+            <span class="stat-value">{{ book.currentPage }}</span>
+            <span class="stat-unit">of {{ book.totalPages }}</span>
+          </dd>
+        </div>
+        <div class="stat">
+          <dt>Pace</dt>
+          <dd>
+            <span class="stat-value">{{ averageLabel(book) }}</span>
+            <span class="stat-unit">pages/day</span>
+          </dd>
+        </div>
+        <div class="stat">
+          <dt>Remaining</dt>
+          <dd>
+            <span class="stat-value">{{ daysLabel(book) }}</span>
+            <span class="stat-unit">{{ daysUnit(book) }}</span>
+          </dd>
+        </div>
+      </dl>
+    </details>
+    </article>
+    }
+  </div>
+  @if (compact() && inProgressBooks().length > 1) {
+    <button mat-button type="button" [attr.aria-expanded]="expanded()" (click)="expanded.set(!expanded())">{{ expanded() ? 'Show fewer books' : 'View all ' + inProgressBooks().length + ' books' }}</button>
+  }
+</section>
+}

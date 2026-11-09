@@ -29,7 +29,7 @@ Clicking that notification focuses the tab and dismisses the alert.
 ## Gateway authentication and static hosting
 
 Production documents are authenticated by the per-app Entra/oauth2-proxy gateway
-before React starts. OAuth tokens stay in the server-side Redis session; the
+before Angular starts. OAuth tokens stay in the server-side Redis session; the
 browser uses a host-only HttpOnly session cookie. The API still validates the JWT
 audience, scope and application roles, and preserves the `oid` principal used by
 stored Strava/Withings credentials. Browser mutations require a CSRF header and
@@ -48,7 +48,7 @@ Deployment empties `$web` and `assets`, then uploads only the latest assets with
 one-year caching and publishes `$web/index.html` last with `no-store`.
 Downtime is intentional; old bundles are removed.
 The `static-client-app` 5.0.0 chart replaces the client Deployment with an
-authenticated HTTPS website origin; `rust-app` 7.0.0 gates API sessions.
+authenticated HTTPS website origin; `spring-app` 37.0.0 gates API sessions.
 
 `deploy/integrations` owns more-specific routes for GET Strava/Withings OAuth
 callbacks, POST KOReader sync, and GET/DELETE device book delivery. These routes
@@ -75,7 +75,7 @@ Azure CORS and Gateway API routing require rollout checks; the Playwright app
 suite supplies gateway identity while exercising the real JWT/CSRF backend.
 Shared gateway behavior is owned by the pinned charts.
 
-For local development, use an authenticated gateway in front of the Vite dev
+For local development, use an authenticated gateway in front of the Angular dev
 server and API, forwarding `/oauth2` to oauth2-proxy. Direct standalone browser
 OIDC login is no longer supported. `scripts/pod_up.sh` plus `cd test && npm test`
 provides the isolated app test stack, with gateway identity supplied by fixtures.
@@ -87,9 +87,7 @@ Client releases contain the tested `client-static.tar.gz` artifact rather than a
 
 ## Azure Key Vault Secrets
 
-Production secrets are loaded from Azure Key Vault using Azure workload identity
-before Loco connects to PostgreSQL. Set `AZURE_KEYVAULT_ENDPOINT`; the pod's
-workload identity supplies the Azure credential environment.
+All application secrets are pulled from Azure Key Vault using the Spring Cloud Azure Key Vault Secrets starter. The only environment variable required at runtime is `AZURE_KEYVAULT_ENDPOINT`.
 
 | Secret Name | Description | Reference |
 |---|---|---|
@@ -106,34 +104,30 @@ workload identity supplies the Azure credential environment.
 | `strava-client-secret` | Strava OAuth2 client secret | [Strava API Settings](https://www.strava.com/settings/api) |
 | `token-encryption-key` | Base64-encoded 256-bit AES key used to encrypt stored Strava/Withings OAuth tokens at rest. Generate with `openssl rand -base64 32`. | Self-generated |
 
-## Native Rust server
+## One image per Spring profile
 
-The server uses Rust/Loco, SeaORM and PostgreSQL. One native image supports all
-environments, selected at runtime using `LOCO_ENV` (`test`, `development`, or
-`production`). Production is the image default.
+The server is shipped as a GraalVM native executable. Bean definitions are
+resolved during ahead-of-time processing at build time, so the active Spring
+profile is baked into the executable and cannot be chosen at startup any more.
+The server image is therefore built once per profile, via the `SPRING_PROFILE`
+build argument:
 
 ```bash
-podman build -t training-log-pro-server:test server
-cd server && cargo build --locked
+podman build --build-arg SPRING_PROFILE=test -t training-log-pro-server:test server   # e2e pod
+podman build --build-arg SPRING_PROFILE=prod -t training-log-pro-server:prod server   # published image
 ```
 
-Deploy the final Spring release with Liquibase change 37 before upgrading.
-The SeaORM baseline adopts that database without resetting data or re-encrypting
-credentials. It initializes only fresh databases and rejects partial/older schemas.
-The `training-log-server` release, service, workload identity and integration routes
-remain unchanged; deployment switches to `rust-app` 7.0.0 with `--reset-values`.
-See [server/README.md](server/README.md) for local configuration and verification.
+`SPRING_PROFILES_ACTIVE` is not read at runtime; the pipeline builds the test
+image for the e2e job and the prod image when publishing to GHCR. Running
+the server on a JVM for local development is unaffected - `mvn spring-boot:run
+-Dspring-boot.run.profiles=local` still selects the profile the usual way.
 
 ## Runtime Environment Variables
 
 | Variable | Description |
 |---|---|
 | `AZURE_KEYVAULT_ENDPOINT` | Azure Key Vault endpoint URL |
-| `LOCO_ENV` | Runtime environment (production in the container) |
-| `PORT` | HTTP port, default 8080; readiness at `/healthz` |
-| `DATABASE_URL` | PostgreSQL URL in test/development; production reads Key Vault |
-| `DAILY_SYNC_CRON` | Six-field cron expression, default `0 0 21 * * *` |
-| `DAILY_SYNC_ZONE` | Schedule timezone, default `Europe/Budapest` |
+| `SPRING_ACTUATOR_PORT` | Port for Spring Boot Actuator endpoints |
 
 ## Port Mapping
 
@@ -146,9 +140,10 @@ All host-bound ports use the 80-89 range to avoid conflicts.
 | 5480 | PostgreSQL | Test pod |
 | 5481 | PostgreSQL | Test DB pod |
 | 5482 | PostgreSQL | Dev pod |
-| 8080 | Loco server | Test pod (internal, behind Traefik) |
-| 8081 | Loco server | Local dev (VSCode) |
+| 8080 | Spring Boot server | Test pod (internal, behind Traefik) |
+| 8081 | Spring Boot server | Local dev (VSCode) |
 | 8089 | Mock OAuth2 provider | Test pod |
 | 8180 | Traefik HTTP | Test pod |
 | 8181 | Traefik dashboard | Test pod |
-| 4280 | Vite dev server | Local dev |
+| 4280 | Angular dev server | Local dev |
+| 8182 | Spring Boot actuator | Test pod / Local dev |

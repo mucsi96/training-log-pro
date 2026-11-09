@@ -29,16 +29,16 @@ test.describe('Weight', () => {
     await page.goto('/?view=health');
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
     const weightArticle = page.locator('article', { hasText: 'Weight' });
-    await expect(weightArticle.getByLabel('Today change')).toHaveText('↓ 0.3 kg');
-    await expect(weightArticle.getByLabel('Today change')).toHaveClass(/green/);
+    await expect(weightArticle.locator('.today-diff')).toHaveText('↓ 0.3 kg');
+    await expect(weightArticle.locator('.today-diff')).toHaveClass(/green/);
 
     const fatArticle = page.locator('article', { hasText: 'Body fat' });
-    await expect(fatArticle.getByLabel('Today change')).toHaveText('↓ 7.2 kg');
-    await expect(fatArticle.getByLabel('Today change')).toHaveClass(/green/);
+    await expect(fatArticle.locator('.today-diff')).toHaveText('↓ 7.2 kg');
+    await expect(fatArticle.locator('.today-diff')).toHaveClass(/green/);
 
     const ratioArticle = page.locator('article', { hasText: 'Fat ratio' });
-    await expect(ratioArticle.getByLabel('Today change')).toHaveText('↑ 2.5 %');
-    await expect(ratioArticle.getByLabel('Today change')).toHaveClass(/red/);
+    await expect(ratioArticle.locator('.today-diff')).toHaveText('↑ 2.5 %');
+    await expect(ratioArticle.locator('.today-diff')).toHaveClass(/red/);
   });
 
   test('should display weight diff for the default month view', async ({ page }) => {
@@ -80,7 +80,7 @@ test.describe('Weight', () => {
 
   test('should display weight diff for year', async ({ page }) => {
     await page.goto('/?view=health');
-    await page.getByRole('button', { name: /Range/ }).click();
+    await page.getByRole('combobox', { name: 'Range' }).click();
     await page.getByRole('option', { name: 'Year', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
     await expect(page.getByText('↓ 21.7 kg')).toBeVisible();
@@ -90,7 +90,7 @@ test.describe('Weight', () => {
 
   test('should display weight chart for year', async ({ page }) => {
     await page.goto('/?view=health');
-    await page.getByRole('button', { name: /Range/ }).click();
+    await page.getByRole('combobox', { name: 'Range' }).click();
     await page.getByRole('option', { name: 'Year', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
     const chart = page.locator('section:has-text("Weight") [role="img"]');
@@ -106,7 +106,7 @@ test.describe('Weight', () => {
 
   test('should display weight diff for all time', async ({ page }) => {
     await page.goto('/?view=health');
-    await page.getByRole('button', { name: /Range/ }).click();
+    await page.getByRole('combobox', { name: 'Range' }).click();
     await page.getByRole('option', { name: 'All time', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
     await expect(page.getByText('↓ 21.7 kg')).toBeVisible();
@@ -116,7 +116,7 @@ test.describe('Weight', () => {
 
   test('should display weight chart for all time', async ({ page }) => {
     await page.goto('/?view=health');
-    await page.getByRole('button', { name: /Range/ }).click();
+    await page.getByRole('combobox', { name: 'Range' }).click();
     await page.getByRole('option', { name: 'All time', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Weight' })).toBeVisible();
     const chart = page.locator('section:has-text("Weight") [role="img"]');
@@ -147,7 +147,7 @@ test.describe('Weight without a measurement today', () => {
     const weight = page.locator('article', { has: page.getByRole('heading', { name: 'Weight', exact: true }) });
     await expect(weight.getByText('87.5 kg', { exact: true })).toBeVisible();
     await expect(weight.getByText(/Last measured/)).toBeVisible();
-    await expect(weight.getByLabel('Today change')).toHaveCount(0);
+    await expect(weight.locator('.today-diff')).toHaveCount(0);
     await expect(page.getByText('29 kg', { exact: true })).toBeVisible();
     await expect(page.getByText('32.8 %', { exact: true })).toBeVisible();
   });

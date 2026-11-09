@@ -1,0 +1,12 @@
+{"properties": [
+  {
+    "name": "withings",
+    "type": "mucsi96.traininglog.withings.WithingsConfiguration",
+    "description": "Configuration for Withings API"
+  },
+  {
+    "name": "strava",
+    "type": "mucsi96.traininglog.strava.StravaConfiguration",
+    "description": "Configuration for Strava API"
+  }
+]}
