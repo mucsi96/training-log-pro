@@ -38,7 +38,7 @@ export class ReadingProgressDialogComponent {
   readonly totalPages = this.book.totalPages ?? 0;
   readonly page = signal(this.book.currentPage);
   readonly minutes = signal(0);
-  readonly canSave = computed(() => this.page() > this.book.currentPage && this.minutes() > 0);
+  readonly canSave = computed(() => this.page() >= this.book.currentPage && this.minutes() > 0);
   readonly pageUnit = `/ ${this.totalPages}`;
 
   cancel(): void {

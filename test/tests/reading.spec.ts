@@ -184,7 +184,7 @@ test.describe('Reading', () => {
     await expect(save).toBeDisabled();
     await minutes.focus();
     await page.keyboard.press('PageUp');
-    await expect(save).toBeDisabled();
+    await expect(save).toBeEnabled();
     await page.keyboard.press('Home');
     await expect(dial).toHaveAttribute('aria-valuenow', '120');
     await dial.focus();
@@ -212,6 +212,33 @@ test.describe('Reading', () => {
     await expect(section.getByRole('button', { name: /Clean Code, 125 of 400 pages/ })).toBeVisible();
   });
 
+  test('records minutes at page zero for a newly added book', async ({ page }) => {
+    await setTierRequirements('GOLD', { READING_MINUTES: 30 });
+    await insertBook(randomUUID(), 'New Book', 'Author', 300, daysAgoAt(1, 8));
+    await page.goto('/');
+
+    const book = page.getByRole('button', { name: 'New Book, 0 of 300 pages' });
+    await book.click();
+    const dialog = page.getByRole('dialog', { name: 'New Book' });
+    const save = dialog.getByRole('button', { name: 'Save 0', exact: true });
+    await expect(save).toBeDisabled();
+    await dialog.getByRole('slider', { name: 'Minutes' }).focus();
+    await page.keyboard.press('PageUp');
+    await expect(dialog.getByRole('slider', { name: 'Page' })).toHaveAttribute('aria-valuenow', '0');
+    await save.click();
+    await expect(dialog).toBeHidden();
+    const goal = page.getByRole('region', { name: 'Day goal' });
+    await expect(goal.getByText('1/30 min')).toBeVisible();
+
+    const progress = await getReadingProgressRows();
+    expect(progress).toHaveLength(1);
+    expect(progress[0].current_page).toBe(0);
+    expect(progress[0].minutes).toBe(1);
+    await page.reload();
+    await expect(book).toBeVisible();
+    await expect(goal.getByText('1/30 min')).toBeVisible();
+  });
+
   test('does not infer minutes from historical page-only progress', async ({ page }) => {
     await setTierRequirements('GOLD', { READING_MINUTES: 30 });
     const bookId = randomUUID();
@@ -225,6 +252,7 @@ test.describe('Reading', () => {
   test('rejects invalid reading sessions on the server without persisting progress', async ({ page, apiHeaders }) => {
     const bookId = randomUUID();
     await insertBook(bookId, 'Validated Book', 'Author', 300, daysAgoAt(1, 8), null, 100);
+    await insertReadingProgress(bookId, 105, daysAgoAt(1, 9));
     await page.goto('/');
     await expect(page.getByRole('button', { name: 'Open profile menu' })).toBeVisible();
     const csrfCookie = (await page.context().cookies()).find(cookie => cookie.name === 'XSRF-TOKEN');
@@ -238,14 +266,17 @@ test.describe('Reading', () => {
       { currentPage: 110, minutes: 1441 },
       { minutes: 10 },
       { currentPage: 0, minutes: 10 },
-      { currentPage: 100, minutes: 10 },
+      { currentPage: 104, minutes: 10 },
       { currentPage: 99, minutes: 10 },
       { currentPage: 301, minutes: 10 },
     ]) {
       const response = await page.request.post(`/api/reading/books/${bookId}/progress`, { headers, data });
       expect(response.status(), JSON.stringify(data)).toBe(400);
     }
-    expect(await getReadingProgressRows()).toHaveLength(0);
+    const progress = await getReadingProgressRows();
+    expect(progress).toHaveLength(1);
+    expect(progress[0].current_page).toBe(105);
+    expect(progress[0].minutes).toBeNull();
   });
 
   test('cancels a reading session on mobile without recording pages or minutes', async ({ page }) => {

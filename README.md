@@ -3,8 +3,9 @@
 ## Reading goals
 
 Click a book on the dashboard to record your new page and reading minutes using
-the two dials. Saving requires advancing past the last recorded page and entering
-1–1440 minutes. Daily reading goals in Settings use minutes, summed across books
+the two dials. Saving requires entering 1–1440 minutes; you can leave the page
+unchanged to record time after an e-reader sync. Pages cannot move backwards.
+Daily reading goals in Settings use minutes, summed across books
 and sessions in your local timezone. Book completion and reading pace still use pages.
 
 The migration keeps existing reading-goal numbers as minute targets; adjust them

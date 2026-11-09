@@ -7,6 +7,7 @@ import {
   getReadingProgressRows,
   insertBook,
   populateOAuthClients,
+  setTierRequirements,
 } from '../utils';
 
 const SYNC_URL = 'http://localhost:8180/api/reading/koreader-sync';
@@ -89,6 +90,50 @@ test.describe('KOReader sync', () => {
     expect(progress).toHaveLength(1);
     expect(progress[0].book_id).toBe(bookId);
     expect(progress[0].current_page).toBe(100);
+  });
+
+  test('records minutes without changing the page after an e-reader sync', async ({ page }) => {
+    await setTierRequirements('GOLD', { READING_MINUTES: 30 });
+    const apiKey = await createDeviceViaUI(page, 'Kobo');
+    const body = {
+      title: 'Synced Book',
+      author: 'Author',
+      totalPages: 300,
+      currentPage: 100,
+    };
+    expect((await sync(apiKey, body)).status).toBe(204);
+
+    await page.goto('/');
+    const book = page.getByRole('button', { name: 'Synced Book, 100 of 300 pages' });
+    const goal = page.getByRole('region', { name: 'Day goal' });
+    await expect(goal.getByText('0/30 min')).toBeVisible();
+    await book.click();
+    const dialog = page.getByRole('dialog', { name: 'Synced Book' });
+    const save = dialog.getByRole('button', { name: 'Save 100', exact: true });
+    await expect(save).toBeDisabled();
+    await dialog.getByRole('slider', { name: 'Minutes' }).focus();
+    for (let i = 0; i < 10; i++) {
+      await page.keyboard.press('PageUp');
+    }
+    await expect(dialog.getByRole('slider', { name: 'Minutes' })).toHaveAttribute('aria-valuenow', '10');
+    await expect(dialog.getByRole('slider', { name: 'Page' })).toHaveAttribute('aria-valuenow', '100');
+    await save.click();
+    await expect(dialog).toBeHidden();
+    await expect(book).toBeVisible();
+    await expect(goal.getByText('10/30 min')).toBeVisible();
+
+    const progress = await getReadingProgressRows();
+    expect(progress).toHaveLength(2);
+    expect(progress[0].current_page).toBe(100);
+    expect(progress[0].minutes).toBeNull();
+    expect(progress[1].current_page).toBe(100);
+    expect(progress[1].minutes).toBe(10);
+
+    expect((await sync(apiKey, body)).status).toBe(204);
+    expect(await getReadingProgressRows()).toHaveLength(2);
+    await page.reload();
+    await expect(book).toBeVisible();
+    await expect(goal.getByText('10/30 min')).toBeVisible();
   });
 
   test('does not record duplicate progress for an unchanged page', async ({
