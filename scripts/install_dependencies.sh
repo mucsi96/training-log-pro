@@ -52,26 +52,58 @@ if [ "$(uname -s)" = "Linux" ] && [ -f /etc/os-release ]; then
         loginctl enable-linger "$(whoami)" 2>/dev/null || true
         systemctl --user enable --now podman.socket
 
-        sudo apt-get install -y build-essential pkg-config cmake
+        # Check and install SDKMAN
+        if [ ! -d "$HOME/.sdkman" ]; then
+            echo "Installing SDKMAN..."
+            curl -s "https://get.sdkman.io" | bash
+        else
+            echo "SDKMAN is already installed."
+        fi
 
+        # Source SDKMAN
+        export SDKMAN_DIR="$HOME/.sdkman"
+        [ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ] && . "$SDKMAN_DIR/bin/sdkman-init.sh"
+
+        # Check and install JDK via SDKMAN
+        if ! sdk list java | grep -q "21\.0\.[0-9]*.*tem.*installed"; then
+            echo "Installing JDK 21.0.x via SDKMAN..."
+            sdk install java 21.0.9-tem
+        else
+            echo "JDK 21.0.x is already installed."
+        fi
+
+        # Check and install Maven via SDKMAN
+        if ! command -v mvn >/dev/null 2>&1; then
+            echo "Installing Maven via SDKMAN..."
+            sdk install maven
+        else
+            echo "Maven is already installed."
+        fi
+
+        # Check and install angular-cli
+        if ! command -v ng >/dev/null 2>&1; then
+            echo "Installing Angular CLI..."
+            sudo npm install -g @angular/cli
+        else
+            echo "Angular CLI is already installed."
+        fi
     fi
 fi
 
 echo "Building server..."
-if ! command -v rustup >/dev/null 2>&1; then
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
-    . "$HOME/.cargo/env"
-fi
-cd server && cargo build --locked && cd ..
+cd server && mvn clean install && cd ..
 
 echo "Installing client dependencies..."
-cd client && npm ci && cd ..
+cd client && npm install && cd ..
 
 echo "Installing mock Strava server dependencies..."
 cd mock_strava_server && npm install && cd ..
 
 echo "Installing mock Withings server dependencies..."
 cd mock_withings_server && npm install && cd ..
+
+echo "Installing mock Anthropic server dependencies..."
+cd mock_anthropic_server && npm install && cd ..
 
 echo "Installing test dependencies..."
 cd test && npm install && npx playwright install --with-deps chromium && cd ..

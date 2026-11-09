@@ -1,0 +1,50 @@
+@let s = stats.value();
+<section
+  class="day-goal"
+  [class]="tierClass()"
+  aria-labelledby="day-goal-heading"
+>
+  <header class="header">
+    <h2 id="day-goal-heading">Day goal</h2>
+    @if (todayLabel(); as label) {
+      <p class="status status--achieved" role="status">Today is a {{ label }} day</p>
+    }
+    @if (nextTier(); as next) {
+      <p class="status">
+        <span class="next-label">Next: {{ next.label }}</span>
+        @for (item of next.progress; track item.metric) {
+          <span class="progress">{{ item.value }}/{{ item.goal }} {{ item.unit }}</span>
+        }
+      </p>
+    } @else if (s && !todayTier()) {
+      <p class="status">No tier has requirements yet. Configure them in settings.</p>
+    }
+  </header>
+
+  <div class="stats">
+    <div class="month">
+      <p class="caption" id="day-goal-month-caption">This month</p>
+      <dl class="tier-counts" aria-labelledby="day-goal-month-caption">
+        @for (count of monthCounts(); track count.tier) {
+          <div class="stat" [attr.data-tier]="count.tier">
+            <dt>{{ TIERS[count.tier].label }}<span class="visually-hidden"> this month</span></dt>
+            <dd>
+              <span class="stat-value">{{ count.count }}</span>
+              <span class="stat-unit">{{ count.count === 1 ? 'day' : 'days' }}</span>
+            </dd>
+          </div>
+        }
+      </dl>
+    </div>
+    <dl class="stat">
+      <dt>Streak</dt>
+      <dd>
+        <span class="stat-value">{{ streak() }}</span>
+        <span class="stat-unit">{{ streak() === 1 ? 'day' : 'days' }}</span>
+      </dd>
+    </dl>
+  </div>
+</section>
+@if (showConfetti()) {
+  <app-confetti />
+}

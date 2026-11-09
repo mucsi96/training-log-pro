@@ -1,0 +1,41 @@
+<div class="range-toolbar">
+  <mat-form-field class="range-selector" appearance="outline" subscriptSizing="dynamic">
+    <mat-label>Range</mat-label>
+    <mat-select [value]="selectedRange" (selectionChange)="selectRange($event.value)">
+      <mat-option value="">Month</mat-option>
+      <mat-option value="year">Year</mat-option>
+      <mat-option value="all-time">All time</mat-option>
+    </mat-select>
+  </mat-form-field>
+</div>
+
+<mat-tab-group animationDuration="0ms" mat-stretch-tabs [disablePagination]="true" [selectedIndex]="selectedIndex()" (selectedIndexChange)="selectView($event)">
+  <mat-tab label="Today">
+    <ng-template matTabContent>
+      <div class="today-grid">
+        <app-day-goal />
+        <app-daily-tasks />
+        <app-pushups [compact]="true" />
+        <app-reading [compact]="true" />
+      </div>
+    </ng-template>
+  </mat-tab>
+  <mat-tab label="Training">
+    <ng-template matTabContent>
+      <div class="detail-grid">
+        <div class="section-intro"><h2>Your rides</h2><p>Today’s totals · selected period below</p></div>
+        <app-ride />
+        <div class="metric-grid"><app-fitness /><app-ftp /></div>
+        <app-pushups />
+      </div>
+    </ng-template>
+  </mat-tab>
+  <mat-tab label="Health">
+    <ng-template matTabContent>
+      <div class="detail-grid">
+        <div class="section-intro"><h2>Body measurements</h2><p>Your latest measurements and trends</p></div>
+        <app-weight />
+      </div>
+    </ng-template>
+  </mat-tab>
+</mat-tab-group>

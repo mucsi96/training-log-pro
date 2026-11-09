@@ -1,0 +1,68 @@
+@let latestVal = latest();
+@let todayDiffVal = todayDiff();
+@let periodDiffVal = periodDiff();
+@let chart = chartOptions();
+@if (todayHistory.isLoading() || periodHistory.isLoading()) {
+<div class="page-loading"><bt-bar-loader /></div>
+} @else if (chart || latestVal) {
+<section>
+  @if (chart) {
+  <div class="chart-wrapper">
+    <div
+      role="img"
+      class="chart"
+      echarts
+      [options]="chart"
+      [initOpts]="initOpts"
+    ></div>
+  </div>
+  }
+  @if (latestVal) {
+  <article>
+    <h2>Weight</h2>
+    <p class="value">
+      <span>{{ latestVal.weight | measurementWithUnit : "kg" }}</span>
+      @if (todayDiffVal?.weight; as weightDiff) {
+      <span [class]="'today-diff ' + (weightDiff | diffColor : 'inverse')">
+        {{ weightDiff | absoluteDiff : "kg" }}
+      </span>
+      }
+    </p>
+    @if (!todayHistory.value()?.measurements?.length) {
+    <p class="measurement-date">Last measured {{ latestVal.date | date : "mediumDate" }}</p>
+    }
+    <p class="period-value">
+      {{ periodDiffVal?.weight | absoluteDiff : "kg" }}
+    </p>
+  </article>
+  <article>
+    <h2>Body fat</h2>
+    <p class="value">
+      <span>{{ latestVal.fatMassWeight | measurementWithUnit : "kg" }}</span>
+      @if (todayDiffVal?.fatMassWeight; as fatMassDiff) {
+      <span [class]="'today-diff ' + (fatMassDiff | diffColor : 'inverse')">
+        {{ fatMassDiff | absoluteDiff : "kg" }}
+      </span>
+      }
+    </p>
+    <p class="period-value">
+      {{ periodDiffVal?.fatMassWeight | absoluteDiff : "kg" }}
+    </p>
+  </article>
+  <article>
+    <h2>Fat ratio</h2>
+    <p class="value">
+      <span>{{ latestVal.fatRatio | measurementWithUnit : "%" }}</span>
+      @if (todayDiffVal?.fatRatio; as fatRatioDiff) {
+      <span [class]="'today-diff ' + (fatRatioDiff | diffColor : 'inverse')">
+        {{ fatRatioDiff | absoluteDiff : "%" }}
+      </span>
+      }
+    </p>
+    <p class="period-value">
+      {{ periodDiffVal?.fatRatio | absoluteDiff : "%" }}
+    </p>
+  </article>
+  }
+</section>
+}

@@ -31,27 +31,33 @@ CLIENT_STORAGE_CONFIG=$(az keyvault secret show --vault-name "$AZURE_KEYVAULT_NA
 CLIENT_ORIGIN=$(jq -er '.hostname | select(test("^[a-z0-9.-]+\\.web\\.core\\.windows\\.net$"))' <<<"$CLIENT_STORAGE_CONFIG")
 
 echo "Updating Helm repositories..."
+# The mucsi96 charts no longer bundle Prometheus exporter sidecars or
+# ServiceMonitors (client-app >= 22.0.0, spring-app >= 30.0.0, node-app >= 20.0.0).
+# This deploy rolls out the updated charts and drops those containers.
 helm repo add mucsi96 https://mucsi96.github.io/k8s-helm-charts --force-update
 
-serverChartVersion=7.0.0
+springAppChartVersion=37.0.0
 staticClientAppChartVersion=5.0.0
 helm status "$AUTH_RELEASE" --namespace training-log >/dev/null
-helm show chart mucsi96/rust-app --version "$serverChartVersion" >/dev/null
+helm show chart mucsi96/spring-app --version "$springAppChartVersion" >/dev/null
 helm show chart mucsi96/static-client-app --version "$staticClientAppChartVersion" >/dev/null
 
 # More-specific routes retain API-key and one-time-token integration handlers.
 helm upgrade training-log-integrations "$(dirname "$0")/../deploy/integrations" \
     --install --reset-values --namespace training-log --set-string host="$HOSTNAME" --wait
 
-echo "Deploying server: $SERVER_IMAGE using rust-app chart $serverChartVersion"
+echo "Deploying server: $SERVER_IMAGE using spring-app chart $springAppChartVersion"
 
-# Retain the application's memory budget for book uploads and integration sync.
+# The 2026-11-06 p07 audit measured a 199Mi median working set over 75h.
+# Reserve 256Mi (29% above that baseline), including active file-backed pages.
+# The separate 384Mi limit covers the measured 310Mi peak and retains room
+# for the 256Mi heap cap plus native overhead.
 
-helm upgrade $SERVER_RELEASE_NAME mucsi96/rust-app \
+helm upgrade $SERVER_RELEASE_NAME mucsi96/spring-app \
     --install \
     --namespace training-log \
     --reset-values \
-    --version $serverChartVersion \
+    --version $springAppChartVersion \
     --set-string image="$SERVER_IMAGE" \
     --set host=$HOSTNAME \
     --set basePath=/api \
@@ -59,7 +65,6 @@ helm upgrade $SERVER_RELEASE_NAME mucsi96/rust-app \
     --set clientId=$API_CLIENT_ID \
     --set serviceAccountName=training-log-api-workload-identity \
     --set env.AZURE_KEYVAULT_ENDPOINT=$AZURE_KEYVAULT_ENDPOINT \
-    --set env.LOCO_ENV=production \
     --set resources.requests.memory=256Mi \
     --set resources.requests.cpu=100m \
     --set resources.limits.memory=384Mi \

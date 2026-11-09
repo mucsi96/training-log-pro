@@ -1,0 +1,9 @@
+:host {
+  display: block;
+}
+
+.podium-elevation {
+  height: 140px;
+  width: 100%;
+  overflow: hidden;
+}

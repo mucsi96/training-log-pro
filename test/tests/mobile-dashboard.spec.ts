@@ -35,7 +35,7 @@ test('daily overview stays compact with a long task list', async ({ page }, test
 
   await tasks.getByRole('button', { name: 'View all 12 tasks' }).click();
   await expect(tasks.getByRole('checkbox')).toHaveCount(12);
-  await tasks.getByText('Floss', { exact: true }).click();
+  await tasks.getByRole('checkbox', { name: 'Floss', exact: true }).check();
   await expect(tasks.getByText('1 / 12 done')).toBeVisible();
   expect(await getDailyTaskCompletionRows()).toHaveLength(1);
   await tasks.getByRole('button', { name: 'Show fewer tasks' }).click();
@@ -47,12 +47,12 @@ test('daily overview stays compact with a long task list', async ({ page }, test
   await page.getByRole('tab', { name: 'Training', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Calories', exact: true })).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath('iphone-training.png'), fullPage: true });
-  await page.getByRole('button', { name: /Range/ }).click();
+  await page.getByRole('combobox', { name: 'Range' }).click();
   await page.getByRole('option', { name: 'Year', exact: true }).click();
   await expect(page).toHaveURL(/\/year\?view=training$/);
   await expect(page.getByRole('tab', { name: 'Training', exact: true })).toHaveAttribute('aria-selected', 'true');
   await page.reload();
-  await expect(page.getByRole('button', { name: /Range/ })).toHaveText('Year');
+  await expect(page.getByRole('combobox', { name: 'Range' })).toHaveText('Year');
   await expect(page.getByRole('tab', { name: 'Training', exact: true })).toHaveAttribute('aria-selected', 'true');
   await page.getByRole('tab', { name: 'Health', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Weight', exact: true })).toBeVisible();

@@ -105,13 +105,24 @@ spec:
     - name: server
       image: localhost/training-log-pro-server:test
       env:
-        - name: LOCO_ENV
-          value: test
-        - name: DATABASE_URL
-          value: postgres://postgres:postgres@localhost:5432/test
+        - name: SPRING_ACTUATOR_PORT
+          value: "8182"
+        - name: DB_URL
+          value: jdbc:postgresql://localhost:5432/test
+        - name: DB_USERNAME
+          value: postgres
+        - name: DB_PASSWORD
+          value: postgres
+        - name: MOCK_OAUTH2_SERVER_URI
+          value: http://localhost:8089
       livenessProbe:
-        exec:
-          command: ["/app/training-log-server", "--healthcheck"]
+        httpGet:
+          path: /actuator/health/readiness
+          port: 8182
+        # The native executable is serving within a second of the container
+        # starting, so there is nothing to wait for before the first probe. The
+        # window stays generous because readiness still waits for the db
+        # container and the Liquibase migration.
         initialDelaySeconds: 2
         periodSeconds: 2
         failureThreshold: 30
