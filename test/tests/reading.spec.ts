@@ -212,6 +212,33 @@ test.describe('Reading', () => {
     await expect(section.getByRole('button', { name: /Clean Code, 125 of 400 pages/ })).toBeVisible();
   });
 
+  test('records minutes at page zero for a newly added book', async ({ page }) => {
+    await setTierRequirements('GOLD', { READING_MINUTES: 30 });
+    await insertBook(randomUUID(), 'New Book', 'Author', 300, daysAgoAt(1, 8));
+    await page.goto('/');
+
+    const book = page.getByRole('button', { name: 'New Book, 0 of 300 pages' });
+    await book.click();
+    const dialog = page.getByRole('dialog', { name: 'New Book' });
+    const save = dialog.getByRole('button', { name: 'Save 0', exact: true });
+    await expect(save).toBeDisabled();
+    await dialog.getByRole('slider', { name: 'Minutes' }).focus();
+    await page.keyboard.press('PageUp');
+    await expect(dialog.getByRole('slider', { name: 'Page' })).toHaveAttribute('aria-valuenow', '0');
+    await save.click();
+    await expect(dialog).toBeHidden();
+    const goal = page.getByRole('region', { name: 'Day goal' });
+    await expect(goal.getByText('1/30 min')).toBeVisible();
+
+    const progress = await getReadingProgressRows();
+    expect(progress).toHaveLength(1);
+    expect(progress[0].current_page).toBe(0);
+    expect(progress[0].minutes).toBe(1);
+    await page.reload();
+    await expect(book).toBeVisible();
+    await expect(goal.getByText('1/30 min')).toBeVisible();
+  });
+
   test('does not infer minutes from historical page-only progress', async ({ page }) => {
     await setTierRequirements('GOLD', { READING_MINUTES: 30 });
     const bookId = randomUUID();

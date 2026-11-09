@@ -118,6 +118,6 @@ public class ReadingController {
   }
 
   public record UpdateBookProgressRequest(
-      @NotNull @Min(1) @Max(100000) Integer currentPage,
+      @NotNull @Min(0) @Max(100000) Integer currentPage,
       @NotNull @Min(1) @Max(1440) Integer minutes) {}
 }
