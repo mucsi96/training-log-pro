@@ -26,7 +26,10 @@ spec:
         failureThreshold: 5
 
     - name: db
-      image: docker.io/library/postgres:17.5-bullseye
+      image: docker.io/library/postgres:18.4
+      resources:
+        limits:
+          memory: 300Mi
       ports:
         - containerPort: 5432
           hostPort: 5480
@@ -104,10 +107,15 @@ spec:
 
     - name: server
       image: localhost/training-log-pro-server:test
+      volumeMounts:
+        - name: storage
+          mountPath: /app/storage
       resources:
         limits:
           memory: 384Mi
       env:
+        - name: STORAGE_DIRECTORY
+          value: /app/storage
         - name: SPRING_ACTUATOR_PORT
           value: "8182"
         - name: DB_URL
@@ -148,6 +156,10 @@ spec:
         failureThreshold: 10
 
   volumes:
+    - name: storage
+      hostPath:
+        path: test/storage
+        type: DirectoryOrCreate
     - name: client-dist
       hostPath:
         path: client/dist

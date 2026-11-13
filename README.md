@@ -81,6 +81,13 @@ server and API, forwarding `/oauth2` to oauth2-proxy. Direct standalone browser
 OIDC login is no longer supported. `scripts/pod_up.sh` plus `cd test && npm test`
 provides the isolated app test stack, with gateway identity supplied by fixtures.
 
+## Device book queue
+
+EPUB transfers use the `training-log-app` volume (`/data/training-log` on p07),
+with metadata in PostgreSQL. Files are removed after device acknowledgement or
+manual removal; pending transfers expire after 24 hours. Startup and queue
+operations clean abandoned files. See [storage, cleanup, and rollout details](docs/device-book-transfers.md).
+
 ## Container images
 
 - [Server](https://github.com/users/mucsi96/packages/container/package/training-log-pro-server)
@@ -129,6 +136,7 @@ the server on a JVM for local development is unaffected - `mvn spring-boot:run
 |---|---|
 | `AZURE_KEYVAULT_ENDPOINT` | Azure Key Vault endpoint URL |
 | `SPRING_ACTUATOR_PORT` | Port for Spring Boot Actuator endpoints |
+| `STORAGE_DIRECTORY` | Mounted storage root (`/app/storage` in production); EPUBs use its `device-books/` subdirectory. The local profile uses `./storage`. |
 
 ## Port Mapping
 

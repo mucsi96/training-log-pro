@@ -40,8 +40,8 @@ public class DeviceService {
     return deviceRepository.findAll(Sort.by(Sort.Direction.ASC, "createdAt"));
   }
 
-  @Transactional(readOnly = true)
   public List<DeviceBookSummary> getPendingBooks(UUID deviceId) {
+    deviceBookStorage.cleanup();
     return deviceBookRepository.findByDeviceIdOrderByCreatedAtAsc(deviceId);
   }
 
@@ -58,16 +58,10 @@ public class DeviceService {
     return new CreatedDevice(deviceRepository.save(entity), apiKey);
   }
 
-  @Transactional
   public void deleteDevice(UUID id) {
-    if (!deviceRepository.existsById(id)) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Device not found");
-    }
-    deviceBookRepository.deleteByDeviceId(id);
-    deviceRepository.deleteById(id);
+    deviceBookStorage.deleteDevice(id);
   }
 
-  @Transactional
   public DeviceBookEntity addBook(UUID deviceId, String fileName, String contentType, InputStream input, long size) {
     if (!deviceRepository.existsById(deviceId)) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Device not found");
@@ -84,11 +78,8 @@ public class DeviceService {
     return book;
   }
 
-  @Transactional
   public void removeBook(UUID deviceId, UUID bookId) {
-    if (deviceBookRepository.deleteBook(bookId, deviceId) == 0) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Book not found");
-    }
+    deviceBookStorage.remove(deviceId, bookId);
   }
 
   @Transactional(readOnly = true)

@@ -383,7 +383,7 @@ export async function getDeviceRows() {
 
 export async function getDeviceBookRows() {
   const result = await query(
-    'SELECT id, device_id, file_name, content_type, data FROM training_log.device_book ORDER BY created_at ASC'
+    'SELECT id, device_id, file_name, content_type, file_size FROM training_log.device_book ORDER BY created_at ASC'
   );
   return result.rows;
 }

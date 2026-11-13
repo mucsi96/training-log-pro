@@ -1085,3 +1085,39 @@ databaseChangeLog:
                 ADD CONSTRAINT reading_progress_minutes_check CHECK (minutes BETWEEN 1 AND 1440);
               UPDATE training_log.day_goal_requirement
                 SET metric = 'READING_MINUTES' WHERE metric = 'READING_PAGES';
+
+  - changeSet:
+      id: 38-disk-backed-device-books
+      author: mucsi96
+      changes:
+        - dropNotNullConstraint:
+            tableName: device_book
+            columnName: data
+            columnDataType: bytea
+        - addColumn:
+            tableName: device_book
+            columns:
+              - column:
+                  name: file_size
+                  type: bigint
+        - sql:
+            dbms: postgresql
+            sql: |
+              ALTER TABLE training_log.device_book
+                ADD CONSTRAINT device_book_storage_check
+                CHECK (data IS NOT NULL OR (file_size IS NOT NULL AND file_size >= 0));
+
+  - changeSet:
+      id: 39-remove-device-book-payloads
+      author: mucsi96
+      comment: Discard the old temporary bytea queue; all transfers now use disk files only.
+      changes:
+        - sql:
+            dbms: postgresql
+            sql: |
+              DELETE FROM training_log.device_book WHERE data IS NOT NULL;
+              ALTER TABLE training_log.device_book
+                DROP CONSTRAINT device_book_storage_check,
+                DROP COLUMN data,
+                ALTER COLUMN file_size SET NOT NULL,
+                ADD CONSTRAINT device_book_file_size_check CHECK (file_size >= 0);
