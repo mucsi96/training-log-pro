@@ -19,3 +19,4 @@ test-results/
 .attach_*
 
 postgres-data/
+/test/device-book-storage/

@@ -81,6 +81,13 @@ server and API, forwarding `/oauth2` to oauth2-proxy. Direct standalone browser
 OIDC login is no longer supported. `scripts/pod_up.sh` plus `cd test && npm test`
 provides the isolated app test stack, with gateway identity supplied by fixtures.
 
+## Device book queue
+
+EPUB transfers use the `training-log-app` volume (`/data/training-log` on p07),
+with metadata in PostgreSQL. Files are removed after device acknowledgement or
+manual removal; pending transfers expire after 24 hours. Startup and queue
+operations clean abandoned files. See [storage, cleanup, and rollout details](docs/device-book-transfers.md).
+
 ## Container images
 
 - [Server](https://github.com/users/mucsi96/packages/container/package/training-log-pro-server)

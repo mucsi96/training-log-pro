@@ -48,6 +48,14 @@ helm upgrade training-log-integrations "$(dirname "$0")/../deploy/integrations" 
 
 echo "Deploying server: $SERVER_IMAGE using spring-app chart $springAppChartVersion"
 
+# spring-app 37 does not expose Deployment strategy. Stop the bytea-only pod
+# before publishing metadata-only rows, and retain this policy on later upgrades.
+SERVER_DEPLOYMENT=$(kubectl get deployment "$SERVER_RELEASE_NAME" -n training-log --ignore-not-found -o name)
+if [[ -n "$SERVER_DEPLOYMENT" ]]; then
+    kubectl patch deployment "$SERVER_RELEASE_NAME" -n training-log --type merge \
+        -p '{"spec":{"strategy":{"type":"Recreate","rollingUpdate":null}}}'
+fi
+
 # The 2026-11-06 p07 audit measured a 199Mi median working set over 75h.
 # Reserve 256Mi (29% above that baseline), including active file-backed pages.
 # The separate 384Mi limit covers the measured 310Mi peak and retains room
@@ -65,12 +73,17 @@ helm upgrade $SERVER_RELEASE_NAME mucsi96/spring-app \
     --set clientId=$API_CLIENT_ID \
     --set serviceAccountName=training-log-api-workload-identity \
     --set env.AZURE_KEYVAULT_ENDPOINT=$AZURE_KEYVAULT_ENDPOINT \
+    --set env.DEVICE_BOOKS_DIRECTORY=/app/storage/device-books \
+    --set-json 'persistentVolumeClaims=[{"name":"training-log-pvc","volumeName":"training-log-app","storageClassName":"","accessMode":"ReadWriteOnce","storage":"5Gi","mountPath":"/app/storage"}]' \
     --set resources.requests.memory=256Mi \
     --set resources.requests.cpu=100m \
     --set resources.limits.memory=384Mi \
     --set resources.limits.cpu=500m \
     --wait \
     --timeout 10m
+
+kubectl patch deployment "$SERVER_RELEASE_NAME" -n training-log --type merge \
+    -p '{"spec":{"strategy":{"type":"Recreate","rollingUpdate":null}}}'
 
 echo "Deploying static client gateway using chart $staticClientAppChartVersion"
 
