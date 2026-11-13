@@ -1,5 +1,6 @@
 package mucsi96.traininglog.device;
 
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
@@ -30,6 +31,7 @@ public class DeviceService {
 
   private final DeviceRepository deviceRepository;
   private final DeviceBookRepository deviceBookRepository;
+  private final DeviceBookStorage deviceBookStorage;
   private final TokenEncryptor tokenEncryptor;
   private final Clock clock;
 
@@ -66,7 +68,7 @@ public class DeviceService {
   }
 
   @Transactional
-  public DeviceBookEntity addBook(UUID deviceId, String fileName, String contentType, byte[] data) {
+  public DeviceBookEntity addBook(UUID deviceId, String fileName, String contentType, InputStream input, long size) {
     if (!deviceRepository.existsById(deviceId)) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Device not found");
     }
@@ -75,24 +77,18 @@ public class DeviceService {
         .deviceId(deviceId)
         .fileName(fileName)
         .contentType(contentType)
-        .data(data)
         .createdAt(now())
         .build();
     log.info("queueing book {} for device {}", fileName, deviceId);
-    return deviceBookRepository.save(book);
+    deviceBookStorage.insert(book.getId(), deviceId, fileName, contentType, book.getCreatedAt(), input, size);
+    return book;
   }
 
   @Transactional
   public void removeBook(UUID deviceId, UUID bookId) {
-    DeviceBookEntity book = deviceBookRepository.findByIdAndDeviceId(bookId, deviceId)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Book not found"));
-    deviceBookRepository.delete(book);
-  }
-
-  @Transactional(readOnly = true)
-  public DeviceBookEntity getBook(UUID deviceId, UUID bookId) {
-    return deviceBookRepository.findByIdAndDeviceId(bookId, deviceId)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Book not found"));
+    if (deviceBookRepository.deleteBook(bookId, deviceId) == 0) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Book not found");
+    }
   }
 
   @Transactional(readOnly = true)

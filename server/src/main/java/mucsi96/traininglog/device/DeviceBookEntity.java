@@ -31,9 +31,6 @@ public class DeviceBookEntity {
   @Column(name = "content_type", nullable = false)
   private String contentType;
 
-  @Column(nullable = false)
-  private byte[] data;
-
   @Column(name = "created_at", nullable = false)
   private ZonedDateTime createdAt;
 }
