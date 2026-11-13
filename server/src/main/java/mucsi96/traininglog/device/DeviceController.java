@@ -75,16 +75,18 @@ public class DeviceController {
     if (file.isEmpty() || file.getOriginalFilename() == null || file.getOriginalFilename().isBlank()) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing file");
     }
-    DeviceBookEntity book = deviceService.addBook(
-        id,
-        file.getOriginalFilename(),
-        file.getContentType() != null ? file.getContentType() : MediaType.APPLICATION_OCTET_STREAM_VALUE,
-        file.getBytes());
-    return DeviceBook.builder()
-        .id(book.getId())
-        .fileName(book.getFileName())
-        .createdAt(book.getCreatedAt().withZoneSameInstant(zoneId).toOffsetDateTime())
-        .build();
+    try (var input = file.getInputStream()) {
+      DeviceBookEntity book = deviceService.addBook(
+          id,
+          file.getOriginalFilename(),
+          file.getContentType() != null ? file.getContentType() : MediaType.APPLICATION_OCTET_STREAM_VALUE,
+          input, file.getSize());
+      return DeviceBook.builder()
+          .id(book.getId())
+          .fileName(book.getFileName())
+          .createdAt(book.getCreatedAt().withZoneSameInstant(zoneId).toOffsetDateTime())
+          .build();
+    }
   }
 
   @DeleteMapping("/{id}/books/{bookId}")

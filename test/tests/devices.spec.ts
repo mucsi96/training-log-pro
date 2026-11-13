@@ -1,4 +1,5 @@
 import { test, expect } from '../fixtures';
+import { createHash } from 'crypto';
 import { createDeviceViaUI, dropFileOnto } from '../device-helpers';
 import {
   cleanupDb,
@@ -151,6 +152,68 @@ test.describe('Devices', () => {
 
     expect(response.status).toBe(200);
     expect(await response.json()).toHaveLength(0);
+
+    const [book] = await getDeviceBookRows();
+    for (const [suffix, method] of [['/file', 'GET'], ['', 'DELETE']]) {
+      const denied = await fetch(`${DEVICE_BOOKS_URL}/${book.id}${suffix}`, {
+        method,
+        headers: { Authorization: `Bearer ${otherApiKey}` },
+      });
+      expect(denied.status).toBe(404);
+    }
+    expect(await getDeviceBookRows()).toHaveLength(1);
+  });
+
+  test('transfers a large binary ebook intact with concurrent downloads', async ({ page }) => {
+    test.setTimeout(180_000);
+    const apiKey = await createDeviceViaUI(page, 'Kobo');
+    const device = page.getByRole('article', { name: 'Kobo' });
+    // Nearly the upload limit, incompressible, and not a multiple of the read chunk size.
+    // The test server runs under the production 384Mi memory limit.
+    const size = 96 * 1024 * 1024 + 17;
+    const payload = await page.evaluateHandle(async (size) => {
+      const bytes = new Uint8Array(size);
+      for (let offset = 0; offset < size; offset += 65536) {
+        crypto.getRandomValues(bytes.subarray(offset, Math.min(offset + 65536, size)));
+      }
+      const digest = await crypto.subtle.digest('SHA-256', bytes);
+      const hash = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(new File([bytes], 'large.epub', { type: 'application/epub+zip' }));
+      return { hash, dataTransfer };
+    }, size);
+    const expectedHash = await payload.evaluate(value => value.hash);
+    const dataTransfer = await payload.getProperty('dataTransfer');
+    await device.dispatchEvent('drop', { dataTransfer });
+    await expect(device.getByText('large.epub')).toBeVisible({ timeout: 60_000 });
+    await payload.dispose();
+    await dataTransfer.dispose();
+
+    const response = await listPendingBooks(apiKey);
+    const [book] = await response.json();
+    await Promise.all([0, 1].map(async () => {
+      const download = await fetch(`${DEVICE_BOOKS_URL}/${book.id}/file`, {
+        headers: { Authorization: `Bearer ${apiKey}` },
+      });
+      expect(download.status).toBe(200);
+      expect(download.headers.get('content-length')).toBe(String(size));
+      const hash = createHash('sha256');
+      for await (const chunk of download.body!) {
+        hash.update(chunk);
+      }
+      expect(hash.digest('hex')).toBe(expectedHash);
+    }));
+
+    const ack = await fetch(`${DEVICE_BOOKS_URL}/${book.id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${apiKey}` },
+    });
+    expect(ack.status).toBe(204);
+    expect(await getDeviceBookRows()).toHaveLength(0);
+    const missing = await fetch(`${DEVICE_BOOKS_URL}/${book.id}/file`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    });
+    expect(missing.status).toBe(404);
   });
 
   test('rejects the device API without an API key', async () => {

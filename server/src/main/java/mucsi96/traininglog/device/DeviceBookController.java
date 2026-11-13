@@ -1,5 +1,6 @@
 package mucsi96.traininglog.device;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import lombok.RequiredArgsConstructor;
+import jakarta.servlet.http.HttpServletResponse;
 import mucsi96.traininglog.api.DeviceBook;
 
 @RestController
@@ -27,6 +29,7 @@ import mucsi96.traininglog.api.DeviceBook;
 public class DeviceBookController {
 
   private final DeviceService deviceService;
+  private final DeviceBookStorage deviceBookStorage;
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
   List<DeviceBook> listPendingBooks(
@@ -42,18 +45,18 @@ public class DeviceBookController {
   }
 
   @GetMapping("/{id}/file")
-  ResponseEntity<byte[]> downloadBook(
+  void downloadBook(
       @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-      @PathVariable UUID id) {
+      @PathVariable UUID id, HttpServletResponse response) throws IOException {
     DeviceEntity device = deviceService.authenticate(authorizationHeader);
-    DeviceBookEntity book = deviceService.getBook(device.getId(), id);
-    return ResponseEntity.ok()
-        .contentType(MediaType.parseMediaType(book.getContentType()))
-        .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
-            .filename(book.getFileName(), StandardCharsets.UTF_8)
+    deviceBookStorage.download(device.getId(), id, book -> {
+      response.setContentType(MediaType.parseMediaType(book.contentType()).toString());
+      response.setContentLengthLong(book.size());
+      response.setHeader(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
+            .filename(book.fileName(), StandardCharsets.UTF_8)
             .build()
-            .toString())
-        .body(book.getData());
+            .toString());
+    }, response.getOutputStream());
   }
 
   @DeleteMapping("/{id}")

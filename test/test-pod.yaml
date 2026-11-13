@@ -104,6 +104,9 @@ spec:
 
     - name: server
       image: localhost/training-log-pro-server:test
+      resources:
+        limits:
+          memory: 384Mi
       env:
         - name: SPRING_ACTUATOR_PORT
           value: "8182"
