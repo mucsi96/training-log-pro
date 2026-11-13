@@ -35,7 +35,6 @@ import lombok.RequiredArgsConstructor;
 @Repository
 @RequiredArgsConstructor
 public class DeviceBookStorage {
-  private static final int CHUNK_SIZE = 64 * 1024;
   private static final Duration RETENTION = Duration.ofHours(24);
   private final JdbcTemplate jdbc;
   private final PlatformTransactionManager transactionManager;
@@ -73,30 +72,14 @@ public class DeviceBookStorage {
   public void download(UUID deviceId, UUID bookId, Consumer<BookFile> headers, OutputStream output) {
     locked(() -> {
       var files = jdbc.query("""
-          SELECT file_name, content_type, coalesce(file_size, octet_length(data)) AS size,
-                 data IS NOT NULL AS legacy
+          SELECT file_name, content_type, file_size AS size
           FROM training_log.device_book WHERE id = ? AND device_id = ?
           """, (row, index) -> new BookFile(row.getString("file_name"),
-              row.getString("content_type"), row.getLong("size"), row.getBoolean("legacy")), bookId, deviceId);
+              row.getString("content_type"), row.getLong("size")), bookId, deviceId);
       if (files.isEmpty()) {
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Book not found");
       }
       var book = files.getFirst();
-      if (book.legacy()) {
-        // Compatibility with already queued bytea books. Each SELECT returns at most 64 KiB.
-        writeFile(bookId, target -> {
-          for (long offset = 0; offset < book.size(); offset += CHUNK_SIZE) {
-            byte[] chunk = jdbc.queryForObject("""
-                SELECT substring(data FROM ? FOR ?) FROM training_log.device_book
-                WHERE id = ? AND device_id = ?
-                """, byte[].class, Math.toIntExact(offset + 1), CHUNK_SIZE, bookId, deviceId);
-            target.write(chunk);
-          }
-        });
-        transaction().executeWithoutResult(status -> jdbc.update("""
-            UPDATE training_log.device_book SET data = NULL, file_size = ? WHERE id = ? AND device_id = ?
-            """, book.size(), bookId, deviceId));
-      }
       try (var input = Files.newInputStream(file(bookId), LinkOption.NOFOLLOW_LINKS)) {
         if (Files.size(file(bookId)) != book.size()) {
           throw new IOException("Stored book size does not match metadata");
@@ -197,5 +180,5 @@ public class DeviceBookStorage {
     void write(OutputStream output) throws IOException;
   }
 
-  public record BookFile(String fileName, String contentType, long size, boolean legacy) {}
+  public record BookFile(String fileName, String contentType, long size) {}
 }

@@ -2,7 +2,8 @@
 
 The device queue is temporary: files expire after **24 hours**. New EPUB bytes
 never enter PostgreSQL. `training_log.device_book` stores the device, filename,
-content type, creation time, and file size; `data` is NULL for disk-backed books.
+content type, creation time, and required file size. There is no `data` column
+or database-payload download path.
 
 ## Storage and deployment
 
@@ -22,8 +23,9 @@ a filesystem quota. The queue directory is not included in folder backups, and
 and after installation (spring-app 37 does not expose a strategy value):
 the old bytea-only server must stop before the new server starts publishing
 metadata-only rows. This causes brief API downtime during deployment. The
-existing database rows are retained by the migration; when downloaded, their
-payloads are copied to disk in bounded chunks before clearing `data`. Do not
+old database-backed queue entries are removed by the migration before dropping
+`data`; those temporary uploads must be sent again. Disk-backed queue entries
+are retained. Do not
 roll back to the bytea-only server after disk-backed books have been queued.
 
 ## Lifecycle and cleanup
@@ -61,5 +63,5 @@ The native test stack mounts a host directory at the same container path and
 uses production limits for **both** the server (384 MiB) and PostgreSQL 18.4
 (300 MiB). Coverage includes a 96 MiB incompressible upload with no database
 payload, interrupted and checksum-verified downloads, acknowledgements,
-device isolation, old bytea compatibility, expiry/orphan cleanup, and retention
+device isolation, the metadata-only database schema, expiry/orphan cleanup, and retention
 plus startup cleanup across a server restart.

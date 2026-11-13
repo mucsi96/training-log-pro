@@ -376,14 +376,14 @@ export async function getDailyTaskCompletionRows() {
 
 export async function getDeviceRows() {
   const result = await query(
-    'SELECT id, name, encrypted_key, created_at FROM training_log.device ORDER BY created_at ASC'
+    'SELECT id, name, encrypted_key FROM training_log.device ORDER BY created_at ASC'
   );
   return result.rows;
 }
 
 export async function getDeviceBookRows() {
   const result = await query(
-    'SELECT id, device_id, file_name, content_type, data, file_size FROM training_log.device_book ORDER BY created_at ASC'
+    'SELECT id, device_id, file_name, content_type, file_size FROM training_log.device_book ORDER BY created_at ASC'
   );
   return result.rows;
 }

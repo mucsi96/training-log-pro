@@ -72,7 +72,6 @@ test.describe('Devices', () => {
     expect(books).toHaveLength(1);
     expect(books[0].file_name).toBe('clean-code.epub');
     expect(books[0].content_type).toBe('application/epub+zip');
-    expect(books[0].data).toBeNull();
     expect(Number(books[0].file_size)).toBe(Buffer.byteLength('epub-binary-content'));
     expect(readFileSync(storagePath(`${books[0].id}.epub`), 'utf-8')).toBe('epub-binary-content');
 
@@ -202,7 +201,6 @@ test.describe('Devices', () => {
     const response = await listPendingBooks(apiKey);
     const [book] = await response.json();
     const [stored] = await getDeviceBookRows();
-    expect(stored.data).toBeNull();
     expect(Number(stored.file_size)).toBe(size);
     const abort = new AbortController();
     const interrupted = await fetch(`${DEVICE_BOOKS_URL}/${book.id}/file`, {
@@ -291,24 +289,11 @@ test.describe('Devices', () => {
     expect(existsSync(storagePath(`${books[0].id}.epub`))).toBe(true);
   });
 
-  test('downloads previously queued database books and migrates their bytes to disk', async ({ page }) => {
-    const apiKey = await createDeviceViaUI(page, 'Kobo');
-    const [device] = await getDeviceRows();
-    const id = randomUUID();
-    const bytes = Buffer.from([0, 255, 128, 42, 0, 17]);
-    await query(`INSERT INTO training_log.device_book
-      (id, device_id, file_name, content_type, data, created_at)
-      VALUES ($1, $2, 'legacy.epub', 'application/epub+zip', $3, $4)`,
-      [id, device.id, bytes, device.created_at]);
-    const response = await fetch(`${DEVICE_BOOKS_URL}/${id}/file`, {
-      headers: { Authorization: `Bearer ${apiKey}` },
-    });
-    expect(response.status).toBe(200);
-    expect(Buffer.from(await response.arrayBuffer())).toEqual(bytes);
-    expect(readFileSync(storagePath(`${id}.epub`))).toEqual(bytes);
-    const [book] = await getDeviceBookRows();
-    expect(book.data).toBeNull();
-    expect(Number(book.file_size)).toBe(bytes.length);
+  test('stores queue metadata without a database payload column', async () => {
+    const result = await query(`SELECT column_name, is_nullable FROM information_schema.columns
+      WHERE table_schema = 'training_log' AND table_name = 'device_book'`);
+    expect(result.rows.some(column => column.column_name === 'data')).toBe(false);
+    expect(result.rows.find(column => column.column_name === 'file_size')?.is_nullable).toBe('NO');
   });
 
   test('keeps queued files across a server restart and cleans abandoned files at startup', async ({ page }) => {
