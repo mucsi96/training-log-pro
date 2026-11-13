@@ -73,8 +73,13 @@ helm upgrade $SERVER_RELEASE_NAME mucsi96/spring-app \
     --set clientId=$API_CLIENT_ID \
     --set serviceAccountName=training-log-api-workload-identity \
     --set env.AZURE_KEYVAULT_ENDPOINT=$AZURE_KEYVAULT_ENDPOINT \
-    --set env.DEVICE_BOOKS_DIRECTORY=/app/storage/device-books \
-    --set-json 'persistentVolumeClaims=[{"name":"training-log-pvc","volumeName":"training-log-app","storageClassName":"","accessMode":"ReadWriteOnce","storage":"5Gi","mountPath":"/app/storage"}]' \
+    --set env.STORAGE_DIRECTORY=/app/storage \
+    --set 'persistentVolumeClaims[0].name=training-log-pvc' \
+    --set 'persistentVolumeClaims[0].accessMode=ReadWriteOnce' \
+    --set 'persistentVolumeClaims[0].volumeName=training-log-app' \
+    --set 'persistentVolumeClaims[0].mountPath=/app/storage' \
+    --set 'persistentVolumeClaims[0].storageClassName=' \
+    --set 'persistentVolumeClaims[0].storage=5Gi' \
     --set resources.requests.memory=256Mi \
     --set resources.requests.cpu=100m \
     --set resources.limits.memory=384Mi \

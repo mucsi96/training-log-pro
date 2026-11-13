@@ -40,7 +40,7 @@ public class DeviceBookStorage {
   private final PlatformTransactionManager transactionManager;
   private final Clock clock;
 
-  @Value("${device-books.directory:./storage/device-books}")
+  @Value("${storage.directory}/device-books")
   private Path directory;
 
   @EventListener(ApplicationReadyEvent.class)

@@ -10,8 +10,13 @@ or database-payload download path.
 Production uses the existing `training-log-app` persistent volume on p07,
 backed by `/data/training-log`. The application's Helm deployment claims it as
 `training-log-pvc` and mounts it at `/app/storage`. Files live exclusively under
-`/app/storage/device-books`, configured by `DEVICE_BOOKS_DIRECTORY`. Local JVM
-runs default to `./storage/device-books`.
+`/app/storage/device-books`. As in Learn Language, `STORAGE_DIRECTORY` configures
+the `/app/storage` root through `storage.directory`; device-book storage uses its
+own subfolder. The local Spring profile uses `./storage` as the root.
+
+The naming follows the same convention as Learn Language: `<app>-app` for the
+p07-owned PV and `<app>-pvc` for the application Helm chart's claim, with an empty
+storage class, `ReadWriteOnce`, and a 5Gi request.
 
 This is disk storage, not a memory-backed emptyDir or host `/tmp`. Files survive
 container and pod replacement on p07. The volume is node-local; moving to a

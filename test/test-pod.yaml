@@ -108,14 +108,14 @@ spec:
     - name: server
       image: localhost/training-log-pro-server:test
       volumeMounts:
-        - name: device-books
-          mountPath: /app/storage/device-books
+        - name: storage
+          mountPath: /app/storage
       resources:
         limits:
           memory: 384Mi
       env:
-        - name: DEVICE_BOOKS_DIRECTORY
-          value: /app/storage/device-books
+        - name: STORAGE_DIRECTORY
+          value: /app/storage
         - name: SPRING_ACTUATOR_PORT
           value: "8182"
         - name: DB_URL
@@ -156,9 +156,9 @@ spec:
         failureThreshold: 10
 
   volumes:
-    - name: device-books
+    - name: storage
       hostPath:
-        path: test/device-book-storage
+        path: test/storage
         type: DirectoryOrCreate
     - name: client-dist
       hostPath:

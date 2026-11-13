@@ -136,6 +136,7 @@ the server on a JVM for local development is unaffected - `mvn spring-boot:run
 |---|---|
 | `AZURE_KEYVAULT_ENDPOINT` | Azure Key Vault endpoint URL |
 | `SPRING_ACTUATOR_PORT` | Port for Spring Boot Actuator endpoints |
+| `STORAGE_DIRECTORY` | Mounted storage root (`/app/storage` in production); EPUBs use its `device-books/` subdirectory. The local profile uses `./storage`. |
 
 ## Port Mapping
 

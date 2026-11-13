@@ -15,7 +15,7 @@ import {
 } from '../utils';
 
 const DEVICE_BOOKS_URL = 'http://localhost:8180/api/device/books';
-const storagePath = (name: string) => resolve(__dirname, '../device-book-storage', name);
+const storagePath = (name: string) => resolve(__dirname, '../storage/device-books', name);
 
 async function listPendingBooks(apiKey: string | null): Promise<Response> {
   return await fetch(DEVICE_BOOKS_URL, {

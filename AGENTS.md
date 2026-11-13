@@ -276,7 +276,7 @@ several minutes). Run the AOT-processed application on a normal JVM:
 ```bash
 cd server
 mvn -Pnative package -DskipTests -Dapp.profile=test
-SPRING_ACTUATOR_PORT=8182 DB_URL=jdbc:postgresql://localhost:5480/test \
+STORAGE_DIRECTORY=./storage SPRING_ACTUATOR_PORT=8182 DB_URL=jdbc:postgresql://localhost:5480/test \
   DB_USERNAME=postgres DB_PASSWORD=postgres \
   java -Dspring.aot.enabled=true -jar target/training-log-0.0.1-SNAPSHOT.jar
 ```
