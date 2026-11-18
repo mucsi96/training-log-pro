@@ -183,7 +183,7 @@ test.describe('Reading', () => {
     const save = dialog.getByRole('button', { name: /^Save/ });
     await expect(save).toBeDisabled();
     await minutes.focus();
-    await page.keyboard.press('PageUp');
+    await page.keyboard.press('ArrowUp');
     await expect(save).toBeEnabled();
     await page.keyboard.press('Home');
     await expect(dial).toHaveAttribute('aria-valuenow', '120');
@@ -194,7 +194,7 @@ test.describe('Reading', () => {
     await expect(dial).toHaveAttribute('aria-valuenow', '125');
     await expect(save).toBeDisabled();
     await minutes.focus();
-    await page.keyboard.press('PageUp');
+    await page.keyboard.press('ArrowUp');
     await expect(minutes).toHaveAttribute('aria-valuenow', '1');
     await dialog.getByRole('button', { name: 'Save 125' }).click();
     await expect(dialog).toBeHidden();
@@ -223,7 +223,7 @@ test.describe('Reading', () => {
     const save = dialog.getByRole('button', { name: 'Save 0', exact: true });
     await expect(save).toBeDisabled();
     await dialog.getByRole('slider', { name: 'Minutes' }).focus();
-    await page.keyboard.press('PageUp');
+    await page.keyboard.press('ArrowUp');
     await expect(dialog.getByRole('slider', { name: 'Page' })).toHaveAttribute('aria-valuenow', '0');
     await save.click();
     await expect(dialog).toBeHidden();
