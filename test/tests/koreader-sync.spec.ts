@@ -113,7 +113,7 @@ test.describe('KOReader sync', () => {
     await expect(save).toBeDisabled();
     await dialog.getByRole('slider', { name: 'Minutes' }).focus();
     for (let i = 0; i < 10; i++) {
-      await page.keyboard.press('PageUp');
+      await page.keyboard.press('ArrowUp');
     }
     await expect(dialog.getByRole('slider', { name: 'Minutes' })).toHaveAttribute('aria-valuenow', '10');
     await expect(dialog.getByRole('slider', { name: 'Page' })).toHaveAttribute('aria-valuenow', '100');
